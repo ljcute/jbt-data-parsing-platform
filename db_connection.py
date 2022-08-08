@@ -2,65 +2,86 @@
 # -*- coding: utf-8 -*-
 # 2022/6/23 13:55
 # pip3 install DBUtils==1.3
-
+import pandas as pd
 import pymysql
-from dbutils.pooled_db import PooledDB
-from configparser import ConfigParser
-import os
+from sqlalchemy import create_engine
 
-base_dir = os.path.dirname(os.path.abspath(__file__))
-full_path = os.path.join(base_dir, 'config/config.ini')
 
-cf = ConfigParser()
-cf.read(full_path, encoding='utf-8')
+class Mysqldb(object):
+    # 初始化
+    def __init__(self, config):
+        # 初始化方法中调用连接数据库的方法
+        self.config = config
+        self.conn = self.get_conn()
+        # 调用获取游标的方法
+        self.cursor = self.get_cursor()
 
-host_biz = cf.get('mysql-biz', 'host')
-port_biz = cf.getint('mysql-biz', 'port')
-username_biz = cf.get('mysql-biz', 'username')
-password_biz = cf.get('mysql-biz', 'password')
-schema_biz = cf.get('mysql-biz', 'schema')
-charset_biz = cf.get('mysql-biz', 'charset')
+    # 连接数据库
+    def get_conn(self):
+        # **config代表不定长参数
+        conn = pymysql.connect(**self.config)
+        return conn
 
-global_pool_biz = PooledDB(
-    creator=pymysql,
-    maxconnections=200,
-    mincached=4,
-    maxcached=20,
-    maxshared=0,
-    blocking=True,
-    setsession=[],
-    ping=5,
-    host=host_biz,
-    port=port_biz,
-    user=username_biz,
-    password=password_biz,
-    database=schema_biz,
-    charset=charset_biz)
+    # 获取游标
+    def get_cursor(self):
+        cursor = self.conn.cursor()
+        return cursor
 
-host_raw = cf.get('mysql-raw', 'host')
-port_raw = cf.getint('mysql-raw', 'port')
-username_raw = cf.get('mysql-raw', 'username')
-password_raw = cf.get('mysql-raw', 'password')
-schema_raw = cf.get('mysql-raw', 'schema')
-charset_raw = cf.get('mysql-raw', 'charset')
+    # 查询sql语句返回所有数据
+    def select_all(self, sql):
+        self.cursor.execute(sql)
+        print(f'查询sql为:{sql}')
+        return self.cursor.fetchall()
 
-global_pool_raw = PooledDB(
-    creator=pymysql,
-    maxconnections=200,
-    mincached=4,
-    maxcached=20,
-    maxshared=0,
-    blocking=True,
-    setsession=[],
-    ping=5,
-    host=host_raw,
-    port=port_raw,
-    user=username_raw,
-    password=password_raw,
-    database=schema_raw,
-    charset=charset_raw)
+    # 查询sql语句返回一条数据
+    def select_one(self, sql):
+        self.cursor.execute(sql)
+        print(f'查询sql为:{sql}')
+        return self.cursor.fetchone()
 
-if __name__ == '__main__':
-    conn = global_pool_raw.connection()
-    cursor = conn.cursor()
-    print(cursor)
+    # 查询sql语句返回指定条数数据
+    def select_many(self, sql, num):
+        self.cursor.execute(sql)
+        print(f'查询sql为:{sql}')
+        return self.cursor.fetchmany(num)
+
+    # 增删改除了sql语句不一样其他都一样，都需要提交
+    def commit_data(self, sql, data_list=None):
+        try:
+            # 执行语句
+            if data_list:
+                self.cursor.executemany(sql, data_list)
+                self.conn.commit()
+                print(f'提交成功，sql:{sql}')
+            else:
+                self.cursor.execute(sql)
+                # 提交
+                self.conn.commit()
+                print(f'提交成功，sql:{sql}')
+        except Exception as e:
+            print(f'提交失败:{e}')
+            # 提交失败需要回滚
+            self.conn.rollback()
+
+    # 获取dataframe结构的查询
+    def select_data_by_dataframe(self, sql):
+        username = self.config['user']
+        pwd = self.config['passwd']
+        ip = self.config['host']
+        port = self.config['port']
+        database = self.config['database']
+        charset = self.config['charset']
+
+        engine = create_engine(f'mysql+pymysql://{username}:{pwd}@{ip}:{port}/{database}?charset={charset}')
+        df = pd.read_sql(sql=sql, con=engine)
+        if df is not None:
+            return df
+        else:
+            return None
+
+    # 当对象被销毁时，游标要关闭,连接也要关闭
+    # 创建时是先创建连接后创建游标，关闭时是先关闭游标后关闭连接
+
+    def __del__(self):
+        self.cursor.close()
+        self.conn.close()
