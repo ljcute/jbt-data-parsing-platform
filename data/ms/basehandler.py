@@ -60,16 +60,19 @@ class BaseHandler(object):
         recv_ = None
         while True:
             for msg in consumer:
-                recv = msg.value.decode('unicode_escape')
-                recv = recv[1:-1]
-                recv_ = eval(recv)
-                if recv_:
-                    cls.parsing_data_job(recv_)
-                else:
-                    logger.error(f'消费消息失败，请检查{recv_}')
-                consumer.commit()
-                logger.info(f'此次消费的消息内容为：{recv_}')
-                time.sleep(5)
+                try:
+                    recv = msg.value.decode('unicode_escape')
+                    recv = recv[1:-1]
+                    recv_ = eval(recv)
+                    if recv_:
+                        cls.parsing_data_job(recv_)
+                    else:
+                        logger.error(f'消费消息失败，请检查{recv_}')
+                    consumer.commit()
+                    logger.info(f'此次消费的消息内容为：{recv_}')
+                    time.sleep(5)
+                except Exception as es:
+                    logger.error(f'此次解析任务失败{recv_}，请检查！{es}')
 
     # 进行业务数据解析
     @classmethod
@@ -102,11 +105,11 @@ class BaseHandler(object):
                                         1, rs[0][1], 1, 'success')
                 logger.info(f'数据处理日志表入库完成!')
             else:
-                logger.error(f'数据采集平台未查询到对应数据{rs[0]}，中止解析进行！')
-                raise Exception(f'数据采集平台未查询到对应数据{rs[0]}，中止解析进行！')
+                logger.error(f'数据采集平台未查询到{data["data_source"]}对应数据，中止解析进行！')
+                # raise Exception(f'数据采集平台未查询到对应数据{rs[0]}，中止解析进行！')
         else:
             logger.error(f'数据解析失败，传入参数{data}为空!')
-            raise Exception(f'数据解析失败，传入参数{data}为空!')
+            # raise Exception(f'数据解析失败，传入参数{data}为空!')
 
     @classmethod
     def exchange_items_deal(cls, rs, data_):
