@@ -19,7 +19,7 @@ class ManualHandler(object):
     @classmethod
     def manual_handle_stock(cls):
         # df = pd.read_excel("D:\jbt-data-parsing-platform\data\ms\担保证券-交易所-股票-20220810.xlsx")
-        df = pd.read_excel("data/ms/担保证券-交易所-股票-20220810.xlsx")
+        df = pd.read_excel("担保证券-交易所-股票-20220810.xlsx")
         list = df.values.tolist()
         del list[0]
         args = []
@@ -33,6 +33,7 @@ class ManualHandler(object):
                 "update_flag": 1
             }
             args.append(arg_dict)
+            logger.info(arg_dict)
 
         etl_param = {
             "module": "pysec.etl.sec360.api.sec_api",
@@ -44,7 +45,7 @@ class ManualHandler(object):
     @classmethod
     def manual_handle_bond(cls):
         # df = pd.read_excel("D:\jbt-data-parsing-platform\data\ms\担保证券-交易所-债券-20220810.xlsx")
-        df = pd.read_excel("data/ms/担保证券-交易所-债券-20220810.xlsx")
+        df = pd.read_excel("担保证券-交易所-债券-20220810.xlsx")
         list = df.values.tolist()
         del list[0]
         args = []
@@ -58,6 +59,7 @@ class ManualHandler(object):
                 "update_flag": 1
             }
             args.append(arg_dict)
+            logger.info(arg_dict)
 
         etl_param = {
             "module": "pysec.etl.sec360.api.sec_api",
@@ -69,7 +71,7 @@ class ManualHandler(object):
     @classmethod
     def manual_handle_fund(cls):
         # df = pd.read_excel("D:\jbt-data-parsing-platform\data\ms\担保证券-交易所-基金-20220810.xlsx")
-        df = pd.read_excel("data/ms/担保证券-交易所-基金-20220810.xlsx")
+        df = pd.read_excel("担保证券-交易所-基金-20220810.xlsx")
         list = df.values.tolist()
         del list[0]
         args = []
@@ -83,6 +85,7 @@ class ManualHandler(object):
                 "update_flag": 1
             }
             args.append(arg_dict)
+            logger.info(arg_dict)
 
         etl_param = {
             "module": "pysec.etl.sec360.api.sec_api",
