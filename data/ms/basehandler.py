@@ -43,8 +43,8 @@ full_path = os.path.join(base_dir, '../../config/config.ini')
 cf = ConfigParser()
 cf.read(full_path, encoding='utf-8')
 kafkaList = cf.get('kafka', 'kafkaList')
-kafkaTopic = cf.get('kafka', 'kafkaTopic')
-kafkaGroup = cf.get('kafka', 'kafkaGroup')
+kafkaTopic = cf.get('kafka', 'Topic')
+kafkaGroup = cf.get('kafka', 'Group')
 
 
 # 数据解析基类
