@@ -16,8 +16,8 @@ def get_log_info():
         'crit': logging.CRITICAL
     }
 
-    filename = '../../logs/logs.log'
-    # filename = 'logs/logs.log'
+    # filename = '../../logs/logs.log'
+    filename = 'logs/logs.log'
     logger = logging.getLogger(filename)
     fmt = '%(asctime)s - %(pathname)s[line:%(lineno)d] - %(levelname)s: %(message)s'
     format_str = logging.Formatter(fmt)

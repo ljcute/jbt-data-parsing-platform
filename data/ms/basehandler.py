@@ -5,46 +5,61 @@
 # @Site    : 
 # @File    : basehandler.py
 # @Software: PyCharm
-import datetime
-import io
-import json
 import os
-import time
-from configparser import ConfigParser
-from kafka.consumer import KafkaConsumer
+import sys
 
-import pandas as pd
-import requests
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.append(BASE_DIR)
+# sys.path.append(r'D:\jbt-data-parsing-platform')
 
+from kafka import KafkaConsumer
 from data.dao.biz.biz_data_deal import *
 from data.dao.raw.raw_data_deal import *
+from data.ms.genralhandler import post_data_job
+from data.ms.securities.cc_securities_parsing import cc_parsing_data
+from data.ms.securities.cj_securities_parsing import cj_parsing_data
+from data.ms.securities.ct_securities_parsing import ct_parsing_data
+from data.ms.securities.dfcf_securities_parsing import dfcf_parsing_data
+from data.ms.securities.dx_securities_parsing import dx_parsing_data
+from data.ms.securities.gd_securities_parsing import gd_parsing_data
+from data.ms.securities.gf_securities_parsing import gf_parsing_data
+from data.ms.securities.gtja_securities_parsing import gtja_parsing_data
+from data.ms.securities.gx_securities_parsing import gx_parsing_data
+from data.ms.securities.gy_securities_parsing import gy_parsing_data
+from data.ms.securities.ht_securities_parsing import ht_parsing_data
+from data.ms.securities.sw_securities_parsing import sw_parsing_data
+from data.ms.securities.xy_securities_parsing import xy_parsing_data
+from data.ms.securities.yh_securities_parsing import yh_parsing_data
+from data.ms.securities.zs_securities_parsing import zs_parsing_data
+from data.ms.securities.zt_securities_parsing import zt_parsing_data
+from data.ms.securities.zx_securities_parsing import zx_parsing_data
+from data.ms.securities.zxjt_securities_parsing import zxjt_parsing_data
+from data.ms.sh.sh_market_mt_trading_parsing import sh_parsing_data
+from data.ms.sz.sz_market_mt_trading_parsing import sz_parsing_data
 from utils.logs_utils import logger
+
+
 
 base_dir = os.path.dirname(os.path.abspath(__file__))
 full_path = os.path.join(base_dir, '../../config/config.ini')
 cf = ConfigParser()
 cf.read(full_path, encoding='utf-8')
-request_url = cf.get('360etl-url', 'url')
-request_url_zc_center = cf.get('zc-center-url', 'url')
+kafkaList = cf.get('kafka', 'kafkaList')
 
 
 # 数据解析基类
 class BaseHandler(object):
 
-    # 初始化
-    def __init__(self, data_processor):
-        self.data_processor = data_processor
-
     # 从mq接收消息
     @classmethod
     def kafka_mq_consumer(cls):
         consumer = KafkaConsumer(
-            "collect_test",
-            bootstrap_servers=["172.16.10.48:19092"], auto_offset_reset='earliest', group_id='my_group',
+            "collect_pro",
+            bootstrap_servers=kafkaList, auto_offset_reset='earliest', group_id='group_pro',
             consumer_timeout_ms=1000, enable_auto_commit=False
         )
 
-        recv = None
+        recv_ = None
         for msg in consumer:
             recv = msg.value.decode('unicode_escape')
             recv = recv[1:-1]
@@ -53,148 +68,46 @@ class BaseHandler(object):
                 cls.parsing_data_job(recv_)
             else:
                 logger.error(f'消费消息失败，请检查{recv_}')
+            consumer.commit()
+            logger.info(f'此次消费的消息内容为：{recv_}')
             time.sleep(5)
-            # consumer.commit()
-
-        print(recv)
-
-    # 从采集平台查询数据
-    def query_data_job(self):
-        if self.data_processor == 'sh_market_mt_trading_collect' or 'sz_market_mt_trading_collect':
-            total_result = select_sh_mt_trading_total_data()
-            items_result = select_sh_mt_trading_items_data()
-            total_log_id = total_result[0]
-            total_date = total_result[1]
-            total_data_type = total_result[2]
-            total_data_source = total_result[3]
-            # '["date", "rzye", "rzmre", "rjyl", "rjylje", "rjmcl", "rzrjye"]'
-            total_text = eval(total_result[4])['data'][0]
-            time = datetime.datetime.now()
-            insert_data_process_controler(biz_id=total_log_id, data_processor='sh_market_mt_trading_collect'
-                                          , data_type=total_data_type, data_source=total_data_source, data_status=1
-                                          , last_process_bizdt=total_date, last_process_status=1,
-                                          last_process_result='success')
-
-            insert_data_process_log(biz_id=total_log_id, data_processor='sh_market_mt_trading_collect',
-                                    data_type=total_data_type, data_source=total_data_source, record_num=10,
-                                    data_status=1, last_process_bizdt=total_date, last_process_status=1,
-                                    last_process_result='success')
-
-            insert_exchange_mt_transactions_total(biz_dt=total_date, exchange_market='SSZ',
-                                                  financing_balance=total_text[1],
-                                                  financing_purchase_amount=total_text[2],
-                                                  lending_securities_volume=total_text[3],
-                                                  lending_securities_amount=total_text[4],
-                                                  lending_securities_sales_volume=total_text[5],
-                                                  margin_trading_balance=total_text[6], data_status=1,
-                                                  creator_id=960529, updater_id=960529)
-
-            # items_data_list = []
-            # for i in total_result:
-            #     total_data_list.append(eval(i[4])['data'][0])
-            #
-            # for i in items_result:
-            #     items_data_list.append(eval(i[4])['data'][0])
 
     # 进行业务数据解析
     @classmethod
     def parsing_data_job(cls, data):
-        if not data:
-            raise Exception(f'数据解析失败，传入参数{data}为空!')
-        # 从采集平台查询数据
-        rs = select_collected_data(data['biz_dt'], data['data_type'], data['data_source'])
-        if rs is None:
-            raise Exception(f'数据采集平台未查询到对应数据{rs}，中止解析进行！')
-        rs = rs[0]
-        df_dict = eval(rs[4])
-        data_ = df_dict['data']
-        # insert_data_process_controler(rs[0], data['message'], rs[2], rs[3], 1, rs[1], 1, 'success')
-        # logger.info(f'数据处理控制器表入库完成!')
-        #
-        # insert_data_process_log(rs[0], data['message'], rs[2], rs[3], len(rs), 1, rs[1], 1, 'success')
-        # logger.info(f'数据处理日志表入库完成!')
+        if data:
+            # 从采集平台查询数据
+            rs = select_collected_data(data['biz_dt'], data['data_type'], data['data_source'])
+            if rs:
+                start_dt = datetime.datetime.now()
 
-        if data['data_type'] == '0':
-            cls.exchange_items_deal(rs, data_)
-        elif data['data_type'] == '1':
-            cls.exchange_total_deal(data_, data['message'], rs)
-        else:
-            cls.securities_deal(rs, data_)
-        # try:
-        #
-        #
-        # except Exception as e:
-        #     logger.error(e)
-
-    @classmethod
-    def securities_deal(cls, rs, data_):
-        if not data_:
-            raise Exception(f'业务解析失败，传入数据{data_}为空!')
-        sec_code_list = []
-        empty_data_list = []
-        many_data_list = []
-        for data in data_:
-            sec_code = data[0]
-            sec_name = data[1]
-            if sec_code.startswith('0') or sec_code.startswith('3'):
-                sec_code += '.SZ'
-                data[0] = sec_code
-                sec_code_list.append(data[0])
-            elif sec_code.startswith('6'):
-                sec_code += '.SH'
-                data[0] = sec_code
-                sec_code_list.append(data[0])
-            elif sec_code.startswith('4') or sec_code.startswith('8'):
-                sec_code += '.BJ'
-                data[0] = sec_code
-                sec_code_list.append(data[0])
-            else:
-                zc_data = {
-                    "boCode": sec_code,
-                    "boName": sec_name
-                }
-                result = cls.get_securities_type_job(zc_data)
-                if result:
-                    if len(result) == 1:
-                        # 等于1说明能够精准匹配，大于需要后续人工处理数据问题
-                        sec_code = result[0]['boIdCode']
-                        data[0] = sec_code
-                        sec_code_list.append(data[0])
-                    elif len(result) == 0:
-                        empty_data_list.append(zc_data)
-                    elif len(result) > 1:
-                        many_data_list.append(zc_data)
+                if data['data_source'] == '财通证券':
+                    data_ = eval((rs[0][4]).replace("null", "999"))['data']
                 else:
-                    empty_data_list.append(zc_data)
+                    data_ = eval(rs[0][4])['data']
+                insert_data_process_controler(rs[0][0], data['message'], rs[0][2], rs[0][3], 1, rs[0][1], 1, 'success')
+                logger.info(f'数据处理控制器表入库完成!')
 
-        # empty_data_list,many_data_list为有误数据，需后期人工进行处理
+                if data['data_type'] == '0':
+                    cls.exchange_items_deal(rs[0], data_)
+                elif data['data_type'] == '1':
+                    cls.exchange_total_deal(data_, data['message'], rs[0])
+                else:
+                    cls.securities_deal(rs[0], data_)
 
-        etl_datas = {
-            "module": "pysec.etl.sec360.api.sec_api",
-            "method": "query_sec",
-            "args": sec_code_list
-        }
+                end_dt = datetime.datetime.now()
+                used_time = (end_dt - start_dt).seconds
 
-        etl_result = cls.post_data_job(etl_datas)
-        sec_id_list = []
-        if etl_result:
-            for _result in etl_result['data']:
-                if not _result['sec_id']:
-                    raise Exception("{}没有对应的证券id,请人工确认！".format(_result['sec_code_market']))
-                sec_id_list.append(_result['sec_id'])
-
-        print(sec_id_list)
-        print('---')
-
-
-
-
-
-
-        # 调用注册中心接口，通过证券代码和证券名称查询证券类型然后调用etl360接口获取证券id
-        pass
-
-        # 待注册中心提供查询类型接口
+                insert_data_process_log(rs[0][0], data['message'], rs[0][2], rs[0][3], start_dt, end_dt, used_time,
+                                        len(data_),
+                                        1, rs[0][1], 1, 'success')
+                logger.info(f'数据处理日志表入库完成!')
+            else:
+                logger.error(f'数据采集平台未查询到对应数据{rs[0]}，中止解析进行！')
+                raise Exception(f'数据采集平台未查询到对应数据{rs[0]}，中止解析进行！')
+        else:
+            logger.error(f'数据解析失败，传入参数{data}为空!')
+            raise Exception(f'数据解析失败，传入参数{data}为空!')
 
     @classmethod
     def exchange_items_deal(cls, rs, data_):
@@ -225,14 +138,13 @@ class BaseHandler(object):
             "method": "query_sec",
             "args": secu_code_list
         }
-        etl_result = cls.post_data_job(etl_datas)
+        etl_result = post_data_job(etl_datas)
         sec_id_list = []
         if etl_result:
             for _result in etl_result['data']:
                 if not _result['sec_id']:
                     raise Exception("{}没有对应的证券id,请人工确认！".format(_result['sec_code_market']))
                 sec_id_list.append(_result['sec_id'])
-            # print(f'sec_id_list:{sec_id_list}')
 
         if len(sql_data_list) == len(sec_id_list):
             _sql_data_list = []
@@ -252,72 +164,50 @@ class BaseHandler(object):
                 #                                       1, 411, 411)
                 logger.info(f'交易市场融资融券交易交易明细表入库完成!')
 
-    # 调用360etl接口
     @classmethod
-    def post_data_job(cls, data):
-        """
-        POST JSON请求指定服务
-        :param url:<str> 请求资源URI
-        :param data:<obj> 请求对象
-        :return :<dict> 响应一个字典对象
-        """
-
-        url = request_url + '/api/gateway'
-        res = requests.post(url=url, json=data)
-        if res.status_code != 200:
-            logger.error(f'请求服务异常，uri={url}，json={data}，response={res.text}', exc_info=True)
-            raise Exception(res.text)
-        if res.text:
-            try:
-                return res.json()
-            except Exception as ex:
-                logger.error(f'请求服务异常，uri={url}，json={data}，response={res.text}，error={ex}', exc_info=True)
-                raise ex
-        else:
-            return None
-
-    # 调用注册中心接口，通过证券代码，证券简称查询类型，code
-    @classmethod
-    def get_securities_type_job(cls, data):
-        """
-        POST JSON请求指定服务
-        :param data: boCode,boName
-        :param boCode:<str> 证券代码
-        :param boName:<str> 证券简称
-        :return :<dict> 响应字典对象，如只传证券代码，则可能会有多个返回结果，如都传，则可能匹配不到
-        """
-
-        url = request_url_zc_center + '/bo/search'
-        res = requests.post(url=url, json=data)
-        if res.status_code != 200:
-            logger.error(f'请求服务异常，uri={url}，json={data}，response={res.text}', exc_info=True)
-            raise Exception(res.text)
-        if res.text:
-            try:
-                return res.json()
-            except Exception as ex:
-                logger.error(f'请求服务异常，uri={url}，json={data}，response={res.text}，error={ex}', exc_info=True)
-                raise ex
-        else:
-            return None
-
-    # 解析后的业务数据入库
-    @classmethod
-    def insert_biz_data(cls, data):
-        pass
+    def securities_deal(cls, rs, data_):
+        if rs[3] == '上海交易所':
+            sh_parsing_data(rs, data_)
+        elif rs[3] == '深圳交易所':
+            sz_parsing_data(rs, data_)
+        elif rs[3] == '中信证券':
+            zx_parsing_data(rs, data_)
+        elif rs[3] == '华泰证券':
+            ht_parsing_data(rs, data_)
+        elif rs[3] == '财通证券':
+            ct_parsing_data(rs, data_)
+        elif rs[3] == '东方财富证券':
+            dfcf_parsing_data(rs, data_)
+        elif rs[3] == '长城证券':
+            cc_parsing_data(rs, data_)
+        elif rs[3] == '长江证券':
+            cj_parsing_data(rs, data_)
+        # elif rs[3] == '东兴证券':
+        #     dx_parsing_data(rs, data_)
+        elif rs[3] == '国泰君安证券':
+            gtja_parsing_data(rs, data_)
+        elif rs[3] == '中国银河证券':
+            yh_parsing_data(rs, data_)
+        elif rs[3] == '申万宏源':
+            sw_parsing_data(rs, data_)
+        elif rs[3] == '广发证券':
+            gf_parsing_data(rs, data_)
+        elif rs[3] == '招商证券':
+            zs_parsing_data(rs, data_)
+        elif rs[3] == '国信证券':
+            gx_parsing_data(rs, data_)
+        elif rs[3] == '光大证券':
+            gd_parsing_data(rs, data_)
+        elif rs[3] == '中泰证券':
+            zt_parsing_data(rs, data_)
+        elif rs[3] == '兴业证券':
+            xy_parsing_data(rs, data_)
+        elif rs[3] == '国元证券':
+            gy_parsing_data(rs, data_)
+        elif rs[3] == '中信建投':
+            zxjt_parsing_data(rs, data_)
 
 
 if __name__ == '__main__':
-    query_param = 'sh_market_mt_trading_collect'
-    bs = BaseHandler(query_param)
-    # bs.query_data_job()
-
+    bs = BaseHandler()
     bs.kafka_mq_consumer()
-
-    # bs.post_data_job()
-    # data = {
-    #     "boCode": "561550",
-    #     "boName": "500指增"
-    # }
-    # rs = bs.get_securities_type_job(data)
-

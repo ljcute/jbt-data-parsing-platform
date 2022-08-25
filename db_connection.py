@@ -5,6 +5,7 @@
 import pandas as pd
 import pymysql
 from sqlalchemy import create_engine
+from utils.logs_utils import logger
 
 
 class Mysqldb(object):
@@ -30,19 +31,19 @@ class Mysqldb(object):
     # 查询sql语句返回所有数据
     def select_all(self, sql):
         self.cursor.execute(sql)
-        print(f'查询sql为:{sql}')
+        logger.info(f'查询sql为:{sql}')
         return self.cursor.fetchall()
 
     # 查询sql语句返回一条数据
     def select_one(self, sql):
         self.cursor.execute(sql)
-        print(f'查询sql为:{sql}')
+        logger.info(f'查询sql为:{sql}')
         return self.cursor.fetchone()
 
     # 查询sql语句返回指定条数数据
     def select_many(self, sql, num):
         self.cursor.execute(sql)
-        print(f'查询sql为:{sql}')
+        logger.info(f'查询sql为:{sql}')
         return self.cursor.fetchmany(num)
 
     # 增删改除了sql语句不一样其他都一样，都需要提交
@@ -52,14 +53,14 @@ class Mysqldb(object):
             if data_list:
                 self.cursor.executemany(sql, data_list)
                 self.conn.commit()
-                print(f'提交成功，sql:{sql}')
+                logger.info(f'提交成功，sql:{sql}')
             else:
                 self.cursor.execute(sql)
                 # 提交
                 self.conn.commit()
-                print(f'提交成功，sql:{sql}')
+                logger.info(f'提交成功，sql:{sql}')
         except Exception as e:
-            print(f'提交失败:{e}')
+            logger.info(f'提交失败:{e}')
             # 提交失败需要回滚
             self.conn.rollback()
 
