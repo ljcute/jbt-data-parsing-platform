@@ -38,8 +38,6 @@ from data.ms.sh.sh_market_mt_trading_parsing import sh_parsing_data
 from data.ms.sz.sz_market_mt_trading_parsing import sz_parsing_data
 from utils.logs_utils import logger
 
-
-
 base_dir = os.path.dirname(os.path.abspath(__file__))
 full_path = os.path.join(base_dir, '../../config/config.ini')
 cf = ConfigParser()
@@ -60,17 +58,18 @@ class BaseHandler(object):
         )
 
         recv_ = None
-        for msg in consumer:
-            recv = msg.value.decode('unicode_escape')
-            recv = recv[1:-1]
-            recv_ = eval(recv)
-            if recv_:
-                cls.parsing_data_job(recv_)
-            else:
-                logger.error(f'消费消息失败，请检查{recv_}')
-            consumer.commit()
-            logger.info(f'此次消费的消息内容为：{recv_}')
-            time.sleep(5)
+        while True:
+            for msg in consumer:
+                recv = msg.value.decode('unicode_escape')
+                recv = recv[1:-1]
+                recv_ = eval(recv)
+                if recv_:
+                    cls.parsing_data_job(recv_)
+                else:
+                    logger.error(f'消费消息失败，请检查{recv_}')
+                consumer.commit()
+                logger.info(f'此次消费的消息内容为：{recv_}')
+                time.sleep(5)
 
     # 进行业务数据解析
     @classmethod
