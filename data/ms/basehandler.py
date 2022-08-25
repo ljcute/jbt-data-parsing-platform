@@ -43,6 +43,8 @@ full_path = os.path.join(base_dir, '../../config/config.ini')
 cf = ConfigParser()
 cf.read(full_path, encoding='utf-8')
 kafkaList = cf.get('kafka', 'kafkaList')
+kafkaTopic = cf.get('kafka', 'kafkaTopic')
+kafkaGroup = cf.get('kafka', 'kafkaGroup')
 
 
 # 数据解析基类
@@ -52,8 +54,8 @@ class BaseHandler(object):
     @classmethod
     def kafka_mq_consumer(cls):
         consumer = KafkaConsumer(
-            "collect_pro",
-            bootstrap_servers=kafkaList, auto_offset_reset='earliest', group_id='group_pro',
+            kafkaTopic,
+            bootstrap_servers=kafkaList, auto_offset_reset='earliest', group_id=kafkaGroup,
             consumer_timeout_ms=1000, enable_auto_commit=False
         )
 
