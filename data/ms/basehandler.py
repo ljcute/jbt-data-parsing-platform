@@ -56,7 +56,7 @@ class BaseHandler(object):
         consumer = KafkaConsumer(
             Topic,
             bootstrap_servers=kafkaList, auto_offset_reset='earliest', group_id=Group,
-            consumer_timeout_ms=1000, enable_auto_commit=False, max_poll_interval_ms=86400000
+            consumer_timeout_ms=1000, enable_auto_commit=False
         )
 
         recv_ = None
