@@ -19,7 +19,7 @@ def gtja_parsing_data(rs, data_):
             market = data[3]
             sec_code = data[0]
             sec_name = data[1]
-            rate = round(float(str(data[2]).strip('%')) / 100, 3)
+            rate = round(float(str(data[2]).strip('%')), 3)
             bzj_data.append([market, sec_code, sec_name, rate])
         securities_bzj_parsing_data(rs, rs[2], bzj_data)
         logger.info(f'国泰君安证券可充抵保证金证券解析结束...')
@@ -29,7 +29,7 @@ def gtja_parsing_data(rs, data_):
         for data in data_:
             sec_code = data[0]
             sec_name = data[1]
-            rate = round(float(str(data[2]).strip('%')) / 100, 3)
+            rate = round(float(str(data[2]).strip('%')), 3)
             rz_data.append([sec_code, sec_name, rate])
 
         temp_data = securities_normal_parsing_data_no_market(rz_data)
@@ -47,7 +47,7 @@ def gtja_parsing_data(rs, data_):
         for data in data_:
             sec_code = data[0]
             sec_name = data[1]
-            rate = round(float(str(data[2]).strip('%')) / 100, 3)
+            rate = round(float(str(data[2]).strip('%')), 3)
             rq_data.append([sec_code, sec_name, rate])
 
         temp_data = securities_normal_parsing_data_no_market(rq_data)

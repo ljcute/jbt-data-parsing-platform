@@ -22,7 +22,7 @@ def ct_parsing_data(rs, data_):
             market = data[5]
             sec_code = data[0]
             sec_name = data[1]
-            rate = data[2]
+            rate = round(float(str(data[2])) * 100, 3)
             bzj_data.append([market, sec_code, sec_name, rate])
         securities_bzj_parsing_data(rs, rs[2], bzj_data)
         logger.info(f'财通证券可充抵保证金证券解析结束...')
@@ -58,8 +58,8 @@ def ct_parsing_data(rs, data_):
         for data in data_:
             sec_code = data[0]
             sec_name = data[1]
-            rz_rate = data[2]
-            rq_rate = data[3]
+            rz_rate = round(float(str(data[2])) * 100, 3)
+            rq_rate = round(float(str(data[3])) * 100, 3)
             rzrq_data.append([sec_code, sec_name, rz_rate, rq_rate])
 
         temp_data = securities_normal_parsing_data(rzrq_data)

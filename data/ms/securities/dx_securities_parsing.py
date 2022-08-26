@@ -22,7 +22,7 @@ def dx_parsing_data(rs, data_):
         for data in data_:
             sec_code = data[1]
             sec_name = data[2]
-            rate = round(float(str(data[3]).strip('%')) / 100, 3)
+            rate = round(float(str(data[3]).strip('%')), 3)
 
             bzj_data.append([sec_code, sec_name, rate])
         securities_bzj_parsing_data_no_market(rs, bzj_data)
@@ -34,8 +34,8 @@ def dx_parsing_data(rs, data_):
         for data in data_:
             sec_code = data[1]
             sec_name = data[2]
-            rz_rate = round(float(str(data[3]).strip('%')) / 100, 3)
-            rq_rate = round(float(str(data[4]).strip('%')) / 100, 3)
+            rz_rate = round(float(str(data[3]).strip('%')), 3)
+            rq_rate = round(float(str(data[4]).strip('%')), 3)
             rzrq_data.append([sec_code, sec_name, rz_rate, rq_rate])
 
         temp_data = securities_normal_parsing_data(rzrq_data)

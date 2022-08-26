@@ -18,7 +18,7 @@ def gf_parsing_data(rs, data_):
         for data in data_:
             sec_code = data[1]
             sec_name = data[0]
-            rate = round(float(str(data[2]).strip('%')) / 100, 3)
+            rate = round(float(str(data[2]).strip('%')), 3)
             bzj_data.append([sec_code, sec_name, rate])
         securities_bzj_parsing_data_no_market(rs, bzj_data)
         logger.info(f'广发证券可充抵保证金证券解析结束...')
@@ -28,7 +28,7 @@ def gf_parsing_data(rs, data_):
         for data in data_:
             sec_code = data[1]
             sec_name = data[0]
-            rate = round(float(str(data[2]).strip('%')) / 100, 3)
+            rate = round(float(str(data[2]).strip('%')), 3)
             rz_data.append([sec_code, sec_name, rate])
 
         temp_data = securities_normal_parsing_data_no_market(rz_data)
@@ -45,7 +45,7 @@ def gf_parsing_data(rs, data_):
         for data in data_:
             sec_code = data[1]
             sec_name = data[0]
-            rate = round(float(str(data[2]).strip('%')) / 100, 3)
+            rate = round(float(str(data[2]).strip('%')), 3)
             rq_data.append([sec_code, sec_name, rate])
 
         temp_data = securities_normal_parsing_data_no_market(rq_data)

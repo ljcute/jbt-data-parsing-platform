@@ -18,9 +18,9 @@ def zxjt_parsing_data(rs, data_):
             market = data[2]
             sec_code = data[1]
             sec_name = data[3]
-            bzj_rate = None if data[4] == '-' else data[4]
-            rz_rate = None if data[5] == '-' else round(float(str(data[5]).strip('%')) / 100, 3)
-            rq_rate = None if data[6] == '-' else round(float(str(data[6]).strip('%')) / 100, 3)
+            bzj_rate = None if data[4] == '-' else round(float(str(data[4])) * 100, 3)
+            rz_rate = None if data[5] == '-' else round(float(str(data[5]).strip('%')), 3)
+            rq_rate = None if data[6] == '-' else round(float(str(data[6]).strip('%')), 3)
 
             bzj_data.append([market, sec_code, sec_name, bzj_rate])
             rz_data.append([sec_code, sec_name, rz_rate])
