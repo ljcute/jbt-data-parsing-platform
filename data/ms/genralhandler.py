@@ -322,7 +322,7 @@ def securities_bzj_parsing_data_no_market(rs, data_):
                     if adjust_status != adjust_status_invariant:
                         if adjust_status == adjust_status_high:
                             # 调高 更新记录，更新cur_value,adjust_type,data_status,biz_status TODO
-                            update_business_security(str(rs[1]), sec_id, broker_id, rs[2])
+                            update_business_security((str(rs[1])).replace('-', ''), sec_id, broker_id, rs[2])
 
                             insert_data_list = [
                                 [broker_id, sec_id, rs[2], adjust_status_high, old_rate, round_rate, 1, 1,
@@ -330,7 +330,7 @@ def securities_bzj_parsing_data_no_market(rs, data_):
                             insert_broker_mt_business_security(insert_data_list)
                         elif adjust_status == adjust_status_low:
                             # 调低 更新记录，更新cur_value,adjust_type,data_status,biz_status TODO
-                            update_business_security(str(rs[1]), sec_id, broker_id, rs[2])
+                            update_business_security((str(rs[1])).replace('-', ''), sec_id, broker_id, rs[2])
 
                             insert_data_list = [
                                 [broker_id, sec_id, rs[2], adjust_status_low, old_rate, round_rate, 1, 1,
@@ -479,7 +479,7 @@ def securities_rzrq_parsing_data(rs, biz_type, data_):
                     if adjust_status != adjust_status_invariant:
                         if adjust_status == adjust_status_high:
                             # 调高 更新记录，更新cur_value,adjust_type,data_status,biz_status TODO
-                            update_business_security(str(rs[1]), sec_id, broker_id, biz_type)
+                            update_business_security((str(rs[1])).replace('-', ''), sec_id, broker_id, biz_type)
 
                             insert_data_list = [
                                 [broker_id, sec_id, biz_type, adjust_status_high, old_rate, round_rate, 1, 1,
@@ -487,7 +487,7 @@ def securities_rzrq_parsing_data(rs, biz_type, data_):
                             insert_broker_mt_business_security(insert_data_list)
                         elif adjust_status == adjust_status_low:
                             # 调低 更新记录，更新cur_value,adjust_type,data_status,biz_status TODO
-                            update_business_security(str(rs[1]), sec_id, broker_id, biz_type)
+                            update_business_security((str(rs[1])).replace('-', ''), sec_id, broker_id, biz_type)
 
                             insert_data_list = [
                                 [broker_id, sec_id, biz_type, adjust_status_low, old_rate, round_rate, 1, 1,

@@ -56,7 +56,7 @@ class BaseHandler(object):
         consumer = KafkaConsumer(
             Topic,
             bootstrap_servers=kafkaList, auto_offset_reset='earliest', group_id=Group,
-            consumer_timeout_ms=1000, enable_auto_commit=False
+            consumer_timeout_ms=1000, enable_auto_commit=False, max_poll_interval_ms=86400000
         )
 
         recv_ = None
@@ -115,7 +115,12 @@ class BaseHandler(object):
 
     @classmethod
     def exchange_items_deal(cls, rs, data_):
-        insert_exchange_mt_transactions_total(rs[1], 'SSZ', data_[0][1], data_[0][2], data_[0][3], data_[0][4]
+        exchange_market = None
+        if rs[3] == '上海交易所':
+            exchange_market = 'SSE'
+        elif rs[3] == '深圳交易所':
+            exchange_market = 'SZSE'
+        insert_exchange_mt_transactions_total(rs[1], exchange_market, data_[0][1], data_[0][2], data_[0][3], data_[0][4]
                                               , data_[0][5], data_[0][6], 1, 414, 414)
         logger.info(f'交易市场融资融券交易总量表入库完成!')
 
