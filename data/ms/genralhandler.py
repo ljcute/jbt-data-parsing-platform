@@ -109,13 +109,15 @@ def securities_normal_parsing_data(data):
             if len(res) == 1:
                 secu_id = res[0]['boId']
                 secu_type = res[0]['boIdType']
-                data_.append(secu_id, secu_type)
+                data_.append(secu_id)
+                data_.append(secu_type)
             elif len(res) > 1:
                 for r in res:
                     if r['boName'] == boName:
                         secu_id = r['boId']
                         secu_type = r['boIdType']
-                        data_.append(secu_id, secu_type)
+                        data_.append(secu_id)
+                        data_.append(secu_type)
                         break
                     else:
                         continue
@@ -144,13 +146,15 @@ def securities_normal_parsing_data_no_market(data):
             if len(res) == 1:
                 secu_id = res[0]['boId']
                 secu_type = res[0]['boIdType']
-                data_.append(secu_id, secu_type)
+                data_.append(secu_id)
+                data_.append(secu_type)
             elif len(res) > 1:
                 for r in res:
                     if r['boName'] == boName:
                         secu_id = r['boId']
                         secu_type = r['boIdType']
-                        data_.append(secu_id, secu_type)
+                        data_.append(secu_id)
+                        data_.append(secu_type)
                         break
                     else:
                         continue
@@ -180,13 +184,15 @@ def securities_bzj_parsing_data(rs, biz_type, data_):
             if len(res) == 1:
                 secu_id = res[0]['boId']
                 secu_type = res[0]['boIdType']
-                data.append(secu_id, secu_type)
+                data.append(secu_id)
+                data.append(secu_type)
             elif len(res) > 1:
                 for r in res:
                     if r['boName'] == boName:
                         secu_id = r['boId']
                         secu_type = r['boIdType']
-                        data.append(secu_id, secu_type)
+                        data.append(secu_id)
+                        data.append(secu_type)
                         break
                     else:
                         continue
@@ -274,13 +280,15 @@ def securities_bzj_parsing_data_no_market(rs, data_):
             if len(res) == 1:
                 secu_id = res[0]['boId']
                 secu_type = res[0]['boIdType']
-                data.append(secu_id, secu_type)
+                data.append(secu_id)
+                data.append(secu_type)
             elif len(res) > 1:
                 for r in res:
                     if r['boName'] == boName:
                         secu_id = r['boId']
                         secu_type = r['boIdType']
-                        data.append(secu_id, secu_type)
+                        data.append(secu_id)
+                        data.append(secu_type)
                         break
                     else:
                         continue
@@ -397,7 +405,8 @@ def temp_deal_other(data, boName):
         secu_id = res_data[0]['sec_id']
         etl_type = res_data[0]['sec_category']
         secu_type = get_secu_type(etl_type)
-        data.append(secu_id, secu_type)
+        data.append(secu_id)
+        data.append(secu_type)
         sec_category = res_data[0]['sec_category']
         sec_type = None
         if sec_category == 'sec_stock':
@@ -447,7 +456,8 @@ def temp_deal(data, boName):
         secu_id = res_data[0]['sec_id']
         etl_type = res_data[0]['sec_category']
         secu_type = get_secu_type(etl_type)
-        data.append(secu_id, secu_type)
+        data.append(secu_id)
+        data.append(secu_type)
         sec_category = res_data[0]['sec_category']
         sec_type = None
         if sec_category == 'sec_stock':
@@ -549,13 +559,15 @@ def securities_stockgroup_parsing_data(rs, biz_type, stockgroup_data):
             if len(res) == 1:
                 secu_id = res[0]['boId']
                 secu_type = res[0]['boIdType']
-                data.append(secu_id, secu_type)
+                data.append(secu_id)
+                data.append(secu_type)
             elif len(res) > 1:
                 for r in res:
                     if r['boName'] == boName:
                         secu_id = r['boId']
                         secu_type = r['boIdType']
-                        data.append(secu_id, secu_type)
+                        data.append(secu_id)
+                        data.append(secu_type)
                         break
                     else:
                         continue
