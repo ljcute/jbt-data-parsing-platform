@@ -108,12 +108,14 @@ def securities_normal_parsing_data(data):
         if res:
             if len(res) == 1:
                 secu_id = res[0]['boId']
-                data_.append(secu_id)
+                secu_type = res[0]['boIdType']
+                data_.append(secu_id, secu_type)
             elif len(res) > 1:
                 for r in res:
                     if r['boName'] == boName:
                         secu_id = r['boId']
-                        data_.append(secu_id)
+                        secu_type = r['boIdType']
+                        data_.append(secu_id, secu_type)
                         break
                     else:
                         continue
@@ -141,12 +143,14 @@ def securities_normal_parsing_data_no_market(data):
         if res:
             if len(res) == 1:
                 secu_id = res[0]['boId']
-                data_.append(secu_id)
+                secu_type = res[0]['boIdType']
+                data_.append(secu_id, secu_type)
             elif len(res) > 1:
                 for r in res:
                     if r['boName'] == boName:
                         secu_id = r['boId']
-                        data_.append(secu_id)
+                        secu_type = r['boIdType']
+                        data_.append(secu_id, secu_type)
                         break
                     else:
                         continue
@@ -175,12 +179,14 @@ def securities_bzj_parsing_data(rs, biz_type, data_):
         if res:
             if len(res) == 1:
                 secu_id = res[0]['boId']
-                data.append(secu_id)
+                secu_type = res[0]['boIdType']
+                data.append(secu_id, secu_type)
             elif len(res) > 1:
                 for r in res:
                     if r['boName'] == boName:
                         secu_id = r['boId']
-                        data.append(secu_id)
+                        secu_type = r['boIdType']
+                        data.append(secu_id, secu_type)
                         break
                     else:
                         continue
@@ -208,8 +214,8 @@ def securities_bzj_parsing_data(rs, biz_type, data_):
         # 查询结果为空，第一次处理，从数据采集平台爬取到的数据进行入库处理,调整类型为调入
         insert_data_list = []
         for i in data_:
-            if len(i) == 5:
-                insert_data_list.append([broker_id, i[4], biz_type, adjust_status_in, None, i[3], 1, 1, rs[1],
+            if len(i) == 6:
+                insert_data_list.append([broker_id, i[4], i[5], biz_type, adjust_status_in, None, i[3], 1, 1, rs[1],
                                          forever_end_dt, None])
             else:
                 logger.error(f'该条记录无证券id{i},需人工修复!')
@@ -219,9 +225,10 @@ def securities_bzj_parsing_data(rs, biz_type, data_):
     else:
         logger.info(f'进入不为空的判断')
         for row in data_:
-            if len(row) == 5:
+            if len(row) == 6:
                 sec_code = row[1]
-                sec_id = row[-1]
+                sec_id = row[4]
+                secu_type = row[5]
                 round_rate = row[3]
 
                 db_record = df_exists_index(result, sec_code, sec_id)
@@ -234,7 +241,7 @@ def securities_bzj_parsing_data(rs, biz_type, data_):
                             update_business_security((str(rs[1])).replace('-', ''), sec_id, broker_id, biz_type)
 
                             insert_data_list = [
-                                [broker_id, sec_id, biz_type, adjust_status_high, old_rate, round_rate, 1, 1,
+                                [broker_id, sec_id, secu_type, biz_type, adjust_status_high, old_rate, round_rate, 1, 1,
                                  datetime.datetime.now(), forever_end_dt, None]]
                             insert_broker_mt_business_security(insert_data_list)
                         elif adjust_status == adjust_status_low:
@@ -242,11 +249,11 @@ def securities_bzj_parsing_data(rs, biz_type, data_):
                             update_business_security((str(rs[1])).replace('-', ''), sec_id, broker_id, biz_type)
 
                             insert_data_list = [
-                                [broker_id, sec_id, biz_type, adjust_status_low, old_rate, round_rate, 1, 1,
+                                [broker_id, sec_id, secu_type, biz_type, adjust_status_low, old_rate, round_rate, 1, 1,
                                  datetime.datetime.now(), forever_end_dt, None]]
                             insert_broker_mt_business_security(insert_data_list)
                 else:
-                    insert_list = [[broker_id, sec_id, biz_type, adjust_status_in, None, round_rate, 1, 1,
+                    insert_list = [[broker_id, sec_id, secu_type, biz_type, adjust_status_in, None, round_rate, 1, 1,
                                     datetime.datetime.now(), forever_end_dt, None]]
                     insert_broker_mt_business_security(insert_list)
             else:
@@ -266,12 +273,14 @@ def securities_bzj_parsing_data_no_market(rs, data_):
         if res:
             if len(res) == 1:
                 secu_id = res[0]['boId']
-                data.append(secu_id)
+                secu_type = res[0]['boIdType']
+                data.append(secu_id, secu_type)
             elif len(res) > 1:
                 for r in res:
                     if r['boName'] == boName:
                         secu_id = r['boId']
-                        data.append(secu_id)
+                        secu_type = r['boIdType']
+                        data.append(secu_id, secu_type)
                         break
                     else:
                         continue
@@ -299,9 +308,9 @@ def securities_bzj_parsing_data_no_market(rs, data_):
         # 查询结果为空，第一次处理，从数据采集平台爬取到的数据进行入库处理,调整类型为调入
         insert_data_list = []
         for i in data_:
-            if len(i) == 4:
-                insert_data_list.append([broker_id, i[3], 3, adjust_status_in, None, i[2], 1, 1, rs[1],
-                                             forever_end_dt, None])
+            if len(i) == 5:
+                insert_data_list.append([broker_id, i[3], i[4], 3, adjust_status_in, None, i[2], 1, 1, rs[1],
+                                         forever_end_dt, None])
             else:
                 logger.error(f'该条记录无证券id{i},需人工修复!')
                 invalid_data_list.append(i)
@@ -310,9 +319,10 @@ def securities_bzj_parsing_data_no_market(rs, data_):
     else:
         logger.info(f'进入不为空的判断')
         for row in data_:
-            if len(row) == 4:
+            if len(row) == 5:
                 sec_code = row[0]
-                sec_id = row[-1]
+                sec_id = row[3]
+                secu_type = row[4]
                 round_rate = row[2]
 
                 db_record = df_exists_index(result, sec_code, sec_id)
@@ -325,7 +335,7 @@ def securities_bzj_parsing_data_no_market(rs, data_):
                             update_business_security((str(rs[1])).replace('-', ''), sec_id, broker_id, 3)
 
                             insert_data_list = [
-                                [broker_id, sec_id, 3, adjust_status_high, old_rate, round_rate, 1, 1,
+                                [broker_id, sec_id, secu_type, 3, adjust_status_high, old_rate, round_rate, 1, 1,
                                  datetime.datetime.now(), forever_end_dt, None]]
                             insert_broker_mt_business_security(insert_data_list)
                         elif adjust_status == adjust_status_low:
@@ -333,15 +343,34 @@ def securities_bzj_parsing_data_no_market(rs, data_):
                             update_business_security((str(rs[1])).replace('-', ''), sec_id, broker_id, 3)
 
                             insert_data_list = [
-                                [broker_id, sec_id, 3, adjust_status_low, old_rate, round_rate, 1, 1,
+                                [broker_id, sec_id, secu_type, 3, adjust_status_low, old_rate, round_rate, 1, 1,
                                  datetime.datetime.now(), forever_end_dt, None]]
                             insert_broker_mt_business_security(insert_data_list)
                 else:
-                    insert_list = [[broker_id, sec_id, 3, adjust_status_in, None, round_rate, 1, 1,
+                    insert_list = [[broker_id, sec_id, secu_type, 3, adjust_status_in, None, round_rate, 1, 1,
                                     datetime.datetime.now(), forever_end_dt, None]]
                     insert_broker_mt_business_security(insert_list)
             else:
                 logger.error(f'该条记录无证券id{row},需人工修复!')
+
+
+def get_secu_type(etl_type):
+    secu_type = None
+    if etl_type == 'sec_fund':
+        secu_type = 'fund'
+    elif etl_type == 'sec_stock':
+        secu_type = 'stock'
+    elif etl_type == 'sec_bond':
+        secu_type = 'bond'
+    elif etl_type == 'sec_future':
+        secu_type = 'future'
+    elif etl_type == 'sec_options':
+        secu_type = 'options'
+    elif etl_type == 'sec_repurchase':
+        secu_type = 'repurchase'
+    elif etl_type == 'sec_index':
+        secu_type = 'index'
+    return secu_type
 
 
 # 从注册中心无法查到证券id，根据代码规则获取证券id的公共方法--无市场的处理
@@ -366,7 +395,9 @@ def temp_deal_other(data, boName):
     error_list = []
     if res_data:
         secu_id = res_data[0]['sec_id']
-        data.append(secu_id)
+        etl_type = res_data[0]['sec_category']
+        secu_type = get_secu_type(etl_type)
+        data.append(secu_id, secu_type)
         sec_category = res_data[0]['sec_category']
         sec_type = None
         if sec_category == 'sec_stock':
@@ -414,7 +445,9 @@ def temp_deal(data, boName):
     error_list = []
     if res_data:
         secu_id = res_data[0]['sec_id']
-        data.append(secu_id)
+        etl_type = res_data[0]['sec_category']
+        secu_type = get_secu_type(etl_type)
+        data.append(secu_id, secu_type)
         sec_category = res_data[0]['sec_category']
         sec_type = None
         if sec_category == 'sec_stock':
@@ -457,8 +490,8 @@ def securities_rzrq_parsing_data(rs, biz_type, data_):
         # 查询结果为空，第一次处理，从数据采集平台爬取到的数据进行入库处理,调整类型为调入
         insert_data_list = []
         for i in data_:
-            if len(i) == 4:
-                insert_data_list.append([broker_id, i[-1], biz_type, adjust_status_in, None, i[2], 1, 1, rs[1],
+            if len(i) == 5:
+                insert_data_list.append([broker_id, i[3], i[4], biz_type, adjust_status_in, None, i[2], 1, 1, rs[1],
                                          forever_end_dt, None])
             else:
                 logger.error(f'该条数据无证券id，请检查!{i}')
@@ -467,9 +500,10 @@ def securities_rzrq_parsing_data(rs, biz_type, data_):
     else:
         logger.info(f'进入不为空的判断')
         for row in data_:
-            if len(row) == 4:
+            if len(row) == 5:
                 sec_code = row[0]
-                sec_id = row[-1]
+                sec_id = row[3]
+                secu_type = row[4]
                 round_rate = row[2]
 
                 db_record = df_exists_index(result, sec_code, sec_id)
@@ -482,7 +516,7 @@ def securities_rzrq_parsing_data(rs, biz_type, data_):
                             update_business_security((str(rs[1])).replace('-', ''), sec_id, broker_id, biz_type)
 
                             insert_data_list = [
-                                [broker_id, sec_id, biz_type, adjust_status_high, old_rate, round_rate, 1, 1,
+                                [broker_id, sec_id, secu_type, biz_type, adjust_status_high, old_rate, round_rate, 1, 1,
                                  datetime.datetime.now(), forever_end_dt, None]]
                             insert_broker_mt_business_security(insert_data_list)
                         elif adjust_status == adjust_status_low:
@@ -490,11 +524,11 @@ def securities_rzrq_parsing_data(rs, biz_type, data_):
                             update_business_security((str(rs[1])).replace('-', ''), sec_id, broker_id, biz_type)
 
                             insert_data_list = [
-                                [broker_id, sec_id, biz_type, adjust_status_low, old_rate, round_rate, 1, 1,
+                                [broker_id, sec_id, secu_type, biz_type, adjust_status_low, old_rate, round_rate, 1, 1,
                                  datetime.datetime.now(), forever_end_dt, None]]
                             insert_broker_mt_business_security(insert_data_list)
                 else:
-                    insert_list = [[broker_id, sec_id, biz_type, adjust_status_in, None, round_rate, 1, 1,
+                    insert_list = [[broker_id, sec_id, secu_type, biz_type, adjust_status_in, None, round_rate, 1, 1,
                                     datetime.datetime.now(), forever_end_dt, None]]
                     insert_broker_mt_business_security(insert_list)
             else:
@@ -514,12 +548,14 @@ def securities_stockgroup_parsing_data(rs, biz_type, stockgroup_data):
         if res:
             if len(res) == 1:
                 secu_id = res[0]['boId']
-                data.append(secu_id)
+                secu_type = res[0]['boIdType']
+                data.append(secu_id, secu_type)
             elif len(res) > 1:
                 for r in res:
                     if r['boName'] == boName:
                         secu_id = r['boId']
-                        data.append(secu_id)
+                        secu_type = r['boIdType']
+                        data.append(secu_id, secu_type)
                         break
                     else:
                         continue
@@ -547,8 +583,8 @@ def securities_stockgroup_parsing_data(rs, biz_type, stockgroup_data):
         # 查询结果为空，第一次处理，从数据采集平台爬取到的数据进行入库处理,调整类型为调入
         insert_data_list = []
         for i in stockgroup_data:
-            if len(i) == 5:
-                insert_data_list.append([broker_id, i[-1], biz_type, adjust_status_in, None, i[3], 1, 1, rs[1],
+            if len(i) == 6:
+                insert_data_list.append([broker_id, i[4], i[5], biz_type, adjust_status_in, None, i[3], 1, 1, rs[1],
                                          forever_end_dt, None])
             else:
                 logger.error(f'该条数据无证券id，请检查!{i}')
@@ -558,9 +594,10 @@ def securities_stockgroup_parsing_data(rs, biz_type, stockgroup_data):
     else:
         logger.info(f'进入不为空的判断')
         for row in stockgroup_data:
-            if len(row) == 5:
+            if len(row) == 6:
                 sec_code = row[1]
-                sec_id = row[-1]
+                sec_id = row[4]
+                secu_type = row[5]
                 round_rate = row[3]
 
                 db_record = df_exists_index(result, sec_code, sec_id)
@@ -573,7 +610,7 @@ def securities_stockgroup_parsing_data(rs, biz_type, stockgroup_data):
                             update_business_security((str(rs[1])).replace('-', ''), sec_id, broker_id, biz_type)
 
                             insert_data_list = [
-                                [broker_id, sec_id, biz_type, adjust_status_high, old_rate, round_rate, 1, 1,
+                                [broker_id, sec_id, secu_type, biz_type, adjust_status_high, old_rate, round_rate, 1, 1,
                                  datetime.datetime.now(), forever_end_dt, None]]
                             insert_broker_mt_business_security(insert_data_list)
                         elif adjust_status == adjust_status_low:
@@ -581,11 +618,11 @@ def securities_stockgroup_parsing_data(rs, biz_type, stockgroup_data):
                             update_business_security((str(rs[1])).replace('-', ''), sec_id, broker_id, biz_type)
 
                             insert_data_list = [
-                                [broker_id, sec_id, biz_type, adjust_status_low, old_rate, round_rate, 1, 1,
+                                [broker_id, sec_id, secu_type, biz_type, adjust_status_low, old_rate, round_rate, 1, 1,
                                  datetime.datetime.now(), forever_end_dt, None]]
                             insert_broker_mt_business_security(insert_data_list)
                 else:
-                    insert_list = [[broker_id, sec_id, biz_type, adjust_status_in, None, round_rate, 1, 1,
+                    insert_list = [[broker_id, sec_id, secu_type, biz_type, adjust_status_in, None, round_rate, 1, 1,
                                     datetime.datetime.now(), forever_end_dt, None]]
                     insert_broker_mt_business_security(insert_list)
             else:

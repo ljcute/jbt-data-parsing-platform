@@ -76,9 +76,9 @@ def insert_broker_mt_business_security(insert_data_list):
         time.sleep(0.001)
 
 
-    sql = "insert into t_broker_mt_business_security(row_id,broker_id,secu_id,biz_type,adjust_type,pre_value,cur_value," \
+    sql = "insert into t_broker_mt_business_security(row_id,broker_id,secu_id,secu_type,biz_type,adjust_type,pre_value,cur_value," \
           "data_status,biz_status,start_dt,end_dt,data_desc,create_dt,update_dt) " \
-          "values(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s) "
+          "values(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s) "
     db.commit_data(sql, insert_data_list_)
 
 
