@@ -53,13 +53,13 @@ def sz_parsing_data(rs, data_):
     }
     post_data_job(sync_datas)
     if rs[2] == '2':
-        sz_data_parsing(rs, 2, data_)
+        sz_data_parsing(rs, 3, data_)
     elif rs[2] == '3':
         logger.info(f'融资标的证券解析')
-        sz_data_parsing(rs, 4, data_)
+        sz_data_parsing(rs, 1, data_)
         time.sleep(5)
         logger.info(f'融券标的证券解析')
-        sz_data_parsing(rs, 5, data_)
+        sz_data_parsing(rs, 2, data_)
 
 
 def sz_data_parsing(rs, biz_type, data_):

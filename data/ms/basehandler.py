@@ -120,8 +120,8 @@ class BaseHandler(object):
             exchange_market = 'SSE'
         elif rs[3] == '深圳交易所':
             exchange_market = 'SZSE'
-        insert_exchange_mt_transactions_total(rs[1], exchange_market, data_[0][1], data_[0][2], data_[0][3], data_[0][4]
-                                              , data_[0][5], data_[0][6], 1, 414, 414)
+        insert_exchange_mt_transactions_total(rs[1], exchange_market, data_[0][0], data_[0][1], data_[0][2], data_[0][3]
+                                              , data_[0][4], data_[0][5], 1, 414, 414)
         logger.info(f'交易市场融资融券交易总量表入库完成!')
 
     @classmethod

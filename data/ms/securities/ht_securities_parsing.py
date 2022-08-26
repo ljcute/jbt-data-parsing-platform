@@ -22,7 +22,7 @@ def ht_parsing_data(rs, data_):
             sec_name = data[2]
             rate = round(float(str(data[3])) * 100, 3)
             bzj_data.append([market, sec_code, sec_name, rate])
-        securities_bzj_parsing_data(rs, rs[2], bzj_data)
+        securities_bzj_parsing_data(rs, 3, bzj_data)
         logger.info(f'华泰证券可充抵保证金证券解析结束...')
 
         time.sleep(5)
@@ -48,7 +48,7 @@ def ht_parsing_data(rs, data_):
                 stockgroup_name = 6
             stockgroup_data.append([market, sec_code, sec_name, stockgroup_name])
 
-        securities_stockgroup_parsing_data(rs, 6, stockgroup_data)
+        securities_stockgroup_parsing_data(rs, 4, stockgroup_data)
         logger.info(f'华泰证券集中度分组数据解析结束...')
 
     elif rs[2] == '3':
@@ -69,12 +69,12 @@ def ht_parsing_data(rs, data_):
                 logger.error(f'该条记录无证券id{temp},需人工修复!')
 
         logger.info(f'华泰证券融资标的证券解析开始...')
-        securities_rzrq_parsing_data(rs, 4, rz_data)
+        securities_rzrq_parsing_data(rs, 1, rz_data)
         logger.info(f'华泰证券融资标的证券解析结束...')
 
         time.sleep(5)
         logger.info(f'华泰证券融券标的证券解析开始...')
-        securities_rzrq_parsing_data(rs, 5, rq_data)
+        securities_rzrq_parsing_data(rs, 2, rq_data)
         logger.info(f'华泰证券融券标的证券解析结束...')
 
         logger.info(f'华泰证券融资融券标的证券解析结束...')

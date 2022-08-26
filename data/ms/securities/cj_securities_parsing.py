@@ -21,7 +21,7 @@ def cj_parsing_data(rs, data_):
             sec_name = data[2]
             rate = round(float(str(data[3])) * 100, 3)
             bzj_data.append([market, sec_code, sec_name, rate])
-        securities_bzj_parsing_data(rs, rs[2], bzj_data)
+        securities_bzj_parsing_data(rs, 3, bzj_data)
         logger.info(f'长江证券可充抵保证金证券解析结束...')
 
     # elif rs[2] == '3':

@@ -56,19 +56,27 @@ def sh_parsing_data(rs, data_):
 
 
 def data_parsing(rs, data_):
+    biz_type = None
+    if rs[2] == '2':
+        biz_type = 3
+    elif rs[2] == '4':
+        biz_type = 1
+    elif rs[2] == '5':
+        biz_type = 2
+
     invalid_data_list = []
     if rs[3] == '上海交易所' or rs[3] == '深圳交易所':
         broker_key = '交易所'
     else:
         broker_key = rs[3]
     broker_id = broker_id_map.get(broker_key)
-    result = query_business_security_item(str(rs[1]), rs[2], broker_id)
+    result = query_business_security_item(str(rs[1]), biz_type, broker_id)
     if result.empty:
         # 查询结果为空，第一次处理，从数据采集平台爬取到的数据进行入库处理,调整类型为调入
         insert_data_list = []
         for i in data_:
             if i[-1]:
-                insert_data_list.append([broker_id, i[-1], rs[2], adjust_status_in, None, None, 1, 1, rs[1],
+                insert_data_list.append([broker_id, i[-1], biz_type, adjust_status_in, None, None, 1, 1, rs[1],
                                          forever_end_dt, None])
             else:
                 logger.error(f'该条数据无证券id，请检查!{i}')
@@ -88,6 +96,6 @@ def data_parsing(rs, data_):
         if not s_list:
             temp_insert_data_list = []
             for b in query_list:
-                temp_insert_data_list.append([broker_id, b, rs[2], adjust_status_in, None, None, 1, 1,
+                temp_insert_data_list.append([broker_id, b, biz_type, adjust_status_in, None, None, 1, 1,
                                               datetime.datetime.now(), forever_end_dt, None])
             insert_broker_mt_business_security(temp_insert_data_list)

@@ -41,12 +41,12 @@ def zt_parsing_data(rs, data_):
                 logger.error(f'该条记录无证券id{temp},需人工修复!')
 
         logger.info(f'中泰证券融资标的证券解析开始...')
-        securities_rzrq_parsing_data(rs, 4, rz_data)
+        securities_rzrq_parsing_data(rs, 1, rz_data)
         logger.info(f'中泰证券融资标的证券解析结束...')
 
         time.sleep(5)
         logger.info(f'中泰证券融券标的证券解析开始...')
-        securities_rzrq_parsing_data(rs, 5, rq_data)
+        securities_rzrq_parsing_data(rs, 2, rq_data)
         logger.info(f'中泰证券融券标的证券解析结束...')
 
         logger.info(f'中泰证券融资融券标的证券解析结束...')

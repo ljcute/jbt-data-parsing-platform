@@ -18,5 +18,5 @@ def gd_parsing_data(rs, data_):
             sec_name = data[2]
             rate = round(float(str(data[3]).strip('%')), 3)
             bzj_data.append([market, sec_code, sec_name, rate])
-        securities_bzj_parsing_data(rs, rs[2], bzj_data)
+        securities_bzj_parsing_data(rs, 3, bzj_data)
         logger.info(f'光大证券可充抵保证金证券解析结束...')

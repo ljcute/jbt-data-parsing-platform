@@ -21,7 +21,7 @@ def gtja_parsing_data(rs, data_):
             sec_name = data[1]
             rate = round(float(str(data[2]).strip('%')), 3)
             bzj_data.append([market, sec_code, sec_name, rate])
-        securities_bzj_parsing_data(rs, rs[2], bzj_data)
+        securities_bzj_parsing_data(rs, 3, bzj_data)
         logger.info(f'国泰君安证券可充抵保证金证券解析结束...')
 
     elif rs[2] == '4':
@@ -38,7 +38,7 @@ def gtja_parsing_data(rs, data_):
                 logger.error(f'该条记录无证券id{temp},需人工修复!')
                 error_list.append(temp)
 
-        securities_rzrq_parsing_data(rs, rs[2], rz_data)
+        securities_rzrq_parsing_data(rs, 1, rz_data)
         logger.info(f'国泰君安证券融资标的证券解析结束...')
 
 
@@ -56,7 +56,7 @@ def gtja_parsing_data(rs, data_):
                 logger.error(f'该条记录无证券id{temp},需人工修复!')
                 error_list.append(temp)
 
-        securities_rzrq_parsing_data(rs, rs[2], rq_data)
+        securities_rzrq_parsing_data(rs, 2, rq_data)
         logger.info(f'国泰君安证券融券标的证券解析结束...')
 
 
