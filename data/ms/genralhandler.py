@@ -125,7 +125,7 @@ def securities_normal_parsing_data(data):
         else:
             logger.info(f'未查询到证券id{data_},调用处理方法获取证券id')
             temp_deal_other(data_, boName)
-        logger.info(data_)
+        # logger.info(data_)
 
     return data
 
@@ -158,7 +158,7 @@ def securities_normal_parsing_data_no_market(data):
         else:
             logger.info(f'未查询到证券id{data_},调用处理方法获取证券id')
             temp_deal_other(data_, boName)
-        logger.info(data_)
+        # logger.info(data_)
 
     return data
 
@@ -189,7 +189,7 @@ def securities_bzj_parsing_data(rs, biz_type, data_):
                     temp_deal(data, boName)
         else:
             temp_deal(data, boName)
-        logger.info(data)
+        # logger.info(data)
 
     for tempp in data_:
         if len(tempp) == 4:
@@ -280,7 +280,7 @@ def securities_bzj_parsing_data_no_market(rs, data_):
                     temp_deal_other(data, boName)
         else:
             temp_deal_other(data, boName)
-        logger.info(data)
+        # logger.info(data)
 
     for tempp in data_:
         if len(tempp) == 3:
@@ -528,7 +528,7 @@ def securities_stockgroup_parsing_data(rs, biz_type, stockgroup_data):
                     temp_deal(data, boName)
         else:
             temp_deal(data, boName)
-        logger.info(data)
+        # logger.info(data)
 
     for tempp in stockgroup_data:
         if len(tempp) == 4:
