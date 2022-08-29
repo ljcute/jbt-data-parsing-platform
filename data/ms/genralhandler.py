@@ -129,7 +129,7 @@ def securities_normal_parsing_data(data):
         else:
             logger.info(f'未查询到证券id{data_},调用处理方法获取证券id')
             temp_deal_other(data_, boName)
-        # logger.info(data_)
+        logger.info(data_)
 
     return data
 
@@ -201,7 +201,7 @@ def securities_bzj_parsing_data(rs, biz_type, data_):
                     temp_deal(data, boName)
         else:
             temp_deal(data, boName)
-        # logger.info(data)
+        logger.info(data)
 
     for tempp in data_:
         if len(tempp) == 4:
@@ -209,6 +209,7 @@ def securities_bzj_parsing_data(rs, biz_type, data_):
             error_list.append(tempp)
 
     invalid_data_list = []
+    useless_list = []
     if rs[3] == '上海交易所' or rs[3] == '深圳交易所':
         broker_key = '交易所'
     else:
@@ -221,8 +222,12 @@ def securities_bzj_parsing_data(rs, biz_type, data_):
         insert_data_list = []
         for i in data_:
             if len(i) == 6:
-                insert_data_list.append([broker_id, i[4], i[5], biz_type, adjust_status_in, None, i[3], 1, 1, rs[1],
-                                         forever_end_dt, None])
+                if 0 <= int(i[3]) <= 70:
+                    insert_data_list.append([broker_id, i[4], i[5], biz_type, adjust_status_in, None, i[3], 1, 1, rs[1],
+                                             forever_end_dt, None])
+                else:
+                    logger.error(f'该担保券折算率为负数或折算率比例超过70%，需人工处理！{i}')
+                    useless_list.append(i)
             else:
                 logger.error(f'该条记录无证券id{i},需人工修复!')
                 invalid_data_list.append(i)
@@ -243,20 +248,33 @@ def securities_bzj_parsing_data(rs, biz_type, data_):
                     adjust_status = get_adjust_status_by_two_rate(old_rate, round_rate)
                     if adjust_status != adjust_status_invariant:
                         if adjust_status == adjust_status_high:
-                            # 调高 更新记录，更新cur_value,adjust_type,data_status,biz_status TODO
+                            # 调高 更新记录，更新cur_value,adjust_type,data_status,biz_status
                             update_business_security((str(rs[1])).replace('-', ''), sec_id, broker_id, biz_type)
-
-                            insert_data_list = [
-                                [broker_id, sec_id, secu_type, biz_type, adjust_status_high, old_rate, round_rate, 1, 1,
-                                 datetime.datetime.now(), forever_end_dt, None]]
-                            insert_broker_mt_business_security(insert_data_list)
+                            if 0 <= int(round_rate) <= 70:
+                                insert_data_list = [
+                                    [broker_id, sec_id, secu_type, biz_type, adjust_status_high, old_rate, round_rate,
+                                     1, 1, datetime.datetime.now(), forever_end_dt, None]]
+                                insert_broker_mt_business_security(insert_data_list)
+                            else:
+                                logger.error(f'该担保券折算率为负数或折算率比例超过70%，需人工处理！{row}')
+                                useless_list.append(row)
                         elif adjust_status == adjust_status_low:
-                            # 调低 更新记录，更新cur_value,adjust_type,data_status,biz_status TODO
+                            # 调低 更新记录，更新cur_value,adjust_type,data_status,biz_status
                             update_business_security((str(rs[1])).replace('-', ''), sec_id, broker_id, biz_type)
-
+                            if 0 <= int(round_rate) <= 70:
+                                insert_data_list = [
+                                    [broker_id, sec_id, secu_type, biz_type, adjust_status_low, old_rate, round_rate, 1,
+                                     1, datetime.datetime.now(), forever_end_dt, None]]
+                                insert_broker_mt_business_security(insert_data_list)
+                            else:
+                                logger.error(f'该担保券折算率为负数或折算率比例超过70%，需人工处理！{row}')
+                                useless_list.append(row)
+                        elif adjust_status == adjust_status_out:
+                            # 调出 更新记录，rate置为空，新增一条调处记录，更新其他字段,
                             insert_data_list = [
-                                [broker_id, sec_id, secu_type, biz_type, adjust_status_low, old_rate, round_rate, 1, 1,
-                                 datetime.datetime.now(), forever_end_dt, None]]
+                                [broker_id, sec_id, secu_type, biz_type, adjust_status_out, old_rate, None, 1, 1,
+                                 datetime.datetime.now(), forever_end_dt, None]
+                            ]
                             insert_broker_mt_business_security(insert_data_list)
                 else:
                     insert_list = [[broker_id, sec_id, secu_type, biz_type, adjust_status_in, None, round_rate, 1, 1,
@@ -305,6 +323,7 @@ def securities_bzj_parsing_data_no_market(rs, data_):
             error_list.append(tempp)
 
     invalid_data_list = []
+    useless_list = []
     if rs[3] == '上海交易所' or rs[3] == '深圳交易所':
         broker_key = '交易所'
     else:
@@ -317,8 +336,12 @@ def securities_bzj_parsing_data_no_market(rs, data_):
         insert_data_list = []
         for i in data_:
             if len(i) == 5:
-                insert_data_list.append([broker_id, i[3], i[4], 3, adjust_status_in, None, i[2], 1, 1, rs[1],
-                                         forever_end_dt, None])
+                if 0 <= int(i[2]) <= 70:
+                    insert_data_list.append([broker_id, i[3], i[4], 3, adjust_status_in, None, i[2], 1, 1, rs[1],
+                                             forever_end_dt, None])
+                else:
+                    logger.error(f'该担保券折算率为负数或折算率比例超过70%，需人工处理！{i}')
+                    useless_list.append(i)
             else:
                 logger.error(f'该条记录无证券id{i},需人工修复!')
                 invalid_data_list.append(i)
@@ -339,20 +362,33 @@ def securities_bzj_parsing_data_no_market(rs, data_):
                     adjust_status = get_adjust_status_by_two_rate(old_rate, round_rate)
                     if adjust_status != adjust_status_invariant:
                         if adjust_status == adjust_status_high:
-                            # 调高 更新记录，更新cur_value,adjust_type,data_status,biz_status TODO
+                            # 调高 更新记录，更新cur_value,adjust_type,data_status,biz_status
                             update_business_security((str(rs[1])).replace('-', ''), sec_id, broker_id, 3)
-
-                            insert_data_list = [
-                                [broker_id, sec_id, secu_type, 3, adjust_status_high, old_rate, round_rate, 1, 1,
-                                 datetime.datetime.now(), forever_end_dt, None]]
-                            insert_broker_mt_business_security(insert_data_list)
+                            if 0 <= int(round_rate) <= 70:
+                                insert_data_list = [
+                                    [broker_id, sec_id, secu_type, 3, adjust_status_high, old_rate, round_rate, 1, 1,
+                                     datetime.datetime.now(), forever_end_dt, None]]
+                                insert_broker_mt_business_security(insert_data_list)
+                            else:
+                                logger.error(f'该担保券折算率为负数或折算率比例超过70%，需人工处理！{row}')
+                                useless_list.append(row)
                         elif adjust_status == adjust_status_low:
-                            # 调低 更新记录，更新cur_value,adjust_type,data_status,biz_status TODO
+                            # 调低 更新记录，更新cur_value,adjust_type,data_status,biz_status
                             update_business_security((str(rs[1])).replace('-', ''), sec_id, broker_id, 3)
-
+                            if 0 <= int(round_rate) <= 70:
+                                insert_data_list = [
+                                    [broker_id, sec_id, secu_type, 3, adjust_status_low, old_rate, round_rate, 1, 1,
+                                     datetime.datetime.now(), forever_end_dt, None]]
+                                insert_broker_mt_business_security(insert_data_list)
+                            else:
+                                logger.error(f'该担保券折算率为负数或折算率比例超过70%，需人工处理！{row}')
+                                useless_list.append(row)
+                        elif adjust_status == adjust_status_out:
+                            # 调出 更新记录，rate置为空，新增一条调处记录，更新其他字段,
                             insert_data_list = [
-                                [broker_id, sec_id, secu_type, 3, adjust_status_low, old_rate, round_rate, 1, 1,
-                                 datetime.datetime.now(), forever_end_dt, None]]
+                                [broker_id, sec_id, secu_type, 3, adjust_status_out, old_rate, None, 1, 1,
+                                 datetime.datetime.now(), forever_end_dt, None]
+                            ]
                             insert_broker_mt_business_security(insert_data_list)
                 else:
                     insert_list = [[broker_id, sec_id, secu_type, 3, adjust_status_in, None, round_rate, 1, 1,
@@ -500,8 +536,21 @@ def securities_rzrq_parsing_data(rs, biz_type, data_):
         # 查询结果为空，第一次处理，从数据采集平台爬取到的数据进行入库处理,调整类型为调入
         insert_data_list = []
         for i in data_:
+            rate = None
             if len(i) == 5:
-                insert_data_list.append([broker_id, i[3], i[4], biz_type, adjust_status_in, None, i[2], 1, 1, rs[1],
+                if biz_type == 1:
+                    if int(i[2]) < 100 and int(i[2]) != 0:
+                        rate = None
+                        logger.error(f'融资标的，调入、调高、调低后担保比例不能小于100，请人工处理！{i}')
+                    else:
+                        rate = int(i[2])
+                elif biz_type == 2:
+                    if int(i[2]) < 50 and int(i[2]) != 0:
+                        rate = None
+                        logger.error(f'融券标的，调入、调高、调低后担保比例不能小于50，请人工处理！{i}')
+                    else:
+                        rate = int(i[2])
+                insert_data_list.append([broker_id, i[3], i[4], biz_type, adjust_status_in, None, rate, 1, 1, rs[1],
                                          forever_end_dt, None])
             else:
                 logger.error(f'该条数据无证券id，请检查!{i}')
@@ -510,11 +559,25 @@ def securities_rzrq_parsing_data(rs, biz_type, data_):
     else:
         logger.info(f'进入不为空的判断')
         for row in data_:
+            rate = None
             if len(row) == 5:
                 sec_code = row[0]
                 sec_id = row[3]
                 secu_type = row[4]
                 round_rate = row[2]
+
+                if biz_type == 1:
+                    if int(round_rate) < 100 and int(round_rate) != 0:
+                        rate = None
+                        logger.error(f'融资标的，调入、调高、调低后担保比例不能小于100，请人工处理！{row}')
+                    else:
+                        rate = int(round_rate)
+                elif biz_type == 2:
+                    if int(round_rate) < 50 and int(round_rate) != 0:
+                        rate = None
+                        logger.error(f'融券标的，调入、调高、调低后担保比例不能小于50，请人工处理！{row}')
+                    else:
+                        rate = int(round_rate)
 
                 db_record = df_exists_index(result, sec_code, sec_id)
                 if db_record is not None:
@@ -522,21 +585,28 @@ def securities_rzrq_parsing_data(rs, biz_type, data_):
                     adjust_status = get_adjust_status_by_two_rate(old_rate, round_rate)
                     if adjust_status != adjust_status_invariant:
                         if adjust_status == adjust_status_high:
-                            # 调高 更新记录，更新cur_value,adjust_type,data_status,biz_status TODO
+                            # 调高 更新记录，更新cur_value,adjust_type,data_status,biz_status
                             update_business_security((str(rs[1])).replace('-', ''), sec_id, broker_id, biz_type)
 
                             insert_data_list = [
-                                [broker_id, sec_id, secu_type, biz_type, adjust_status_high, old_rate, round_rate, 1, 1,
+                                [broker_id, sec_id, secu_type, biz_type, adjust_status_high, old_rate, rate, 1, 1,
                                  datetime.datetime.now(), forever_end_dt, None]]
                             insert_broker_mt_business_security(insert_data_list)
                         elif adjust_status == adjust_status_low:
-                            # 调低 更新记录，更新cur_value,adjust_type,data_status,biz_status TODO
+                            # 调低 更新记录，更新cur_value,adjust_type,data_status,biz_status
                             update_business_security((str(rs[1])).replace('-', ''), sec_id, broker_id, biz_type)
 
                             insert_data_list = [
-                                [broker_id, sec_id, secu_type, biz_type, adjust_status_low, old_rate, round_rate, 1, 1,
+                                [broker_id, sec_id, secu_type, biz_type, adjust_status_low, old_rate, rate, 1, 1,
                                  datetime.datetime.now(), forever_end_dt, None]]
                             insert_broker_mt_business_security(insert_data_list)
+                        elif adjust_status == adjust_status_out:
+                            # 调出 更新记录，rate置为空，新增一条调处记录，更新其他字段,
+                            insert_data_list = [
+                                [broker_id, sec_id, secu_type, biz_type, adjust_status_low, old_rate, None, 1, 1,
+                                 datetime.datetime.now(), forever_end_dt, None]]
+                            insert_broker_mt_business_security(insert_data_list)
+
                 else:
                     insert_list = [[broker_id, sec_id, secu_type, biz_type, adjust_status_in, None, round_rate, 1, 1,
                                     datetime.datetime.now(), forever_end_dt, None]]
@@ -618,7 +688,7 @@ def securities_stockgroup_parsing_data(rs, biz_type, stockgroup_data):
                     adjust_status = get_adjust_status_by_two_rate(old_rate, round_rate)
                     if adjust_status != adjust_status_invariant:
                         if adjust_status == adjust_status_high:
-                            # 调高 更新记录，更新cur_value,adjust_type,data_status,biz_status TODO
+                            # 调高 更新记录，更新cur_value,adjust_type,data_status,biz_status
                             update_business_security((str(rs[1])).replace('-', ''), sec_id, broker_id, biz_type)
 
                             insert_data_list = [
@@ -626,11 +696,17 @@ def securities_stockgroup_parsing_data(rs, biz_type, stockgroup_data):
                                  datetime.datetime.now(), forever_end_dt, None]]
                             insert_broker_mt_business_security(insert_data_list)
                         elif adjust_status == adjust_status_low:
-                            # 调低 更新记录，更新cur_value,adjust_type,data_status,biz_status TODO
+                            # 调低 更新记录，更新cur_value,adjust_type,data_status,biz_status
                             update_business_security((str(rs[1])).replace('-', ''), sec_id, broker_id, biz_type)
 
                             insert_data_list = [
                                 [broker_id, sec_id, secu_type, biz_type, adjust_status_low, old_rate, round_rate, 1, 1,
+                                 datetime.datetime.now(), forever_end_dt, None]]
+                            insert_broker_mt_business_security(insert_data_list)
+                        elif adjust_status == adjust_status_out:
+                            # 调出 更新记录，rate置为空，新增一条调处记录，更新其他字段,
+                            insert_data_list = [
+                                [broker_id, sec_id, secu_type, biz_type, adjust_status_low, old_rate, None, 1, 1,
                                  datetime.datetime.now(), forever_end_dt, None]]
                             insert_broker_mt_business_security(insert_data_list)
                 else:
