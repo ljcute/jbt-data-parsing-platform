@@ -277,9 +277,14 @@ def securities_bzj_parsing_data(rs, biz_type, data_):
                             ]
                             insert_broker_mt_business_security(insert_data_list)
                 else:
-                    insert_list = [[broker_id, sec_id, secu_type, biz_type, adjust_status_in, None, round_rate, 1, 1,
-                                    datetime.datetime.now(), forever_end_dt, None]]
-                    insert_broker_mt_business_security(insert_list)
+                    if 0 <= int(round_rate) <= 70:
+                        insert_list = [
+                            [broker_id, sec_id, secu_type, biz_type, adjust_status_in, None, round_rate, 1, 1,
+                             datetime.datetime.now(), forever_end_dt, None]]
+                        insert_broker_mt_business_security(insert_list)
+                    else:
+                        logger.error(f'该担保券折算率为负数或折算率比例超过70%，需人工处理！{row}')
+                        useless_list.append(row)
             else:
                 logger.error(f'该条记录无证券id{row},需人工修复!')
                 invalid_data_list.append(row)
@@ -391,9 +396,13 @@ def securities_bzj_parsing_data_no_market(rs, data_):
                             ]
                             insert_broker_mt_business_security(insert_data_list)
                 else:
-                    insert_list = [[broker_id, sec_id, secu_type, 3, adjust_status_in, None, round_rate, 1, 1,
-                                    datetime.datetime.now(), forever_end_dt, None]]
-                    insert_broker_mt_business_security(insert_list)
+                    if 0 <= int(round_rate) <= 70:
+                        insert_list = [[broker_id, sec_id, secu_type, 3, adjust_status_in, None, round_rate, 1, 1,
+                                        datetime.datetime.now(), forever_end_dt, None]]
+                        insert_broker_mt_business_security(insert_list)
+                    else:
+                        logger.error(f'该担保券折算率为负数或折算率比例超过70%，需人工处理！{row}')
+                        useless_list.append(row)
             else:
                 logger.error(f'该条记录无证券id{row},需人工修复!')
 
@@ -606,9 +615,8 @@ def securities_rzrq_parsing_data(rs, biz_type, data_):
                                 [broker_id, sec_id, secu_type, biz_type, adjust_status_low, old_rate, None, 1, 1,
                                  datetime.datetime.now(), forever_end_dt, None]]
                             insert_broker_mt_business_security(insert_data_list)
-
                 else:
-                    insert_list = [[broker_id, sec_id, secu_type, biz_type, adjust_status_in, None, round_rate, 1, 1,
+                    insert_list = [[broker_id, sec_id, secu_type, biz_type, adjust_status_in, None, rate, 1, 1,
                                     datetime.datetime.now(), forever_end_dt, None]]
                     insert_broker_mt_business_security(insert_list)
             else:
