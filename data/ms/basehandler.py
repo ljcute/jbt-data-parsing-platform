@@ -58,7 +58,8 @@ class BaseHandler(object):
             bootstrap_servers=kafkaList, auto_offset_reset='earliest', group_id=Group,
             consumer_timeout_ms=1000, enable_auto_commit=False, max_poll_interval_ms=86400000
         )
-
+        logger.info(f'============================')
+        logger.info(f'数据解析开始......')
         recv_ = None
         while True:
             for msg in consumer:
