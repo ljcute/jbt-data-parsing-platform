@@ -651,7 +651,7 @@ def securities_rzrq_parsing_data(rs, biz_type, data_):
             if len(i) == 5:
                 if biz_type == 1:
                     # 融资
-                    if 0 < int(i[2]) < 100 and int(i[2]) != 0:
+                    if int(i[2]) < 100:
                         rate = None
                         insert_data_list.append([broker_id, i[3], i[4], biz_type, adjust_status_out, None, rate, 1, 1, rs[1], forever_end_dt, None])
                     elif int(i[2]) > 200:
@@ -662,7 +662,7 @@ def securities_rzrq_parsing_data(rs, biz_type, data_):
                         insert_data_list.append([broker_id, i[3], i[4], biz_type, adjust_status_in, None, rate, 1, 1, rs[1], forever_end_dt, None])
                 elif biz_type == 2:
                     # 融券
-                    if 0 < int(i[2]) < 50 and int(i[2]) != 0:
+                    if int(i[2]) < 50:
                         rate = None
                         insert_data_list.append([broker_id, i[3], i[4], biz_type, adjust_status_out, None, rate, 1, 1, rs[1], forever_end_dt, None])
                     elif int(i[2]) > 200:
@@ -700,7 +700,7 @@ def securities_rzrq_parsing_data(rs, biz_type, data_):
                             update_business_security((str(rs[1])).replace('-', ''), sec_id, broker_id, biz_type)
                             if biz_type == 1:
                                 # 融资
-                                if 0 < int(round_rate) < 100 and int(round_rate) != 0:
+                                if int(round_rate) < 100:
                                     rate = None
                                     insert_data_list_noempty.append([broker_id, sec_id, secu_type, biz_type, adjust_status_out, old_rate, rate, 1, 1, datetime.datetime.now(), forever_end_dt, None])
                                 elif int(round_rate) > 200:
@@ -711,7 +711,7 @@ def securities_rzrq_parsing_data(rs, biz_type, data_):
                                     insert_data_list_noempty.append([broker_id, sec_id, secu_type, biz_type, adjust_status_high, old_rate, rate, 1, 1, datetime.datetime.now(), forever_end_dt, None])
                             elif biz_type == 2:
                                 # 融券
-                                if int(round_rate) < 50 and int(round_rate) != 0:
+                                if int(round_rate) < 50:
                                     rate = None
                                     insert_data_list_noempty.append([broker_id, sec_id, secu_type, biz_type, adjust_status_out, old_rate, rate, 1, 1, datetime.datetime.now(), forever_end_dt, None])
                                 elif int(round_rate) > 200:
@@ -726,7 +726,7 @@ def securities_rzrq_parsing_data(rs, biz_type, data_):
                             update_business_security((str(rs[1])).replace('-', ''), sec_id, broker_id, biz_type)
                             if biz_type == 1:
                                 # 融资
-                                if 0 < int(round_rate) < 100 and int(round_rate) != 0:
+                                if int(round_rate) < 100:
                                     rate = None
                                     insert_data_list_noempty.append([broker_id, sec_id, secu_type, biz_type, adjust_status_out, old_rate, rate, 1, 1, datetime.datetime.now(), forever_end_dt, None])
                                 elif int(round_rate) > 200:
@@ -737,7 +737,7 @@ def securities_rzrq_parsing_data(rs, biz_type, data_):
                                     insert_data_list_noempty.append([broker_id, sec_id, secu_type, biz_type, adjust_status_low, old_rate, rate, 1, 1, datetime.datetime.now(), forever_end_dt, None])
                             elif biz_type == 2:
                                 # 融券
-                                if int(round_rate) < 50 and int(round_rate) != 0:
+                                if int(round_rate) < 50:
                                     rate = None
                                     insert_data_list_noempty.append([broker_id, sec_id, secu_type, biz_type, adjust_status_out, old_rate, rate, 1, 1, datetime.datetime.now(), forever_end_dt, None])
                                 elif int(round_rate) > 200:
@@ -753,7 +753,7 @@ def securities_rzrq_parsing_data(rs, biz_type, data_):
                 else:
                     if biz_type == 1:
                         # 融资
-                        if 0 < int(round_rate) < 100 and int(round_rate) != 0:
+                        if int(round_rate) < 100:
                             rate = None
                             insert_data_list_noempty.append([broker_id, sec_id, secu_type, biz_type, adjust_status_out, None, rate, 1, 1, datetime.datetime.now(), forever_end_dt, None])
                         elif int(round_rate) > 200:
@@ -764,7 +764,7 @@ def securities_rzrq_parsing_data(rs, biz_type, data_):
                             insert_data_list_noempty.append([broker_id, sec_id, secu_type, biz_type, adjust_status_in, None, rate, 1, 1, datetime.datetime.now(), forever_end_dt, None])
                     elif biz_type == 2:
                         # 融券
-                        if int(round_rate) < 50 and int(round_rate) != 0:
+                        if int(round_rate) < 50:
                             rate = None
                             insert_data_list_noempty.append([broker_id, sec_id, secu_type, biz_type, adjust_status_out, None, rate, 1, 1, datetime.datetime.now(), forever_end_dt, None])
                         elif int(round_rate) > 200:
