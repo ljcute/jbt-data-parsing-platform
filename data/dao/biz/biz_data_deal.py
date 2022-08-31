@@ -54,14 +54,14 @@ def update_business_security(biz_date, secu_id, broker_id, biz_type):
 
 
 def query_business_security_item(biz_dt, biz_type, broker_id):
-    sql = f'select row_id,broker_id,secu_id,biz_type,adjust_type,pre_value,cur_value from t_broker_mt_business_security ' \
+    sql = f'select row_id,broker_id,secu_id,secu_type,biz_type,adjust_type,pre_value,cur_value from t_broker_mt_business_security ' \
           f'where start_dt <= {biz_dt} < end_dt and biz_type ={biz_type} and broker_id = {broker_id} and data_status=1 and biz_status=1'
     rs = db.select_all(sql)
     columns = []
     for i in rs:
         columns.append(str(i[2]))
     df = pd.DataFrame(list(rs), index=columns,
-                      columns=['row_id', 'broker_id', 'secu_id', 'biz_type', 'adjust_type', 'pre_value', 'cur_value'])
+                      columns=['row_id', 'broker_id', 'secu_id', 'secu_type', 'biz_type', 'adjust_type', 'pre_value', 'cur_value'])
     return df
 
 

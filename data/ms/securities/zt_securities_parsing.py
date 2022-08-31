@@ -34,9 +34,9 @@ def zt_parsing_data(rs, data_):
 
         temp_data = securities_normal_parsing_data(rzrq_data)
         for temp in temp_data:
-            if len(temp) == 5:
-                rz_data.append([temp[0], temp[1], temp[2], temp[4]])
-                rq_data.append([temp[0], temp[1], temp[3], temp[4]])
+            if len(temp) == 6:
+                rz_data.append([temp[0], temp[1], temp[2], temp[4], temp[5]])
+                rq_data.append([temp[0], temp[1], temp[3], temp[4], temp[5]])
             else:
                 logger.error(f'该条记录无证券id{temp},需人工修复!')
 

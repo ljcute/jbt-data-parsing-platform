@@ -9,9 +9,14 @@ from data.ms.genralhandler import *
 
 
 def sz_parsing_data(rs, data_):
+    new_data = []
+    for dd in data_:
+        if dd[1] != '-':
+            new_data.append([dd[0], dd[1]])
+
     temp_list = []
     if rs[3] == '深圳交易所':
-        for data in data_:
+        for data in new_data:
             data[0] = data[0] + '.SZ'
             temp_list.append(data[0])
 
@@ -23,10 +28,12 @@ def sz_parsing_data(rs, data_):
     query_result = post_data_job(query_datas)
     sec_type_list = query_result['data']
     args = []
-    for temp_data in data_:
+    for temp_data in new_data:
         for sec in sec_type_list:
             if temp_data[0] == sec['sec_code_market']:
                 temp_data.append(sec['sec_id'])
+                secu_type = get_secu_type(sec['sec_category'])
+                temp_data.append(secu_type)
                 sec_code_market = sec['sec_code_market']
                 sec_category = sec['sec_category']
                 sec_type = None
@@ -45,6 +52,7 @@ def sz_parsing_data(rs, data_):
                     "update_flag": 1
                 }
                 args.append(args_dict)
+        logger.info(temp_data)
 
     sync_datas = {
         "module": "pysec.etl.sec360.api.sec_api",
@@ -53,13 +61,13 @@ def sz_parsing_data(rs, data_):
     }
     post_data_job(sync_datas)
     if rs[2] == '2':
-        sz_data_parsing(rs, 3, data_)
+        sz_data_parsing(rs, 3, new_data)
     elif rs[2] == '3':
         logger.info(f'融资标的证券解析')
-        sz_data_parsing(rs, 1, data_)
+        sz_data_parsing(rs, 1, new_data)
         time.sleep(5)
         logger.info(f'融券标的证券解析')
-        sz_data_parsing(rs, 2, data_)
+        sz_data_parsing(rs, 2, new_data)
 
 
 def sz_data_parsing(rs, biz_type, data_):
@@ -72,29 +80,43 @@ def sz_data_parsing(rs, biz_type, data_):
     result = query_business_security_item(str(rs[1]), biz_type, broker_id)
     if result.empty:
         # 查询结果为空，第一次处理，从数据采集平台爬取到的数据进行入库处理,调整类型为调入
+        logger.info(f'进入为空的判断...')
         insert_data_list = []
         for i in data_:
-            if i[-1]:
-                insert_data_list.append([broker_id, i[-1], biz_type, adjust_status_in, None, None, 1, 1, rs[1],
+            if len(i) == 4:
+                insert_data_list.append([broker_id, None if i[2] == '-' else i[2], i[3], biz_type, adjust_status_in, None, None, 1, 1, rs[1],
                                          forever_end_dt, None])
             else:
                 logger.error(f'该条数据无证券id，请检查!{i}')
                 invalid_data_list.append(i)
                 raise Exception(f'该条数据无证券id，请检查!{i}')
-        if len(data_) == len(insert_data_list) and len(data_) > 0 and len(insert_data_list) > 0:
+        if insert_data_list:
+            logger.info(f'深圳交易所业务数据入库开始...')
             insert_broker_mt_business_security(insert_data_list)
+            logger.info(f'深圳交易所业务数据入库完成，共{len(insert_data_list)}条')
+
     else:
+        logger.info(f'进入不为空的判断...')
         haved_list = []
         query_list = []
         for col in result.values.tolist():
             haved_list.append(col[2])
-        for row in data_:
-            query_list.append(row[-1])
 
-        s_list = list(set(haved_list).intersection(set(query_list)))
-        if not s_list:
+        for row in data_:
+            if len(row) == 4:
+                query_list.append(row[2])
+
+
+        s_list = list(set(query_list).difference(set(haved_list)))
+        if s_list:
             temp_insert_data_list = []
-            for b in query_list:
-                temp_insert_data_list.append([broker_id, b, biz_type, adjust_status_in, None, None, 1, 1,
-                                              datetime.datetime.now(), forever_end_dt, None])
+            for b in s_list:
+                for temp_data in data_:
+                    if b == temp_data[2]:
+                        secu_type = temp_data[3]
+                        temp_insert_data_list.append([broker_id, None if b == '-' else b, secu_type, biz_type, adjust_status_in, None, None, 1, 1,
+                                                      datetime.datetime.now(), forever_end_dt, None])
+            logger.info(f'深圳交易所业务数据入库开始...')
             insert_broker_mt_business_security(temp_insert_data_list)
+            logger.info(f'深圳交易所业务数据入库完成，共{len(temp_insert_data_list)}条')
+
