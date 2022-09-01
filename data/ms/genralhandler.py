@@ -24,16 +24,21 @@ def get_adjust_status_by_two_rate(pre_value, current_rate):
     if current_rate is None or current_rate == '-' or current_rate == '--':  # 当前rate是'-'表示调出
         return adjust_status_out
 
-    pre_value2 = Decimal(pre_value).quantize(Decimal('0.00'))
-    current_value2 = Decimal(current_rate).quantize(Decimal('0.00'))
+    if pre_value is None and current_rate is None:
+        return adjust_status_invariant
 
-    result = pre_value2.compare(current_value2)
+    if pre_value is None and current_rate is not None:
+        return adjust_status_in
 
-    if result == 1:
-        return adjust_status_low
-    elif result == -1:
-        return adjust_status_high
-    return adjust_status_invariant  # 不变
+    if pre_value is not None and current_rate is not None:
+        pre_value2 = Decimal(pre_value).quantize(Decimal('0.00'))
+        current_value2 = Decimal(current_rate).quantize(Decimal('0.00'))
+        result = pre_value2.compare(current_value2)
+        if result == 1:
+            return adjust_status_low
+        elif result == -1:
+            return adjust_status_high
+        return adjust_status_invariant  # 不变
 
 
 # 判断df中是否存在某个字段
@@ -46,6 +51,16 @@ def df_exists_index(df, sec_code, sec_id):
     except Exception as es:
         logger.error(es)
     return None
+
+
+# 判断券商状态设置
+def rate_is_normal_one(rate):
+    if rate == '作废' or rate == '禁用' or rate == '限制':
+        right_rate = None
+    else:
+        right_rate = round(float(str(rate)) * 100, 3)
+
+    return right_rate
 
 
 # 调用360etl接口
@@ -233,19 +248,25 @@ def securities_bzj_parsing_data(rs, biz_type, data_):
                 rate = int(i[3])
                 if i[5] == 'stock':
                     if 0 <= rate <= 70:
-                        insert_data_list.append([broker_id, i[4], i[5], biz_type, adjust_status_in, None, rate, 1, 1, rs[1], forever_end_dt, None])
+                        insert_data_list.append(
+                            [broker_id, i[4], i[5], biz_type, adjust_status_in, None, rate, 1, 1, rs[1], forever_end_dt,
+                             None])
                     else:
                         logger.error(f'本次解析数据违反业务规则!存在严重异常,不落地数据库,解析结束!{i}')
                         raise Exception(f'本次解析数据违反业务规则!存在严重异常,不落地数据库,解析结束!{i}')
                 elif i[5] == 'fund':
                     if 0 <= rate <= 95:
-                        insert_data_list.append([broker_id, i[4], i[5], biz_type, adjust_status_in, None, rate, 1, 1, rs[1], forever_end_dt, None])
+                        insert_data_list.append(
+                            [broker_id, i[4], i[5], biz_type, adjust_status_in, None, rate, 1, 1, rs[1], forever_end_dt,
+                             None])
                     else:
                         logger.error(f'本次解析数据违反业务规则!存在严重异常,不落地数据库,解析结束!{i}')
                         raise Exception(f'本次解析数据违反业务规则!存在严重异常,不落地数据库,解析结束!{i}')
                 elif i[5] == 'bond':
                     if 0 <= rate <= 95:
-                        insert_data_list.append([broker_id, i[4], i[5], biz_type, adjust_status_in, None, rate, 1, 1, rs[1], forever_end_dt, None])
+                        insert_data_list.append(
+                            [broker_id, i[4], i[5], biz_type, adjust_status_in, None, rate, 1, 1, rs[1], forever_end_dt,
+                             None])
                     else:
                         logger.error(f'本次解析数据违反业务规则!存在严重异常,不落地数据库,解析结束!{i}')
                         raise Exception(f'本次解析数据违反业务规则!存在严重异常,不落地数据库,解析结束!{i}')
@@ -268,27 +289,60 @@ def securities_bzj_parsing_data(rs, biz_type, data_):
 
                 db_record = df_exists_index(result, sec_code, sec_id)
                 if db_record is not None:
-                    old_rate = db_record[6]
+                    old_rate = db_record[7]
                     adjust_status = get_adjust_status_by_two_rate(old_rate, round_rate)
                     if adjust_status != adjust_status_invariant:
-                        if adjust_status == adjust_status_high:
-                            # 调高 更新记录，更新cur_value,adjust_type,data_status,biz_status
+                        if adjust_status == adjust_status_in:
+                            # 调入 新增记录,更新之前一条位失效（仅限同一天内）
                             update_business_security((str(rs[1])).replace('-', ''), sec_id, broker_id, biz_type)
                             if secu_type == 'stock':
                                 if 0 <= int(round_rate) <= 70:
-                                    insert_data_list_noempty.append([broker_id, sec_id, secu_type, biz_type, adjust_status_high, old_rate, round_rate, 1, 1, datetime.datetime.now(), forever_end_dt, None])
+                                    insert_data_list_noempty.append(
+                                        [broker_id, sec_id, secu_type, biz_type, adjust_status_in, old_rate, round_rate,
+                                         1, 1, datetime.datetime.now(), forever_end_dt, None])
                                 else:
                                     logger.error(f'本次解析数据违反业务规则!存在严重异常,不落地数据库,解析结束!{row}')
                                     raise Exception(f'本次解析数据违反业务规则!存在严重异常,不落地数据库,解析结束!{row}')
                             elif secu_type == 'fund':
                                 if 0 <= int(round_rate) <= 95:
-                                    insert_data_list_noempty.append([broker_id, sec_id, secu_type, biz_type, adjust_status_high, old_rate, round_rate, 1, 1, datetime.datetime.now(), forever_end_dt, None])
+                                    insert_data_list_noempty.append(
+                                        [broker_id, sec_id, secu_type, biz_type, adjust_status_in, old_rate, round_rate,
+                                         1, 1, datetime.datetime.now(), forever_end_dt, None])
                                 else:
                                     logger.error(f'本次解析数据违反业务规则!存在严重异常,不落地数据库,解析结束!{row}')
                                     raise Exception(f'本次解析数据违反业务规则!存在严重异常,不落地数据库,解析结束!{row}')
                             elif secu_type == 'bond':
                                 if 0 <= int(round_rate) <= 95:
-                                    insert_data_list_noempty.append([broker_id, sec_id, secu_type, biz_type, adjust_status_high, old_rate, round_rate, 1, 1, datetime.datetime.now(), forever_end_dt, None])
+                                    insert_data_list_noempty.append(
+                                        [broker_id, sec_id, secu_type, biz_type, adjust_status_in, old_rate, round_rate,
+                                         1, 1, datetime.datetime.now(), forever_end_dt, None])
+                                else:
+                                    logger.error(f'本次解析数据违反业务规则!存在严重异常,不落地数据库,解析结束!{row}')
+                                    raise Exception(f'本次解析数据违反业务规则!存在严重异常,不落地数据库,解析结束!{row}')
+                        elif adjust_status == adjust_status_high:
+                            # 调高 更新记录，更新cur_value,adjust_type,data_status,biz_status
+                            update_business_security((str(rs[1])).replace('-', ''), sec_id, broker_id, biz_type)
+                            if secu_type == 'stock':
+                                if 0 <= int(round_rate) <= 70:
+                                    insert_data_list_noempty.append(
+                                        [broker_id, sec_id, secu_type, biz_type, adjust_status_high, old_rate,
+                                         round_rate, 1, 1, datetime.datetime.now(), forever_end_dt, None])
+                                else:
+                                    logger.error(f'本次解析数据违反业务规则!存在严重异常,不落地数据库,解析结束!{row}')
+                                    raise Exception(f'本次解析数据违反业务规则!存在严重异常,不落地数据库,解析结束!{row}')
+                            elif secu_type == 'fund':
+                                if 0 <= int(round_rate) <= 95:
+                                    insert_data_list_noempty.append(
+                                        [broker_id, sec_id, secu_type, biz_type, adjust_status_high, old_rate,
+                                         round_rate, 1, 1, datetime.datetime.now(), forever_end_dt, None])
+                                else:
+                                    logger.error(f'本次解析数据违反业务规则!存在严重异常,不落地数据库,解析结束!{row}')
+                                    raise Exception(f'本次解析数据违反业务规则!存在严重异常,不落地数据库,解析结束!{row}')
+                            elif secu_type == 'bond':
+                                if 0 <= int(round_rate) <= 95:
+                                    insert_data_list_noempty.append(
+                                        [broker_id, sec_id, secu_type, biz_type, adjust_status_high, old_rate,
+                                         round_rate, 1, 1, datetime.datetime.now(), forever_end_dt, None])
                                 else:
                                     logger.error(f'本次解析数据违反业务规则!存在严重异常,不落地数据库,解析结束!{row}')
                                     raise Exception(f'本次解析数据违反业务规则!存在严重异常,不落地数据库,解析结束!{row}')
@@ -297,41 +351,56 @@ def securities_bzj_parsing_data(rs, biz_type, data_):
                             update_business_security((str(rs[1])).replace('-', ''), sec_id, broker_id, biz_type)
                             if secu_type == 'stock':
                                 if 0 <= int(round_rate) <= 70:
-                                    insert_data_list_noempty.append([broker_id, sec_id, secu_type, biz_type, adjust_status_low, old_rate, round_rate, 1, 1, datetime.datetime.now(), forever_end_dt, None])
+                                    insert_data_list_noempty.append(
+                                        [broker_id, sec_id, secu_type, biz_type, adjust_status_low, old_rate,
+                                         round_rate, 1, 1, datetime.datetime.now(), forever_end_dt, None])
                                 else:
                                     logger.error(f'本次解析数据违反业务规则!存在严重异常,不落地数据库,解析结束!{row}')
                                     raise Exception(f'本次解析数据违反业务规则!存在严重异常,不落地数据库,解析结束!{row}')
                             elif secu_type == 'fund':
                                 if 0 <= int(round_rate) <= 95:
-                                    insert_data_list_noempty.append([broker_id, sec_id, secu_type, biz_type, adjust_status_low, old_rate, round_rate, 1, 1, datetime.datetime.now(), forever_end_dt, None])
+                                    insert_data_list_noempty.append(
+                                        [broker_id, sec_id, secu_type, biz_type, adjust_status_low, old_rate,
+                                         round_rate, 1, 1, datetime.datetime.now(), forever_end_dt, None])
                                 else:
                                     logger.error(f'本次解析数据违反业务规则!存在严重异常,不落地数据库,解析结束!{row}')
                                     raise Exception(f'本次解析数据违反业务规则!存在严重异常,不落地数据库,解析结束!{row}')
                             elif secu_type == 'bond':
                                 if 0 <= int(round_rate) <= 95:
-                                    insert_data_list_noempty.append([broker_id, sec_id, secu_type, biz_type, adjust_status_low, old_rate, round_rate, 1, 1, datetime.datetime.now(), forever_end_dt, None])
+                                    insert_data_list_noempty.append(
+                                        [broker_id, sec_id, secu_type, biz_type, adjust_status_low, old_rate,
+                                         round_rate, 1, 1, datetime.datetime.now(), forever_end_dt, None])
                                 else:
                                     logger.error(f'本次解析数据违反业务规则!存在严重异常,不落地数据库,解析结束!{row}')
                                     raise Exception(f'本次解析数据违反业务规则!存在严重异常,不落地数据库,解析结束!{row}')
                         elif adjust_status == adjust_status_out:
+                            update_business_security((str(rs[1])).replace('-', ''), sec_id, broker_id, biz_type)
                             # 调出 更新记录，rate置为空，新增一条调处记录，更新其他字段,
-                            insert_data_list_noempty.append([broker_id, sec_id, secu_type, biz_type, adjust_status_out, old_rate, None, 1, 1, datetime.datetime.now(), forever_end_dt, None])
+                            insert_data_list_noempty.append(
+                                [broker_id, sec_id, secu_type, biz_type, adjust_status_out, old_rate, None, 1, 1,
+                                 datetime.datetime.now(), forever_end_dt, None])
                 else:
                     if secu_type == 'stock':
                         if 0 <= int(round_rate) <= 70:
-                            insert_data_list_noempty.append([broker_id, sec_id, secu_type, biz_type, adjust_status_in, None, round_rate, 1, 1, datetime.datetime.now(), forever_end_dt, None])
+                            insert_data_list_noempty.append(
+                                [broker_id, sec_id, secu_type, biz_type, adjust_status_in, None, round_rate, 1, 1,
+                                 datetime.datetime.now(), forever_end_dt, None])
                         else:
                             logger.error(f'本次解析数据违反业务规则!存在严重异常,不落地数据库,解析结束!{row}')
                             raise Exception(f'本次解析数据违反业务规则!存在严重异常,不落地数据库,解析结束!{row}')
                     elif secu_type == 'fund':
                         if 0 <= int(round_rate) <= 95:
-                            insert_data_list_noempty.append([broker_id, sec_id, secu_type, biz_type, adjust_status_in, None, round_rate, 1, 1, datetime.datetime.now(), forever_end_dt, None])
+                            insert_data_list_noempty.append(
+                                [broker_id, sec_id, secu_type, biz_type, adjust_status_in, None, round_rate, 1, 1,
+                                 datetime.datetime.now(), forever_end_dt, None])
                         else:
                             logger.error(f'本次解析数据违反业务规则!存在严重异常,不落地数据库,解析结束!{row}')
                             raise Exception(f'本次解析数据违反业务规则!存在严重异常,不落地数据库,解析结束!{row}')
                     elif secu_type == 'bond':
                         if 0 <= int(round_rate) <= 95:
-                            insert_data_list_noempty.append([broker_id, sec_id, secu_type, biz_type, adjust_status_in, None, round_rate, 1, 1, datetime.datetime.now(), forever_end_dt, None])
+                            insert_data_list_noempty.append(
+                                [broker_id, sec_id, secu_type, biz_type, adjust_status_in, None, round_rate, 1, 1,
+                                 datetime.datetime.now(), forever_end_dt, None])
                         else:
                             logger.error(f'本次解析数据违反业务规则!存在严重异常,不落地数据库,解析结束!{row}')
                             raise Exception(f'本次解析数据违反业务规则!存在严重异常,不落地数据库,解析结束!{row}')
@@ -401,19 +470,22 @@ def securities_bzj_parsing_data_no_market(rs, data_):
                 rate = int(i[2])
                 if i[4] == 'stock':
                     if 0 <= rate <= 70:
-                        insert_data_list.append([broker_id, i[3], i[4], 3, adjust_status_in, None, i[2], 1, 1, rs[1], forever_end_dt, None])
+                        insert_data_list.append(
+                            [broker_id, i[3], i[4], 3, adjust_status_in, None, i[2], 1, 1, rs[1], forever_end_dt, None])
                     else:
                         logger.error(f'本次解析数据违反业务规则!存在严重异常,不落地数据库,解析结束!{i}')
                         raise Exception(f'本次解析数据违反业务规则!存在严重异常,不落地数据库,解析结束!{i}')
                 elif i[4] == 'fund':
                     if 0 <= rate <= 95:
-                        insert_data_list.append([broker_id, i[3], i[4], 3, adjust_status_in, None, i[2], 1, 1, rs[1], forever_end_dt, None])
+                        insert_data_list.append(
+                            [broker_id, i[3], i[4], 3, adjust_status_in, None, i[2], 1, 1, rs[1], forever_end_dt, None])
                     else:
                         logger.error(f'本次解析数据违反业务规则!存在严重异常,不落地数据库,解析结束!{i}')
                         raise Exception(f'本次解析数据违反业务规则!存在严重异常,不落地数据库,解析结束!{i}')
                 elif i[4] == 'bond':
                     if 0 < rate <= 95:
-                        insert_data_list.append([broker_id, i[3], i[4], 3, adjust_status_in, None, i[2], 1, 1, rs[1], forever_end_dt, None])
+                        insert_data_list.append(
+                            [broker_id, i[3], i[4], 3, adjust_status_in, None, i[2], 1, 1, rs[1], forever_end_dt, None])
                     else:
                         logger.error(f'本次解析数据违反业务规则!存在严重异常,不落地数据库,解析结束!{i}')
                         raise Exception(f'本次解析数据违反业务规则!存在严重异常,不落地数据库,解析结束!{i}')
@@ -436,27 +508,60 @@ def securities_bzj_parsing_data_no_market(rs, data_):
 
                 db_record = df_exists_index(result, sec_code, sec_id)
                 if db_record is not None:
-                    old_rate = db_record[6]
+                    old_rate = db_record[7]
                     adjust_status = get_adjust_status_by_two_rate(old_rate, round_rate)
                     if adjust_status != adjust_status_invariant:
-                        if adjust_status == adjust_status_high:
-                            # 调高 更新记录，更新cur_value,adjust_type,data_status,biz_status
+                        if adjust_status == adjust_status_in:
+                            # 调入 新增记录,更新之前一条位失效（仅限同一天内）
                             update_business_security((str(rs[1])).replace('-', ''), sec_id, broker_id, 3)
                             if secu_type == 'stock':
                                 if 0 <= int(round_rate) <= 70:
-                                    insert_data_list_noempty.append([broker_id, sec_id, secu_type, 3, adjust_status_high, old_rate, round_rate, 1, 1, datetime.datetime.now(), forever_end_dt, None])
+                                    insert_data_list_noempty.append(
+                                        [broker_id, sec_id, secu_type, 3, adjust_status_in, old_rate, round_rate, 1, 1,
+                                         datetime.datetime.now(), forever_end_dt, None])
                                 else:
                                     logger.error(f'本次解析数据违反业务规则!存在严重异常,不落地数据库,解析结束!{row}')
                                     raise Exception(f'本次解析数据违反业务规则!存在严重异常,不落地数据库,解析结束!{row}')
                             elif secu_type == 'fund':
                                 if 0 <= int(round_rate) <= 95:
-                                    insert_data_list_noempty.append([broker_id, sec_id, secu_type, 3, adjust_status_high, old_rate, round_rate, 1,1, datetime.datetime.now(), forever_end_dt, None])
+                                    insert_data_list_noempty.append(
+                                        [broker_id, sec_id, secu_type, 3, adjust_status_in, old_rate, round_rate, 1, 1,
+                                         datetime.datetime.now(), forever_end_dt, None])
                                 else:
                                     logger.error(f'本次解析数据违反业务规则!存在严重异常,不落地数据库,解析结束!{row}')
                                     raise Exception(f'本次解析数据违反业务规则!存在严重异常,不落地数据库,解析结束!{row}')
                             elif secu_type == 'bond':
                                 if 0 <= int(round_rate) <= 95:
-                                    insert_data_list_noempty.append([broker_id, sec_id, secu_type, 3, adjust_status_high, old_rate, round_rate, 1,1, datetime.datetime.now(), forever_end_dt, None])
+                                    insert_data_list_noempty.append(
+                                        [broker_id, sec_id, secu_type, 3, adjust_status_in, old_rate, round_rate, 1, 1,
+                                         datetime.datetime.now(), forever_end_dt, None])
+                                else:
+                                    logger.error(f'本次解析数据违反业务规则!存在严重异常,不落地数据库,解析结束!{row}')
+                                    raise Exception(f'本次解析数据违反业务规则!存在严重异常,不落地数据库,解析结束!{row}')
+                        elif adjust_status == adjust_status_high:
+                            # 调高 更新记录，更新cur_value,adjust_type,data_status,biz_status
+                            update_business_security((str(rs[1])).replace('-', ''), sec_id, broker_id, 3)
+                            if secu_type == 'stock':
+                                if 0 <= int(round_rate) <= 70:
+                                    insert_data_list_noempty.append(
+                                        [broker_id, sec_id, secu_type, 3, adjust_status_high, old_rate, round_rate, 1,
+                                         1, datetime.datetime.now(), forever_end_dt, None])
+                                else:
+                                    logger.error(f'本次解析数据违反业务规则!存在严重异常,不落地数据库,解析结束!{row}')
+                                    raise Exception(f'本次解析数据违反业务规则!存在严重异常,不落地数据库,解析结束!{row}')
+                            elif secu_type == 'fund':
+                                if 0 <= int(round_rate) <= 95:
+                                    insert_data_list_noempty.append(
+                                        [broker_id, sec_id, secu_type, 3, adjust_status_high, old_rate, round_rate, 1,
+                                         1, datetime.datetime.now(), forever_end_dt, None])
+                                else:
+                                    logger.error(f'本次解析数据违反业务规则!存在严重异常,不落地数据库,解析结束!{row}')
+                                    raise Exception(f'本次解析数据违反业务规则!存在严重异常,不落地数据库,解析结束!{row}')
+                            elif secu_type == 'bond':
+                                if 0 <= int(round_rate) <= 95:
+                                    insert_data_list_noempty.append(
+                                        [broker_id, sec_id, secu_type, 3, adjust_status_high, old_rate, round_rate, 1,
+                                         1, datetime.datetime.now(), forever_end_dt, None])
                                 else:
                                     logger.error(f'本次解析数据违反业务规则!存在严重异常,不落地数据库,解析结束!{row}')
                                     raise Exception(f'本次解析数据违反业务规则!存在严重异常,不落地数据库,解析结束!{row}')
@@ -465,25 +570,34 @@ def securities_bzj_parsing_data_no_market(rs, data_):
                             update_business_security((str(rs[1])).replace('-', ''), sec_id, broker_id, 3)
                             if secu_type == 'stock':
                                 if 0 <= int(round_rate) <= 70:
-                                    insert_data_list_noempty.append([broker_id, sec_id, secu_type, 3, adjust_status_low, old_rate, round_rate, 1, 1, datetime.datetime.now(), forever_end_dt, None])
+                                    insert_data_list_noempty.append(
+                                        [broker_id, sec_id, secu_type, 3, adjust_status_low, old_rate, round_rate, 1, 1,
+                                         datetime.datetime.now(), forever_end_dt, None])
                                 else:
                                     logger.error(f'本次解析数据违反业务规则!存在严重异常,不落地数据库,解析结束!{row}')
                                     raise Exception(f'本次解析数据违反业务规则!存在严重异常,不落地数据库,解析结束!{row}')
                             elif secu_type == 'fund':
                                 if 0 <= int(round_rate) <= 95:
-                                    insert_data_list_noempty.append([broker_id, sec_id, secu_type, 3, adjust_status_low, old_rate, round_rate, 1,1, datetime.datetime.now(), forever_end_dt, None])
+                                    insert_data_list_noempty.append(
+                                        [broker_id, sec_id, secu_type, 3, adjust_status_low, old_rate, round_rate, 1, 1,
+                                         datetime.datetime.now(), forever_end_dt, None])
                                 else:
                                     logger.error(f'本次解析数据违反业务规则!存在严重异常,不落地数据库,解析结束!{row}')
                                     raise Exception(f'本次解析数据违反业务规则!存在严重异常,不落地数据库,解析结束!{row}')
                             elif secu_type == 'bond':
                                 if 0 <= int(round_rate) <= 95:
-                                    insert_data_list_noempty.append([broker_id, sec_id, secu_type, 3, adjust_status_low, old_rate, round_rate, 1,1, datetime.datetime.now(), forever_end_dt, None])
+                                    insert_data_list_noempty.append(
+                                        [broker_id, sec_id, secu_type, 3, adjust_status_low, old_rate, round_rate, 1, 1,
+                                         datetime.datetime.now(), forever_end_dt, None])
                                 else:
                                     logger.error(f'本次解析数据违反业务规则!存在严重异常,不落地数据库,解析结束!{row}')
                                     raise Exception(f'本次解析数据违反业务规则!存在严重异常,不落地数据库,解析结束!{row}')
                         elif adjust_status == adjust_status_out:
+                            update_business_security((str(rs[1])).replace('-', ''), sec_id, broker_id, 3)
                             # 调出 更新记录，rate置为空，新增一条调处记录，更新其他字段,
-                            insert_data_list_noempty.append([broker_id, sec_id, secu_type, 3, adjust_status_out, old_rate, None, 1, 1, datetime.datetime.now(), forever_end_dt, None])
+                            insert_data_list_noempty.append(
+                                [broker_id, sec_id, secu_type, 3, adjust_status_out, old_rate, None, 1, 1,
+                                 datetime.datetime.now(), forever_end_dt, None])
                 else:
                     if secu_type == 'stock':
                         if 0 <= int(round_rate) <= 70:
@@ -653,24 +767,32 @@ def securities_rzrq_parsing_data(rs, biz_type, data_):
                     # 融资
                     if int(i[2]) < 100:
                         rate = None
-                        insert_data_list.append([broker_id, i[3], i[4], biz_type, adjust_status_out, None, rate, 1, 1, rs[1], forever_end_dt, None])
+                        insert_data_list.append(
+                            [broker_id, i[3], i[4], biz_type, adjust_status_out, None, rate, 1, 1, rs[1],
+                             forever_end_dt, None])
                     elif int(i[2]) > 200:
                         logger.error(f'本次解析数据违反业务规则!存在严重异常,不落地数据库,解析结束!{i}')
                         raise Exception(f'本次解析数据违反业务规则!存在严重异常,不落地数据库,解析结束!{i}')
                     else:
                         rate = int(i[2])
-                        insert_data_list.append([broker_id, i[3], i[4], biz_type, adjust_status_in, None, rate, 1, 1, rs[1], forever_end_dt, None])
+                        insert_data_list.append(
+                            [broker_id, i[3], i[4], biz_type, adjust_status_in, None, rate, 1, 1, rs[1], forever_end_dt,
+                             None])
                 elif biz_type == 2:
                     # 融券
                     if int(i[2]) < 50:
                         rate = None
-                        insert_data_list.append([broker_id, i[3], i[4], biz_type, adjust_status_out, None, rate, 1, 1, rs[1], forever_end_dt, None])
+                        insert_data_list.append(
+                            [broker_id, i[3], i[4], biz_type, adjust_status_out, None, rate, 1, 1, rs[1],
+                             forever_end_dt, None])
                     elif int(i[2]) > 200:
                         logger.error(f'本次解析数据违反业务规则!存在严重异常,不落地数据库,解析结束!{i}')
                         raise Exception(f'本次解析数据违反业务规则!存在严重异常,不落地数据库,解析结束!{i}')
                     else:
                         rate = int(i[2])
-                        insert_data_list.append([broker_id, i[3], i[4], biz_type, adjust_status_in, None, rate, 1, 1, rs[1], forever_end_dt, None])
+                        insert_data_list.append(
+                            [broker_id, i[3], i[4], biz_type, adjust_status_in, None, rate, 1, 1, rs[1], forever_end_dt,
+                             None])
             else:
                 logger.error(f'该条数据无证券id，请检查!{i}')
                 invalid_data_list.append(i)
@@ -691,36 +813,76 @@ def securities_rzrq_parsing_data(rs, biz_type, data_):
 
                 db_record = df_exists_index(result, sec_code, sec_id)
                 if db_record is not None:
-                    old_rate = db_record[6]
+                    old_rate = db_record[7]
                     adjust_status = get_adjust_status_by_two_rate(old_rate, round_rate)
                     if adjust_status != adjust_status_invariant:
                         logger.info(f'进入比例调整处理逻辑...')
-                        if adjust_status == adjust_status_high:
+                        if adjust_status == adjust_status_in:
+                            # 调入 新增记录,更新之前一条位失效（仅限同一天内）
+                            update_business_security((str(rs[1])).replace('-', ''), sec_id, broker_id, biz_type)
+                            if biz_type == 1:
+                                # 融资
+                                if int(round_rate) < 100:
+                                    rate = None
+                                    insert_data_list_noempty.append(
+                                        [broker_id, sec_id, secu_type, biz_type, adjust_status_out, old_rate, rate, 1,
+                                         1, datetime.datetime.now(), forever_end_dt, None])
+                                elif int(round_rate) > 200:
+                                    logger.error(f'本次解析数据违反业务规则!存在严重异常,不落地数据库,解析结束!{row}')
+                                    raise Exception(f'本次解析数据违反业务规则!存在严重异常,不落地数据库,解析结束!{row}')
+                                else:
+                                    rate = int(round_rate)
+                                    insert_data_list_noempty.append(
+                                        [broker_id, sec_id, secu_type, biz_type, adjust_status_in, old_rate, rate, 1, 1,
+                                         datetime.datetime.now(), forever_end_dt, None])
+                            elif biz_type == 2:
+                                # 融券
+                                if int(round_rate) < 50:
+                                    rate = None
+                                    insert_data_list_noempty.append(
+                                        [broker_id, sec_id, secu_type, biz_type, adjust_status_out, old_rate, rate, 1,
+                                         1, datetime.datetime.now(), forever_end_dt, None])
+                                elif int(round_rate) > 200:
+                                    logger.error(f'本次解析数据违反业务规则!存在严重异常,不落地数据库,解析结束!{row}')
+                                    raise Exception(f'本次解析数据违反业务规则!存在严重异常,不落地数据库,解析结束!{row}')
+                                else:
+                                    rate = int(round_rate)
+                                    insert_data_list_noempty.append(
+                                        [broker_id, sec_id, secu_type, biz_type, adjust_status_in, old_rate, rate, 1, 1,
+                                         datetime.datetime.now(), forever_end_dt, None])
+                        elif adjust_status == adjust_status_high:
                             # 调高 更新记录，更新cur_value,adjust_type,data_status,biz_status
                             update_business_security((str(rs[1])).replace('-', ''), sec_id, broker_id, biz_type)
                             if biz_type == 1:
                                 # 融资
                                 if int(round_rate) < 100:
                                     rate = None
-                                    insert_data_list_noempty.append([broker_id, sec_id, secu_type, biz_type, adjust_status_out, old_rate, rate, 1, 1, datetime.datetime.now(), forever_end_dt, None])
+                                    insert_data_list_noempty.append(
+                                        [broker_id, sec_id, secu_type, biz_type, adjust_status_out, old_rate, rate, 1,
+                                         1, datetime.datetime.now(), forever_end_dt, None])
                                 elif int(round_rate) > 200:
                                     logger.error(f'本次解析数据违反业务规则!存在严重异常,不落地数据库,解析结束!{row}')
                                     raise Exception(f'本次解析数据违反业务规则!存在严重异常,不落地数据库,解析结束!{row}')
                                 else:
                                     rate = int(round_rate)
-                                    insert_data_list_noempty.append([broker_id, sec_id, secu_type, biz_type, adjust_status_high, old_rate, rate, 1, 1, datetime.datetime.now(), forever_end_dt, None])
+                                    insert_data_list_noempty.append(
+                                        [broker_id, sec_id, secu_type, biz_type, adjust_status_high, old_rate, rate, 1,
+                                         1, datetime.datetime.now(), forever_end_dt, None])
                             elif biz_type == 2:
                                 # 融券
                                 if int(round_rate) < 50:
                                     rate = None
-                                    insert_data_list_noempty.append([broker_id, sec_id, secu_type, biz_type, adjust_status_out, old_rate, rate, 1, 1, datetime.datetime.now(), forever_end_dt, None])
+                                    insert_data_list_noempty.append(
+                                        [broker_id, sec_id, secu_type, biz_type, adjust_status_out, old_rate, rate, 1,
+                                         1, datetime.datetime.now(), forever_end_dt, None])
                                 elif int(round_rate) > 200:
                                     logger.error(f'本次解析数据违反业务规则!存在严重异常,不落地数据库,解析结束!{row}')
                                     raise Exception(f'本次解析数据违反业务规则!存在严重异常,不落地数据库,解析结束!{row}')
                                 else:
                                     rate = int(round_rate)
-                                    insert_data_list_noempty.append([broker_id, sec_id, secu_type, biz_type, adjust_status_high, old_rate, rate, 1, 1, datetime.datetime.now(), forever_end_dt, None])
-                            # insert_broker_mt_business_security(insert_data_list)
+                                    insert_data_list_noempty.append(
+                                        [broker_id, sec_id, secu_type, biz_type, adjust_status_high, old_rate, rate, 1,
+                                         1, datetime.datetime.now(), forever_end_dt, None])
                         elif adjust_status == adjust_status_low:
                             # 调低 更新记录，更新cur_value,adjust_type,data_status,biz_status
                             update_business_security((str(rs[1])).replace('-', ''), sec_id, broker_id, biz_type)
@@ -728,51 +890,69 @@ def securities_rzrq_parsing_data(rs, biz_type, data_):
                                 # 融资
                                 if int(round_rate) < 100:
                                     rate = None
-                                    insert_data_list_noempty.append([broker_id, sec_id, secu_type, biz_type, adjust_status_out, old_rate, rate, 1, 1, datetime.datetime.now(), forever_end_dt, None])
+                                    insert_data_list_noempty.append(
+                                        [broker_id, sec_id, secu_type, biz_type, adjust_status_out, old_rate, rate, 1,
+                                         1, datetime.datetime.now(), forever_end_dt, None])
                                 elif int(round_rate) > 200:
                                     logger.error(f'本次解析数据违反业务规则!存在严重异常,不落地数据库,解析结束!{row}')
                                     raise Exception(f'本次解析数据违反业务规则!存在严重异常,不落地数据库,解析结束!{row}')
                                 else:
                                     rate = int(round_rate)
-                                    insert_data_list_noempty.append([broker_id, sec_id, secu_type, biz_type, adjust_status_low, old_rate, rate, 1, 1, datetime.datetime.now(), forever_end_dt, None])
+                                    insert_data_list_noempty.append(
+                                        [broker_id, sec_id, secu_type, biz_type, adjust_status_low, old_rate, rate, 1,
+                                         1, datetime.datetime.now(), forever_end_dt, None])
                             elif biz_type == 2:
                                 # 融券
                                 if int(round_rate) < 50:
                                     rate = None
-                                    insert_data_list_noempty.append([broker_id, sec_id, secu_type, biz_type, adjust_status_out, old_rate, rate, 1, 1, datetime.datetime.now(), forever_end_dt, None])
+                                    insert_data_list_noempty.append(
+                                        [broker_id, sec_id, secu_type, biz_type, adjust_status_out, old_rate, rate, 1,
+                                         1, datetime.datetime.now(), forever_end_dt, None])
                                 elif int(round_rate) > 200:
                                     logger.error(f'本次解析数据违反业务规则!存在严重异常,不落地数据库,解析结束!{row}')
                                     raise Exception(f'本次解析数据违反业务规则!存在严重异常,不落地数据库,解析结束!{row}')
                                 else:
                                     rate = int(round_rate)
-                                    insert_data_list_noempty.append([broker_id, sec_id, secu_type, biz_type, adjust_status_low, old_rate, rate, 1, 1, datetime.datetime.now(), forever_end_dt, None])
-
+                                    insert_data_list_noempty.append(
+                                        [broker_id, sec_id, secu_type, biz_type, adjust_status_low, old_rate, rate, 1,
+                                         1, datetime.datetime.now(), forever_end_dt, None])
                         elif adjust_status == adjust_status_out:
+                            update_business_security((str(rs[1])).replace('-', ''), sec_id, broker_id, biz_type)
                             # 调出 更新记录，rate置为空，新增一条调处记录，更新其他字段,
-                            insert_data_list_noempty.append([broker_id, sec_id, secu_type, biz_type, adjust_status_out, old_rate, None, 1, 1, datetime.datetime.now(), forever_end_dt, None])
+                            insert_data_list_noempty.append(
+                                [broker_id, sec_id, secu_type, biz_type, adjust_status_out, old_rate, None, 1, 1,
+                                 datetime.datetime.now(), forever_end_dt, None])
                 else:
                     if biz_type == 1:
                         # 融资
                         if int(round_rate) < 100:
                             rate = None
-                            insert_data_list_noempty.append([broker_id, sec_id, secu_type, biz_type, adjust_status_out, None, rate, 1, 1, datetime.datetime.now(), forever_end_dt, None])
+                            insert_data_list_noempty.append(
+                                [broker_id, sec_id, secu_type, biz_type, adjust_status_out, None, rate, 1, 1,
+                                 datetime.datetime.now(), forever_end_dt, None])
                         elif int(round_rate) > 200:
                             logger.error(f'本次解析数据违反业务规则!存在严重异常,不落地数据库,解析结束!{row}')
                             raise Exception(f'本次解析数据违反业务规则!存在严重异常,不落地数据库,解析结束!{row}')
                         else:
                             rate = int(round_rate)
-                            insert_data_list_noempty.append([broker_id, sec_id, secu_type, biz_type, adjust_status_in, None, rate, 1, 1, datetime.datetime.now(), forever_end_dt, None])
+                            insert_data_list_noempty.append(
+                                [broker_id, sec_id, secu_type, biz_type, adjust_status_in, None, rate, 1, 1,
+                                 datetime.datetime.now(), forever_end_dt, None])
                     elif biz_type == 2:
                         # 融券
                         if int(round_rate) < 50:
                             rate = None
-                            insert_data_list_noempty.append([broker_id, sec_id, secu_type, biz_type, adjust_status_out, None, rate, 1, 1, datetime.datetime.now(), forever_end_dt, None])
+                            insert_data_list_noempty.append(
+                                [broker_id, sec_id, secu_type, biz_type, adjust_status_out, None, rate, 1, 1,
+                                 datetime.datetime.now(), forever_end_dt, None])
                         elif int(round_rate) > 200:
                             logger.error(f'本次解析数据违反业务规则!存在严重异常,不落地数据库,解析结束!{row}')
                             raise Exception(f'本次解析数据违反业务规则!存在严重异常,不落地数据库,解析结束!{row}')
                         else:
                             rate = int(round_rate)
-                            insert_data_list_noempty.append([broker_id, sec_id, secu_type, biz_type, adjust_status_in, None, rate, 1, 1, datetime.datetime.now(), forever_end_dt, None])
+                            insert_data_list_noempty.append(
+                                [broker_id, sec_id, secu_type, biz_type, adjust_status_in, None, rate, 1, 1,
+                                 datetime.datetime.now(), forever_end_dt, None])
             else:
                 logger.error(f'该条数据无证券id，请检查!{row}')
                 invalid_data_list.append(row)
@@ -855,10 +1035,19 @@ def securities_stockgroup_parsing_data(rs, biz_type, stockgroup_data):
 
                 db_record = df_exists_index(result, sec_code, sec_id)
                 if db_record is not None:
-                    old_rate = db_record[6]
+                    old_rate = db_record[7]
                     adjust_status = get_adjust_status_by_two_rate(old_rate, round_rate)
                     if adjust_status != adjust_status_invariant:
-                        if adjust_status == adjust_status_high:
+                        if adjust_status == adjust_status_in:
+                            # 调入 新增记录，更新之前的为失效（同一天内）
+                            update_business_security((str(rs[1])).replace('-', ''), sec_id, broker_id, biz_type)
+                            insert_data_list = [
+                                [broker_id, sec_id, secu_type, biz_type, adjust_status_in, old_rate, round_rate, 1, 1,
+                                 datetime.datetime.now(), forever_end_dt, None]]
+                            if insert_data_list:
+                                insert_broker_mt_business_security(insert_data_list)
+
+                        elif adjust_status == adjust_status_high:
                             # 调高 更新记录，更新cur_value,adjust_type,data_status,biz_status
                             update_business_security((str(rs[1])).replace('-', ''), sec_id, broker_id, biz_type)
 
@@ -877,9 +1066,10 @@ def securities_stockgroup_parsing_data(rs, biz_type, stockgroup_data):
                             if insert_data_list:
                                 insert_broker_mt_business_security(insert_data_list)
                         elif adjust_status == adjust_status_out:
+                            update_business_security((str(rs[1])).replace('-', ''), sec_id, broker_id, biz_type)
                             # 调出 更新记录，rate置为空，新增一条调处记录，更新其他字段,
                             insert_data_list = [
-                                [broker_id, sec_id, secu_type, biz_type, adjust_status_low, old_rate, None, 1, 1,
+                                [broker_id, sec_id, secu_type, biz_type, adjust_status_out, old_rate, None, 1, 1,
                                  datetime.datetime.now(), forever_end_dt, None]]
                             if insert_data_list:
                                 insert_broker_mt_business_security(insert_data_list)

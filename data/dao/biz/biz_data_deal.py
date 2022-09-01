@@ -48,8 +48,8 @@ def select_rate_from_security(secu_id, biz_dt):
 
 
 def update_business_security(biz_date, secu_id, broker_id, biz_type):
-    sql = f'update t_broker_mt_business_security set data_status =0,biz_status=2,end_dt={biz_date},update_dt = now() ' \
-          f'where secu_id = {secu_id} and broker_id = {broker_id} and biz_type = {biz_type}'
+    sql = f'update t_broker_mt_business_security set data_status =0,biz_status=2,end_dt= now(),update_dt = now() ' \
+          f'where secu_id = {secu_id} and broker_id = {broker_id} and biz_type = {biz_type} and start_dt <= {biz_date} < end_dt and data_status=1 and biz_status=1'
     db.commit_data(sql)
 
 
