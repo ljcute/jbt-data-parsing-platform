@@ -18,7 +18,9 @@ def sh_parsing_data(rs, data_):
     if rs[3] == '上海交易所':
         for data in new_data:
             data[1] = data[1] + '.SH'
-            temp_list.append(data[1])
+            rs = sec_code_rules_match(data[1])
+            if rs:
+                temp_list.append(rs['code'])
 
     query_datas = {
         "module": "pysec.etl.sec360.api.sec_api",

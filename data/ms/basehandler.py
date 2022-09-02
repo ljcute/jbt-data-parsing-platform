@@ -15,7 +15,7 @@ sys.path.append(BASE_DIR)
 from kafka import KafkaConsumer
 from data.dao.biz.biz_data_deal import *
 from data.dao.raw.raw_data_deal import *
-from data.ms.genralhandler import post_data_job
+from data.ms.genralhandler import post_data_job, sec_code_rules_match
 from data.ms.securities.cc_securities_parsing import cc_parsing_data
 from data.ms.securities.cj_securities_parsing import cj_parsing_data
 from data.ms.securities.ct_securities_parsing import ct_parsing_data
