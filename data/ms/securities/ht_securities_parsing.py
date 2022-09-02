@@ -20,7 +20,8 @@ def ht_parsing_data(rs, data_):
             market = data[0]
             sec_code = data[1]
             sec_name = data[2]
-            rate = round(float(str(data[3])) * 100, 3)
+            # rate = round(float(str(data[3])) * 100, 3)
+            rate = rate_is_normal_one(data[3])
             bzj_data.append([market, sec_code, sec_name, rate])
         securities_bzj_parsing_data(rs, 3, bzj_data)
         logger.info(f'华泰证券可充抵保证金证券解析结束...')
@@ -56,8 +57,10 @@ def ht_parsing_data(rs, data_):
         for data in data_:
             sec_code = data[1]
             sec_name = data[2]
-            rz_rate = round(float(str(data[3])) * 100, 3)
-            rq_rate = round(float(str(data[4])) * 100, 3)
+            # rz_rate = round(float(str(data[3])) * 100, 3)
+            # rq_rate = round(float(str(data[4])) * 100, 3)
+            rz_rate = rate_is_normal_one(data[3])
+            rq_rate = rate_is_normal_one(data[4])
             rzrq_data.append([sec_code, sec_name, rz_rate, rq_rate])
 
         temp_data = securities_normal_parsing_data(rzrq_data)

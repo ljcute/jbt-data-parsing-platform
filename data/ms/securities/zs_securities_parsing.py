@@ -19,7 +19,8 @@ def zs_parsing_data(rs, data_):
             market = data[0]
             sec_code = data[1]
             sec_name = data[2]
-            rate = round(float(str(data[3])) * 100, 3)
+            # rate = round(float(str(data[3])) * 100, 3)
+            rate = rate_is_normal_one(data[3])
             bzj_data.append([market, sec_code, sec_name, rate])
         securities_bzj_parsing_data(rs, 3, bzj_data)
         logger.info(f'招商证券可充抵保证金证券解析结束...')
@@ -29,7 +30,8 @@ def zs_parsing_data(rs, data_):
         for data in data_:
             sec_code = data[1]
             sec_name = data[2]
-            rate = round(float(str(data[3])) * 100, 3)
+            # rate = round(float(str(data[3])) * 100, 3)
+            rate = rate_is_normal_one(data[3])
             rz_data.append([sec_code, sec_name, rate])
 
         temp_data = securities_normal_parsing_data_no_market(rz_data)
@@ -46,7 +48,8 @@ def zs_parsing_data(rs, data_):
         for data in data_:
             sec_code = data[1]
             sec_name = data[2]
-            rate = round(float(str(data[3])) * 100, 3)
+            # rate = round(float(str(data[3])) * 100, 3)
+            rate = rate_is_normal_one(data[3])
             rq_data.append([sec_code, sec_name, rate])
 
         temp_data = securities_normal_parsing_data_no_market(rq_data)

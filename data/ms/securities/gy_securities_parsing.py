@@ -18,7 +18,8 @@ def gy_parsing_data(rs, data_):
         for data in data_:
             sec_code = data[1]
             sec_name = data[0]
-            rate = round(float(str(data[2])) * 100, 3)
+            # rate = round(float(str(data[2])) * 100, 3)
+            rate = rate_is_normal_one(data[2])
             bzj_data.append([sec_code, sec_name, rate])
         securities_bzj_parsing_data_no_market(rs, bzj_data)
         logger.info(f'国元证券可充抵保证金证券解析结束...')
@@ -28,7 +29,8 @@ def gy_parsing_data(rs, data_):
         for data in data_:
             sec_code = data[1]
             sec_name = data[0]
-            rate = round(float(str(data[2]).strip('%')), 3)
+            # rate = round(float(str(data[2]).strip('%')), 3)
+            rate = rate_is_normal_two(data[2])
             rz_data.append([sec_code, sec_name, rate])
 
         temp_data = securities_normal_parsing_data_no_market(rz_data)
@@ -46,7 +48,8 @@ def gy_parsing_data(rs, data_):
         for data in data_:
             sec_code = data[1]
             sec_name = data[0]
-            rate = round(float(str(data[2]).strip('%')), 3)
+            # rate = round(float(str(data[2]).strip('%')), 3)
+            rate = rate_is_normal_two(data[2])
             rq_data.append([sec_code, sec_name, rate])
 
         temp_data = securities_normal_parsing_data_no_market(rq_data)

@@ -18,7 +18,8 @@ def xy_parsing_data(rs, data_):
         for data in data_:
             sec_code = data[1]
             sec_name = data[2]
-            rate = round(float(str(data[3])) * 100, 3)
+            # rate = round(float(str(data[3])) * 100, 3)
+            rate = rate_is_normal_one(data[3])
             bzj_data.append([sec_code, sec_name, rate])
         securities_bzj_parsing_data_no_market(rs, bzj_data)
         logger.info(f'兴业证券可充抵保证金证券解析结束...')
@@ -28,8 +29,8 @@ def xy_parsing_data(rs, data_):
         for data in data_:
             sec_code = data[1]
             sec_name = data[2]
-            rz_rate = None if data[3] == '-' or data[3] == '/' else round(float(str(data[3])) * 100, 3)
-            rq_rate = None if data[4] == '-' or data[4] == '/' else round(float(str(data[4])) * 100, 3)
+            rz_rate = None if data[3] == '-' or data[3] == '/' else rate_is_normal_one(data[3])
+            rq_rate = None if data[4] == '-' or data[4] == '/' else rate_is_normal_one(data[4])
             rzrq_data.append([sec_code, sec_name, rz_rate, rq_rate])
 
         temp_data = securities_normal_parsing_data(rzrq_data)

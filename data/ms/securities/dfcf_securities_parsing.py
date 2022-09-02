@@ -20,7 +20,8 @@ def dfcf_parsing_data(rs, data_):
             market = data[3]
             sec_code = data[0]
             sec_name = data[1]
-            rate = round(float(str(data[2]).strip('%')), 3)
+            # rate = round(float(str(data[2]).strip('%')), 3)
+            rate = rate_is_normal_two(data[2])
             bzj_data.append([market, sec_code, sec_name, rate])
         securities_bzj_parsing_data(rs, 3, bzj_data)
         logger.info(f'东方财富证券可充抵保证金证券解析结束...')
@@ -57,8 +58,10 @@ def dfcf_parsing_data(rs, data_):
         for data in data_:
             sec_code = data[0]
             sec_name = data[1]
-            rz_rate = round(float(str(data[2]).strip('%')), 3)
-            rq_rate = round(float(str(data[3]).strip('%')), 3)
+            # rz_rate = round(float(str(data[2]).strip('%')), 3)
+            # rq_rate = round(float(str(data[3]).strip('%')), 3)
+            rz_rate = rate_is_normal_two(data[2])
+            rq_rate = rate_is_normal_two(data[3])
             rzrq_data.append([sec_code, sec_name, rz_rate, rq_rate])
 
         temp_data = securities_normal_parsing_data(rzrq_data)

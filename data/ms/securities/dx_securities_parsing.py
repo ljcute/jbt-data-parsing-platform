@@ -22,8 +22,8 @@ def dx_parsing_data(rs, data_):
         for data in data_:
             sec_code = data[1]
             sec_name = data[2]
-            rate = round(float(str(data[3]).strip('%')), 3)
-
+            # rate = round(float(str(data[3]).strip('%')), 3)
+            rate = rate_is_normal_two(data[3])
             bzj_data.append([sec_code, sec_name, rate])
         securities_bzj_parsing_data_no_market(rs, bzj_data)
         logger.info(f'东兴证券可充抵保证金证券解析结束...')
@@ -34,8 +34,10 @@ def dx_parsing_data(rs, data_):
         for data in data_:
             sec_code = data[1]
             sec_name = data[2]
-            rz_rate = round(float(str(data[3]).strip('%')), 3)
-            rq_rate = round(float(str(data[4]).strip('%')), 3)
+            # rz_rate = round(float(str(data[3]).strip('%')), 3)
+            # rq_rate = round(float(str(data[4]).strip('%')), 3)
+            rz_rate = rate_is_normal_two(data[2])
+            rq_rate = rate_is_normal_two(data[3])
             rzrq_data.append([sec_code, sec_name, rz_rate, rq_rate])
 
         temp_data = securities_normal_parsing_data(rzrq_data)
