@@ -68,6 +68,7 @@ def rate_is_normal_one(rate):
 # 证券代码规则匹配
 def sec_code_rules_match(code):
     # 处理是否带后缀
+    code = code.upper()
     if '.' in code:
         rs_list = code.split('.')
         if len(rs_list[0]) == 6:
