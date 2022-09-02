@@ -61,21 +61,23 @@ class BaseHandler(object):
         logger.info(f'============================')
         logger.info(f'数据解析开始......')
         recv_ = None
+        mq_content = None
         while True:
             for msg in consumer:
                 try:
                     recv = msg.value.decode('unicode_escape')
                     recv = recv[1:-1]
                     recv_ = eval(recv)
-                    logger.info(f'此次消费的消息内容为：{recv_}')
+                    mq_content = {'biz_dt': recv_['biz_dt'], 'data_type': recv_['data_type'], 'data_source': recv_['data_source'], 'message': recv_['message']}
+                    logger.info(f'此次消费的消息内容为：{mq_content}')
                     if recv_:
                         cls.parsing_data_job(recv_)
                     else:
-                        logger.error(f'消费消息失败，请检查{recv_}')
+                        logger.error(f'消费消息失败，请检查{mq_content}')
                     consumer.commit()
                     time.sleep(5)
                 except Exception as es:
-                    logger.error(f'此次解析任务失败{recv_}，请检查！{es}')
+                    logger.error(f'此次解析任务失败{mq_content}，请检查！{es}')
 
     # 进行业务数据解析
     @classmethod
