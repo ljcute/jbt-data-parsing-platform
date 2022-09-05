@@ -57,15 +57,16 @@ def df_exists_index(df, sec_code, sec_id):
 
 # 判断券商状态设置
 def rate_is_normal_one(rate):
-    if '作废' in rate or '禁用' in rate or '限制' in rate:
+    if '作废' in str(rate) or '禁用' in str(rate) or '限制' in str(rate):
         right_rate = None
     else:
         right_rate = round(float(str(rate)) * 100, 3)
 
     return right_rate
 
+
 def rate_is_normal_two(rate):
-    if '作废' in rate or '禁用' in rate or '限制' in rate:
+    if '作废' in str(rate) or '禁用' in str(rate) or '限制' in str(rate):
         right_rate = None
     else:
         right_rate = round(float(str(rate).strip('%')), 3)
@@ -698,7 +699,7 @@ def temp_deal(data, boName, market_flag):
         data_dict = {"boCode": code, "boName": boName}
         res = get_securities_type_job(data_dict)
         if res:
-            if 'ETF' in boName or 'LOF' in boName or '基金' in boName:
+            if 'ETF' in boName or 'LOF' in boName or '基金' in boName or boName.endswith('基'):
                 temp_type = 'fund'
                 if len(res) == 1:
                     if res[0]['boIdType'] == temp_type:
@@ -718,21 +719,21 @@ def temp_deal(data, boName, market_flag):
                         else:
                             continue
 
-                    # 说明没有查到证券id
-                    if len(data) == 4:
-                        logger.error(f'该证券代码{data}获取证券id和证券类型失败，请检查！')
-            elif '债' in boName:
+                # 说明没有查到证券id
+                if len(data) == 4:
+                    logger.error(f'该证券代码{data}获取证券id和证券类型失败，请检查！')
+            elif '债券' in boName or boName.endswith('债'):
                 temp_type = 'bond'
+                # 先匹配名称 若还是查不到证券id和类型再匹配类型
                 if len(res) == 1:
-                    if res[0]['boIdType'] == temp_type:
-                        # 提前知晓类型，就直接去判断类型，因为boid唯一
+                    if res[0]['boName'] == boName:
                         secu_id = res[0]['boId']
                         secu_type = res[0]['boIdType']
                         data.append(secu_id)
                         data.append(secu_type)
                 elif len(res) > 1:
                     for r in res:
-                        if r['boIdType'] == temp_type:
+                        if r['boName'] == boName:
                             secu_id = res[0]['boId']
                             secu_type = res[0]['boIdType']
                             data.append(secu_id)
@@ -741,9 +742,29 @@ def temp_deal(data, boName, market_flag):
                         else:
                             continue
 
-                    # 说明没有查到证券id
-                    if len(data) == 4:
-                        logger.error(f'该证券代码{data}获取证券id和证券类型失败，请检查！')
+                if len(data) == 4:
+                    # 匹配名字仍查不到证券id和类型，则匹配类型
+                    if len(res) == 1:
+                        if res[0]['boIdType'] == temp_type:
+                            # 提前知晓类型，就直接去判断类型，因为boid唯一
+                            secu_id = res[0]['boId']
+                            secu_type = res[0]['boIdType']
+                            data.append(secu_id)
+                            data.append(secu_type)
+                    elif len(res) > 1:
+                        for r in res:
+                            if r['boIdType'] == temp_type:
+                                secu_id = res[0]['boId']
+                                secu_type = res[0]['boIdType']
+                                data.append(secu_id)
+                                data.append(secu_type)
+                                break
+                            else:
+                                continue
+
+                # 说明没有查到证券id
+                if len(data) == 4:
+                    logger.error(f'该证券代码{data}获取证券id和证券类型失败，请检查！')
             else:
                 if len(res) == 1:
                     if res[0]['boName'] == boName and code in res[0]['boIdCode']:
@@ -764,9 +785,9 @@ def temp_deal(data, boName, market_flag):
                         else:
                             continue
 
-                    # 说明没有查到证券id
-                    if len(data) == 4:
-                        logger.error(f'该证券代码{data}获取证券id和证券类型失败，请检查！')
+                # 说明没有查到证券id
+                if len(data) == 4:
+                    logger.error(f'该证券代码{data}获取证券id和证券类型失败，请检查！')
         else:
             logger.error(f'该证券代码{data}获取证券id和证券类型失败，请检查！')
 
