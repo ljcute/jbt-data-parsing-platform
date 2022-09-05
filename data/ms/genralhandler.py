@@ -282,7 +282,8 @@ def securities_bzj_parsing_data(rs, biz_type, data_):
                             raise Exception(f'本次解析数据违反业务规则!存在严重异常,不落地数据库,解析结束!{i}')
             else:
                 invalid_data_list.append(i)
-        logger.error(f'如下数据无证券id，请检查!{invalid_data_list}')
+        if invalid_data_list:
+            logger.error(f'如下数据无证券id，请检查!{invalid_data_list}')
         if insert_data_list:
             logger.info(f'业务数据入库开始...')
             insert_broker_mt_business_security(insert_data_list)
@@ -417,7 +418,8 @@ def securities_bzj_parsing_data(rs, biz_type, data_):
                                 raise Exception(f'本次解析数据违反业务规则!存在严重异常,不落地数据库,解析结束!{row}')
             else:
                 invalid_data_list.append(row)
-        logger.error(f'如下数据无证券id，请检查!{invalid_data_list}')
+        if invalid_data_list:
+            logger.error(f'如下数据无证券id，请检查!{invalid_data_list}')
         if insert_data_list_noempty:
             logger.info(f'业务数据入库开始,t_broker_mt_business_security...')
             insert_broker_mt_business_security(insert_data_list_noempty)
@@ -472,7 +474,8 @@ def securities_bzj_parsing_data_no_market(rs, data_):
                             raise Exception(f'本次解析数据违反业务规则!存在严重异常,不落地数据库,解析结束!{i}')
             else:
                 invalid_data_list.append(i)
-        logger.error(f'如下数据无证券id，请检查!{invalid_data_list}')
+        if invalid_data_list:
+            logger.error(f'如下数据无证券id，请检查!{invalid_data_list}')
         if insert_data_list:
             logger.info(f'业务数据入库开始...')
             insert_broker_mt_business_security(insert_data_list)
@@ -607,7 +610,8 @@ def securities_bzj_parsing_data_no_market(rs, data_):
                                 raise Exception(f'本次解析数据违反业务规则!存在严重异常,不落地数据库,解析结束!{row}')
             else:
                 invalid_data_list.append(row)
-        logger.error(f'如下数据无证券id，请检查!{invalid_data_list}')
+        if invalid_data_list:
+            logger.error(f'如下数据无证券id，请检查!{invalid_data_list}')
         if insert_data_list_noempty:
             logger.info(f'业务数据入库开始...')
             insert_broker_mt_business_security(insert_data_list_noempty)
@@ -822,7 +826,8 @@ def securities_rzrq_parsing_data(rs, biz_type, data_):
                                  None])
             else:
                 invalid_data_list.append(i)
-        logger.error(f'如下数据无证券id，请检查!{invalid_data_list}')
+        if invalid_data_list:
+            logger.error(f'如下数据无证券id，请检查!{invalid_data_list}')
         if insert_data_list:
             logger.info(f'业务数据入库开始...')
             insert_broker_mt_business_security(insert_data_list)
@@ -983,7 +988,8 @@ def securities_rzrq_parsing_data(rs, biz_type, data_):
                                      datetime.datetime.now(), forever_end_dt, None])
             else:
                 invalid_data_list.append(row)
-        logger.error(f'如下数据无证券id，请检查!{invalid_data_list}')
+        if invalid_data_list:
+            logger.error(f'如下数据无证券id，请检查!{invalid_data_list}')
 
         if insert_data_list_noempty:
             logger.info(f'业务数据入库开始...')
@@ -1016,7 +1022,8 @@ def securities_stockgroup_parsing_data(rs, biz_type, stockgroup_data):
                      forever_end_dt, None])
             else:
                 invalid_data_list.append(i)
-        logger.error(f'如下数据无证券id，请检查!{invalid_data_list}')
+        if invalid_data_list:
+            logger.error(f'如下数据无证券id，请检查!{invalid_data_list}')
         if insert_data_list:
             logger.info(f'业务数据入库开始...')
             insert_broker_mt_business_security(insert_data_list)
@@ -1077,4 +1084,5 @@ def securities_stockgroup_parsing_data(rs, biz_type, stockgroup_data):
                         insert_broker_mt_business_security(insert_list)
             else:
                 invalid_data_list.append(row)
-        logger.error(f'如下数据无证券id，请检查!{invalid_data_list}')
+        if invalid_data_list:
+            logger.error(f'如下数据无证券id，请检查!{invalid_data_list}')
