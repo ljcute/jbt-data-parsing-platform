@@ -722,7 +722,7 @@ def temp_deal(data, boName, market_flag):
                     if len(data) == 4:
                         logger.error(f'该证券代码{data}获取证券id和证券类型失败，请检查！')
             elif '债' in boName:
-                temp_type = 'stock'
+                temp_type = 'bond'
                 if len(res) == 1:
                     if res[0]['boIdType'] == temp_type:
                         # 提前知晓类型，就直接去判断类型，因为boid唯一
