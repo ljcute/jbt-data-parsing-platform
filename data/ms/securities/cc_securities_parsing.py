@@ -39,7 +39,7 @@ def cc_parsing_data(rs, data_):
                 logger.error(f'该条记录无证券id{temp},需人工修复!')
                 error_list.append(temp)
 
-        securities_rzrq_parsing_data(rs, 1, rz_data)
+        securities_rzrq_parsing_data(rs, 1, temp_data)
         logger.info(f'长城证券融资标的证券解析结束...')
 
     elif rs[2] == '5':
@@ -57,7 +57,7 @@ def cc_parsing_data(rs, data_):
                 logger.error(f'该条记录无证券id{temp},需人工修复!')
                 error_list.append(temp)
 
-        securities_rzrq_parsing_data(rs, 2, rq_data)
+        securities_rzrq_parsing_data(rs, 2, temp_data)
         logger.info(f'长城证券融券标的证券解析结束...')
 
 

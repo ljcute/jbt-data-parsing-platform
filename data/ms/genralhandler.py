@@ -73,6 +73,7 @@ def rate_is_normal_two(rate):
 
     return right_rate
 
+
 # 证券代码规则匹配
 def sec_code_rules_match(code):
     # 处理是否带后缀
@@ -214,30 +215,17 @@ def get_securities_type_job(data):
 
 # 融资融券组合数据获取证券id公共方法-- 融资融券合并,不带市场market_flag为False，无后缀
 def securities_normal_parsing_data(data):
-    for data_ in data:
-        boName = str(data_[1]).replace(' ', '').replace('Ａ', 'A').replace('⑶', '(3)').replace('⑷', '(4)').replace(
-            '⑼', '(9)')
-        temp_deal(data_, boName, False)
-
-    return data
+    return temp_deal(data, False)
 
 
 # 融资融券组合数据获取证券id公共方法-- 融资融券分开,不带市场market_flag为False，无后缀
 def securities_normal_parsing_data_no_market(data):
-    for data_ in data:
-        boName = str(data_[1]).replace(' ', '').replace('Ａ', 'A').replace('⑶', '(3)').replace('⑷', '(4)').replace(
-            '⑼', '(9)')
-        temp_deal(data_, boName, False)
-
-    return data
+    return temp_deal(data, False)
 
 
 # 可充抵保证金rate解析公共方法--带市场的处理，market_flag为True，无后缀
 def securities_bzj_parsing_data(rs, biz_type, data_):
-    for data in data_:
-        boName = str(data[2]).replace(' ', '').replace('Ａ', 'A').replace('⑶', '(3)').replace('⑷', '(4)').replace(
-            '⑼', '(9)')
-        temp_deal(data, boName, True)
+    real_data = temp_deal(data_, True)
 
     invalid_data_list = []
     if rs[3] == '上海交易所' or rs[3] == '深圳交易所':
@@ -250,7 +238,7 @@ def securities_bzj_parsing_data(rs, biz_type, data_):
         logger.info(f'进入为空的判断')
         # 查询结果为空，第一次处理，从数据采集平台爬取到的数据进行入库处理,调整类型为调入
         insert_data_list = []
-        for i in data_:
+        for i in real_data:
             if len(i) == 6:
                 if i[3] is not None:
                     rate = int(i[3])
@@ -292,7 +280,7 @@ def securities_bzj_parsing_data(rs, biz_type, data_):
     else:
         logger.info(f'进入不为空的判断')
         insert_data_list_noempty = []
-        for row in data_:
+        for row in real_data:
             if len(row) == 6:
                 if row[3] is not None:
                     sec_code = row[1]
@@ -311,7 +299,8 @@ def securities_bzj_parsing_data(rs, biz_type, data_):
                                 if secu_type == 'stock':
                                     if 0 <= int(round_rate) <= 70:
                                         insert_data_list_noempty.append(
-                                            [broker_id, sec_id, secu_type, biz_type, adjust_status_in, old_rate, round_rate,
+                                            [broker_id, sec_id, secu_type, biz_type, adjust_status_in, old_rate,
+                                             round_rate,
                                              1, 1, datetime.datetime.now(), forever_end_dt, None])
                                     else:
                                         logger.error(f'本次解析数据违反业务规则!存在严重异常,不落地数据库,解析结束!{row}')
@@ -319,7 +308,8 @@ def securities_bzj_parsing_data(rs, biz_type, data_):
                                 elif secu_type == 'fund':
                                     if 0 <= int(round_rate) <= 95:
                                         insert_data_list_noempty.append(
-                                            [broker_id, sec_id, secu_type, biz_type, adjust_status_in, old_rate, round_rate,
+                                            [broker_id, sec_id, secu_type, biz_type, adjust_status_in, old_rate,
+                                             round_rate,
                                              1, 1, datetime.datetime.now(), forever_end_dt, None])
                                     else:
                                         logger.error(f'本次解析数据违反业务规则!存在严重异常,不落地数据库,解析结束!{row}')
@@ -327,7 +317,8 @@ def securities_bzj_parsing_data(rs, biz_type, data_):
                                 elif secu_type == 'bond':
                                     if 0 <= int(round_rate) <= 95:
                                         insert_data_list_noempty.append(
-                                            [broker_id, sec_id, secu_type, biz_type, adjust_status_in, old_rate, round_rate,
+                                            [broker_id, sec_id, secu_type, biz_type, adjust_status_in, old_rate,
+                                             round_rate,
                                              1, 1, datetime.datetime.now(), forever_end_dt, None])
                                     else:
                                         logger.error(f'本次解析数据违反业务规则!存在严重异常,不落地数据库,解析结束!{row}')
@@ -429,10 +420,7 @@ def securities_bzj_parsing_data(rs, biz_type, data_):
 
 # 可充抵保证金rate解析公共方法--不带市场的处理，无后缀，不带市场,market_flag为False
 def securities_bzj_parsing_data_no_market(rs, data_):
-    for data in data_:
-        boName = str(data[1]).replace(' ', '').replace('Ａ', 'A').replace('⑶', '(3)').replace('⑷', '(4)').replace(
-            '⑼', '(9)')
-        temp_deal(data, boName, False)
+    real_data = temp_deal(data_, False)
 
     invalid_data_list = []
     if rs[3] == '上海交易所' or rs[3] == '深圳交易所':
@@ -445,7 +433,7 @@ def securities_bzj_parsing_data_no_market(rs, data_):
         logger.info(f'进入为空的判断')
         # 查询结果为空，第一次处理，从数据采集平台爬取到的数据进行入库处理,调整类型为调入
         insert_data_list = []
-        for i in data_:
+        for i in real_data:
             if len(i) == 5:
                 if i[2] is not None:
                     rate = int(i[2])
@@ -484,7 +472,7 @@ def securities_bzj_parsing_data_no_market(rs, data_):
     else:
         logger.info(f'进入不为空的判断')
         insert_data_list_noempty = []
-        for row in data_:
+        for row in real_data:
             if len(row) == 5:
                 if row[2] is not None:
                     sec_code = row[0]
@@ -503,7 +491,8 @@ def securities_bzj_parsing_data_no_market(rs, data_):
                                 if secu_type == 'stock':
                                     if 0 <= int(round_rate) <= 70:
                                         insert_data_list_noempty.append(
-                                            [broker_id, sec_id, secu_type, 3, adjust_status_in, old_rate, round_rate, 1, 1,
+                                            [broker_id, sec_id, secu_type, 3, adjust_status_in, old_rate, round_rate, 1,
+                                             1,
                                              datetime.datetime.now(), forever_end_dt, None])
                                     else:
                                         logger.error(f'本次解析数据违反业务规则!存在严重异常,不落地数据库,解析结束!{row}')
@@ -511,7 +500,8 @@ def securities_bzj_parsing_data_no_market(rs, data_):
                                 elif secu_type == 'fund':
                                     if 0 <= int(round_rate) <= 95:
                                         insert_data_list_noempty.append(
-                                            [broker_id, sec_id, secu_type, 3, adjust_status_in, old_rate, round_rate, 1, 1,
+                                            [broker_id, sec_id, secu_type, 3, adjust_status_in, old_rate, round_rate, 1,
+                                             1,
                                              datetime.datetime.now(), forever_end_dt, None])
                                     else:
                                         logger.error(f'本次解析数据违反业务规则!存在严重异常,不落地数据库,解析结束!{row}')
@@ -519,7 +509,8 @@ def securities_bzj_parsing_data_no_market(rs, data_):
                                 elif secu_type == 'bond':
                                     if 0 <= int(round_rate) <= 95:
                                         insert_data_list_noempty.append(
-                                            [broker_id, sec_id, secu_type, 3, adjust_status_in, old_rate, round_rate, 1, 1,
+                                            [broker_id, sec_id, secu_type, 3, adjust_status_in, old_rate, round_rate, 1,
+                                             1,
                                              datetime.datetime.now(), forever_end_dt, None])
                                     else:
                                         logger.error(f'本次解析数据违反业务规则!存在严重异常,不落地数据库,解析结束!{row}')
@@ -530,7 +521,8 @@ def securities_bzj_parsing_data_no_market(rs, data_):
                                 if secu_type == 'stock':
                                     if 0 <= int(round_rate) <= 70:
                                         insert_data_list_noempty.append(
-                                            [broker_id, sec_id, secu_type, 3, adjust_status_high, old_rate, round_rate, 1,
+                                            [broker_id, sec_id, secu_type, 3, adjust_status_high, old_rate, round_rate,
+                                             1,
                                              1, datetime.datetime.now(), forever_end_dt, None])
                                     else:
                                         logger.error(f'本次解析数据违反业务规则!存在严重异常,不落地数据库,解析结束!{row}')
@@ -538,7 +530,8 @@ def securities_bzj_parsing_data_no_market(rs, data_):
                                 elif secu_type == 'fund':
                                     if 0 <= int(round_rate) <= 95:
                                         insert_data_list_noempty.append(
-                                            [broker_id, sec_id, secu_type, 3, adjust_status_high, old_rate, round_rate, 1,
+                                            [broker_id, sec_id, secu_type, 3, adjust_status_high, old_rate, round_rate,
+                                             1,
                                              1, datetime.datetime.now(), forever_end_dt, None])
                                     else:
                                         logger.error(f'本次解析数据违反业务规则!存在严重异常,不落地数据库,解析结束!{row}')
@@ -546,7 +539,8 @@ def securities_bzj_parsing_data_no_market(rs, data_):
                                 elif secu_type == 'bond':
                                     if 0 <= int(round_rate) <= 95:
                                         insert_data_list_noempty.append(
-                                            [broker_id, sec_id, secu_type, 3, adjust_status_high, old_rate, round_rate, 1,
+                                            [broker_id, sec_id, secu_type, 3, adjust_status_high, old_rate, round_rate,
+                                             1,
                                              1, datetime.datetime.now(), forever_end_dt, None])
                                     else:
                                         logger.error(f'本次解析数据违反业务规则!存在严重异常,不落地数据库,解析结束!{row}')
@@ -557,7 +551,8 @@ def securities_bzj_parsing_data_no_market(rs, data_):
                                 if secu_type == 'stock':
                                     if 0 <= int(round_rate) <= 70:
                                         insert_data_list_noempty.append(
-                                            [broker_id, sec_id, secu_type, 3, adjust_status_low, old_rate, round_rate, 1, 1,
+                                            [broker_id, sec_id, secu_type, 3, adjust_status_low, old_rate, round_rate,
+                                             1, 1,
                                              datetime.datetime.now(), forever_end_dt, None])
                                     else:
                                         logger.error(f'本次解析数据违反业务规则!存在严重异常,不落地数据库,解析结束!{row}')
@@ -565,7 +560,8 @@ def securities_bzj_parsing_data_no_market(rs, data_):
                                 elif secu_type == 'fund':
                                     if 0 <= int(round_rate) <= 95:
                                         insert_data_list_noempty.append(
-                                            [broker_id, sec_id, secu_type, 3, adjust_status_low, old_rate, round_rate, 1, 1,
+                                            [broker_id, sec_id, secu_type, 3, adjust_status_low, old_rate, round_rate,
+                                             1, 1,
                                              datetime.datetime.now(), forever_end_dt, None])
                                     else:
                                         logger.error(f'本次解析数据违反业务规则!存在严重异常,不落地数据库,解析结束!{row}')
@@ -573,7 +569,8 @@ def securities_bzj_parsing_data_no_market(rs, data_):
                                 elif secu_type == 'bond':
                                     if 0 <= int(round_rate) <= 95:
                                         insert_data_list_noempty.append(
-                                            [broker_id, sec_id, secu_type, 3, adjust_status_low, old_rate, round_rate, 1, 1,
+                                            [broker_id, sec_id, secu_type, 3, adjust_status_low, old_rate, round_rate,
+                                             1, 1,
                                              datetime.datetime.now(), forever_end_dt, None])
                                     else:
                                         logger.error(f'本次解析数据违反业务规则!存在严重异常,不落地数据库,解析结束!{row}')
@@ -632,166 +629,350 @@ def get_secu_type(etl_type):
 
 
 # 统一根据代码匹配规则和360，注册中心服务获取证券id和证券类型的接口
-def temp_deal(data, boName, market_flag):
+def temp_deal(data, market_flag):
     if market_flag:
-        code = str(data[1]).replace(' ', '')
-        rs = sec_code_rules_match(code)
-    else:
-        code = str(data[0]).replace(' ', '')
-        rs = sec_code_rules_match(code)
+        ax_list = []
+        bx_list = []
+        for a in data:
+            code = str(a[1]).replace(' ', '')
+            rs = sec_code_rules_match(code)
+            if rs:
+                ax_list.append(a)
+            else:
+                bx_list.append(a)
 
-    if rs:
-        # 可以通过现有规则匹配，就去360查询，查询不到再注册
-        args_code = rs['code']
-        type_code = rs['type']
-        args = [args_code]
+        args_list = []
+        for ax in ax_list:
+            with_suffix_code = sec_code_rules_match(str(ax[1]).replace(' ', ''))['code']
+            ax[1] = with_suffix_code
+            args_list.append(with_suffix_code)
+
         query_datas = {
             "module": "pysec.etl.sec360.api.sec_api",
             "method": "query_sec",
-            "args": args
+            "args": args_list
         }
         query_result = post_data_job(query_datas)
         res_data = query_result['data']
-        if res_data:
-            if type_code in res_data[0]['sec_category']:
-                # 对比类型是否一致
-                secu_id = res_data[0]['sec_id']
-                etl_type = res_data[0]['sec_category']
-                secu_type = get_secu_type(etl_type)
-                data.append(secu_id)
-                data.append(secu_type)
-            else:
-                logger.error(f'该证券代码{data}获取证券id和证券类型失败，请检查！')
-        else:
-            # 注册到360
-            sec_type = None
-            if type_code == 'stock':
-                sec_type = 'AS'
-            elif type_code == 'bond':
-                sec_type = 'B'
-            elif type_code == 'fund':
-                sec_type = 'OF'
-            args_dict = {
-                "sec_code_market": args_code,
-                "sec_type": sec_type,
-                "sec_name": boName.replace(' ', ''),
-                "update_flag": 1
-            }
-            args_ = [args_dict]
-            sync_datas = {
-                "module": "pysec.etl.sec360.api.sec_api",
-                "method": "sync_sec",
-                "args": args_
-            }
-            sync_result = post_data_job(sync_datas)
-            data_rs = sync_result['data']
-            if data_rs:
-                secu_id = data_rs[0]['sec_id']
-                etl_type = data_rs[0]['sec_category']
-                secu_type = get_secu_type(etl_type)
-                data.append(secu_id)
-                data.append(secu_type)
-                logger.info(f'该条已注册到360{data}')
-            else:
-                logger.error(f'匹配到现有规则的证券代码{data}注册到360失败！请检查')
-    else:
-        # 规则匹配不到，就调用注册中心查询
-        data_dict = {"boCode": code, "boName": boName}
-        res = get_securities_type_job(data_dict)
-        if res:
-            if 'ETF' in boName or 'LOF' in boName or '基金' in boName or boName.endswith('基'):
-                temp_type = 'fund'
-                if len(res) == 1:
-                    if res[0]['boIdType'] == temp_type:
-                        # 提前知晓类型，就直接去判断类型，因为boid唯一
-                        secu_id = res[0]['boId']
-                        secu_type = res[0]['boIdType']
-                        data.append(secu_id)
-                        data.append(secu_type)
-                elif len(res) > 1:
-                    for r in res:
-                        if r['boIdType'] == temp_type:
-                            secu_id = res[0]['boId']
-                            secu_type = res[0]['boIdType']
-                            data.append(secu_id)
-                            data.append(secu_type)
-                            break
-                        else:
-                            continue
+        for ax in ax_list:
+            for res in res_data:
+                if ax[1] == res['sec_code_market']:
+                    if sec_code_rules_match(str(ax[1]).replace(' ', ''))['type'] in res['sec_category']:
+                        ax.append(res['sec_id'])
+                        ax.append(get_secu_type(res['sec_category']))
 
-                # 说明没有查到证券id
-                if len(data) == 4:
-                    logger.error(f'该证券代码{data}获取证券id和证券类型失败，请检查！')
-            elif '债券' in boName or boName.endswith('债'):
-                temp_type = 'bond'
-                # 先匹配名称 若还是查不到证券id和类型再匹配类型
-                if len(res) == 1:
-                    if res[0]['boName'] == boName:
-                        secu_id = res[0]['boId']
-                        secu_type = res[0]['boIdType']
-                        data.append(secu_id)
-                        data.append(secu_type)
-                elif len(res) > 1:
-                    for r in res:
-                        if r['boName'] == boName:
-                            secu_id = res[0]['boId']
-                            secu_type = res[0]['boIdType']
-                            data.append(secu_id)
-                            data.append(secu_type)
-                            break
-                        else:
-                            continue
+        for ax_ in ax_list:
+            if len(ax_) == 4:
+                args_code = sec_code_rules_match(str(ax_[1]).replace(' ', ''))['code']
+                type_code = sec_code_rules_match(str(ax_[1]).replace(' ', ''))['type']
+                # 注册到360
+                sec_type = None
+                if type_code == 'stock':
+                    sec_type = 'AS'
+                elif type_code == 'bond':
+                    sec_type = 'B'
+                elif type_code == 'fund':
+                    sec_type = 'OF'
 
-                if len(data) == 4:
-                    # 匹配名字仍查不到证券id和类型，则匹配类型
+                args_dict = {
+                    "sec_code_market": args_code,
+                    "sec_type": sec_type,
+                    "sec_name": str(ax_[2]).replace(' ', '').replace('Ａ', 'A').replace('⑶', '(3)').replace('⑷',
+                                                                                                           '(4)').replace(
+                        '⑼', '(9)'),
+                    "update_flag": 1
+                }
+                args_ = [args_dict]
+                sync_datas = {
+                    "module": "pysec.etl.sec360.api.sec_api",
+                    "method": "sync_sec",
+                    "args": args_
+                }
+                sync_result = post_data_job(sync_datas)
+                data_rs = sync_result['data']
+                if data_rs:
+                    secu_id = data_rs[0]['sec_id']
+                    secu_type = get_secu_type(data_rs[0]['sec_category'])
+                    ax_.append(secu_id)
+                    ax_.append(secu_type)
+                    logger.info(f'该条已注册到360{ax_}')
+                else:
+                    logger.error(f'匹配到现有规则的证券代码{ax_}注册到360失败！请检查')
+
+        for bx in bx_list:
+            boName = str(bx[2]).replace(' ', '').replace('Ａ', 'A').replace('⑶', '(3)').replace('⑷', '(4)').replace(
+                '⑼', '(9)')
+            data_dict = {"boCode": str(bx[1]).replace(' ', ''), "boName": boName}
+            res = get_securities_type_job(data_dict)
+            if res:
+                if 'ETF' in boName or 'LOF' in boName or '基金' in boName or boName.endswith('基'):
+                    temp_type = 'fund'
                     if len(res) == 1:
                         if res[0]['boIdType'] == temp_type:
                             # 提前知晓类型，就直接去判断类型，因为boid唯一
                             secu_id = res[0]['boId']
                             secu_type = res[0]['boIdType']
-                            data.append(secu_id)
-                            data.append(secu_type)
+                            bx.append(secu_id)
+                            bx.append(secu_type)
                     elif len(res) > 1:
                         for r in res:
                             if r['boIdType'] == temp_type:
                                 secu_id = res[0]['boId']
                                 secu_type = res[0]['boIdType']
-                                data.append(secu_id)
-                                data.append(secu_type)
+                                bx.append(secu_id)
+                                bx.append(secu_type)
                                 break
                             else:
                                 continue
 
-                # 说明没有查到证券id
-                if len(data) == 4:
-                    logger.error(f'该证券代码{data}获取证券id和证券类型失败，请检查！')
-            else:
-                if len(res) == 1:
-                    if res[0]['boName'] == boName and code in res[0]['boIdCode']:
-                        secu_id = res[0]['boId']
-                        secu_type = res[0]['boIdType']
-                        data.append(secu_id)
-                        data.append(secu_type)
-                    else:
-                        logger.error(f'该证券代码{data}获取证券id和证券类型失败，请检查！')
-                elif len(res) > 1:
-                    for r in res:
-                        if r['boName'] == boName and code in r['boIdCode']:
-                            secu_id = r['boId']
-                            secu_type = r['boIdType']
-                            data.append(secu_id)
-                            data.append(secu_type)
-                            break
+                    # 说明没有查到证券id
+                    if len(bx) == 4:
+                        logger.error(f'该证券代码{bx}获取证券id和证券类型失败，请检查！')
+                elif '债券' in boName or boName.endswith('债'):
+                    temp_type = 'bond'
+                    # 先匹配名称 若还是查不到证券id和类型再匹配类型
+                    if len(res) == 1:
+                        if res[0]['boName'] == boName:
+                            secu_id = res[0]['boId']
+                            secu_type = res[0]['boIdType']
+                            bx.append(secu_id)
+                            bx.append(secu_type)
+                    elif len(res) > 1:
+                        for r in res:
+                            if r['boName'] == boName:
+                                secu_id = res[0]['boId']
+                                secu_type = res[0]['boIdType']
+                                bx.append(secu_id)
+                                bx.append(secu_type)
+                                break
+                            else:
+                                continue
+
+                    if len(bx) == 4:
+                        # 匹配名字仍查不到证券id和类型，则匹配类型
+                        if len(res) == 1:
+                            if res[0]['boIdType'] == temp_type:
+                                # 提前知晓类型，就直接去判断类型，因为boid唯一
+                                secu_id = res[0]['boId']
+                                secu_type = res[0]['boIdType']
+                                bx.append(secu_id)
+                                bx.append(secu_type)
+                        elif len(res) > 1:
+                            for r in res:
+                                if r['boIdType'] == temp_type:
+                                    secu_id = res[0]['boId']
+                                    secu_type = res[0]['boIdType']
+                                    bx.append(secu_id)
+                                    bx.append(secu_type)
+                                    break
+                                else:
+                                    continue
+
+                    # 说明没有查到证券id
+                    if len(bx) == 4:
+                        logger.error(f'该证券代码{bx}获取证券id和证券类型失败，请检查！')
+                else:
+                    if len(res) == 1:
+                        if res[0]['boName'] == boName and str(bx[1]).replace(' ', '') in res[0]['boIdCode']:
+                            secu_id = res[0]['boId']
+                            secu_type = res[0]['boIdType']
+                            bx.append(secu_id)
+                            bx.append(secu_type)
                         else:
-                            continue
+                            logger.error(f'该证券代码{bx}获取证券id和证券类型失败，请检查！')
+                    elif len(res) > 1:
+                        for r in res:
+                            if r['boName'] == boName and str(bx[1]).replace(' ', '') in r['boIdCode']:
+                                secu_id = r['boId']
+                                secu_type = r['boIdType']
+                                bx.append(secu_id)
+                                bx.append(secu_type)
+                                break
+                            else:
+                                continue
 
-                # 说明没有查到证券id
-                if len(data) == 4:
-                    logger.error(f'该证券代码{data}获取证券id和证券类型失败，请检查！')
-        else:
-            logger.error(f'该证券代码{data}获取证券id和证券类型失败，请检查！')
+                    # 说明没有查到证券id
+                    if len(bx) == 4:
+                        logger.error(f'该证券代码{bx}获取证券id和证券类型失败，请检查！')
+            else:
+                logger.error(f'该证券代码{bx}获取证券id和证券类型失败，请检查！')
 
-    logger.info(data)
+        ax_list.extend(bx_list)
+        for lo in ax_list:
+            logger.info(lo)
+        return ax_list
+    else:
+        # 不带市场
+        ax_list = []
+        bx_list = []
+        for a in data:
+            code = str(a[0]).replace(' ', '')
+            rs = sec_code_rules_match(code)
+            if rs:
+                ax_list.append(a)
+            else:
+                bx_list.append(a)
+
+        args_list = []
+        for ax in ax_list:
+            with_suffix_code = sec_code_rules_match(str(ax[0]).replace(' ', ''))['code']
+            ax[0] = with_suffix_code
+            args_list.append(with_suffix_code)
+
+        query_datas = {
+            "module": "pysec.etl.sec360.api.sec_api",
+            "method": "query_sec",
+            "args": args_list
+        }
+        query_result = post_data_job(query_datas)
+        res_data = query_result['data']
+        for ax in ax_list:
+            for res in res_data:
+                if ax[0] == res['sec_code_market']:
+                    if sec_code_rules_match(str(ax[0]).replace(' ', ''))['type'] in res['sec_category']:
+                        ax.append(res['sec_id'])
+                        ax.append(get_secu_type(res['sec_category']))
+
+        for ax_ in ax_list:
+            if len(ax_) == 4:
+                args_code = sec_code_rules_match(str(ax_[0]).replace(' ', ''))['code']
+                type_code = sec_code_rules_match(str(ax_[0]).replace(' ', ''))['type']
+                # 注册到360
+                sec_type = None
+                if type_code == 'stock':
+                    sec_type = 'AS'
+                elif type_code == 'bond':
+                    sec_type = 'B'
+                elif type_code == 'fund':
+                    sec_type = 'OF'
+
+                args_dict = {
+                    "sec_code_market": args_code,
+                    "sec_type": sec_type,
+                    "sec_name": str(ax_[1]).replace(' ', '').replace('Ａ', 'A').replace('⑶', '(3)').replace('⑷',
+                                                                                                           '(4)').replace(
+                        '⑼', '(9)'),
+                    "update_flag": 1
+                }
+                args_ = [args_dict]
+                sync_datas = {
+                    "module": "pysec.etl.sec360.api.sec_api",
+                    "method": "sync_sec",
+                    "args": args_
+                }
+                sync_result = post_data_job(sync_datas)
+                data_rs = sync_result['data']
+                if data_rs:
+                    secu_id = data_rs[0]['sec_id']
+                    secu_type = get_secu_type(data_rs[0]['sec_category'])
+                    ax_.append(secu_id)
+                    ax_.append(secu_type)
+                    logger.info(f'该条已注册到360{ax_}')
+                else:
+                    logger.error(f'匹配到现有规则的证券代码{ax_}注册到360失败！请检查')
+
+        for bx in bx_list:
+            boName = str(bx[1]).replace(' ', '').replace('Ａ', 'A').replace('⑶', '(3)').replace('⑷', '(4)').replace(
+                '⑼', '(9)')
+            data_dict = {"boCode": str(bx[0]).replace(' ', ''), "boName": boName}
+            res = get_securities_type_job(data_dict)
+            if res:
+                if 'ETF' in boName or 'LOF' in boName or '基金' in boName or boName.endswith('基'):
+                    temp_type = 'fund'
+                    if len(res) == 1:
+                        if res[0]['boIdType'] == temp_type:
+                            # 提前知晓类型，就直接去判断类型，因为boid唯一
+                            secu_id = res[0]['boId']
+                            secu_type = res[0]['boIdType']
+                            bx.append(secu_id)
+                            bx.append(secu_type)
+                    elif len(res) > 1:
+                        for r in res:
+                            if r['boIdType'] == temp_type:
+                                secu_id = res[0]['boId']
+                                secu_type = res[0]['boIdType']
+                                bx.append(secu_id)
+                                bx.append(secu_type)
+                                break
+                            else:
+                                continue
+
+                    # 说明没有查到证券id
+                    if len(bx) == 4:
+                        logger.error(f'该证券代码{bx}获取证券id和证券类型失败，请检查！')
+                elif '债券' in boName or boName.endswith('债'):
+                    temp_type = 'bond'
+                    # 先匹配名称 若还是查不到证券id和类型再匹配类型
+                    if len(res) == 1:
+                        if res[0]['boName'] == boName:
+                            secu_id = res[0]['boId']
+                            secu_type = res[0]['boIdType']
+                            bx.append(secu_id)
+                            bx.append(secu_type)
+                    elif len(res) > 1:
+                        for r in res:
+                            if r['boName'] == boName:
+                                secu_id = res[0]['boId']
+                                secu_type = res[0]['boIdType']
+                                bx.append(secu_id)
+                                bx.append(secu_type)
+                                break
+                            else:
+                                continue
+
+                    if len(bx) == 4:
+                        # 匹配名字仍查不到证券id和类型，则匹配类型
+                        if len(res) == 1:
+                            if res[0]['boIdType'] == temp_type:
+                                # 提前知晓类型，就直接去判断类型，因为boid唯一
+                                secu_id = res[0]['boId']
+                                secu_type = res[0]['boIdType']
+                                bx.append(secu_id)
+                                bx.append(secu_type)
+                        elif len(res) > 1:
+                            for r in res:
+                                if r['boIdType'] == temp_type:
+                                    secu_id = res[0]['boId']
+                                    secu_type = res[0]['boIdType']
+                                    bx.append(secu_id)
+                                    bx.append(secu_type)
+                                    break
+                                else:
+                                    continue
+
+                    # 说明没有查到证券id
+                    if len(bx) == 4:
+                        logger.error(f'该证券代码{bx}获取证券id和证券类型失败，请检查！')
+                else:
+                    if len(res) == 1:
+                        if res[0]['boName'] == boName and str(bx[0]).replace(' ', '') in res[0]['boIdCode']:
+                            secu_id = res[0]['boId']
+                            secu_type = res[0]['boIdType']
+                            bx.append(secu_id)
+                            bx.append(secu_type)
+                        else:
+                            logger.error(f'该证券代码{bx}获取证券id和证券类型失败，请检查！')
+                    elif len(res) > 1:
+                        for r in res:
+                            if r['boName'] == boName and str(bx[0]).replace(' ', '') in r['boIdCode']:
+                                secu_id = r['boId']
+                                secu_type = r['boIdType']
+                                bx.append(secu_id)
+                                bx.append(secu_type)
+                                break
+                            else:
+                                continue
+
+                    # 说明没有查到证券id
+                    if len(bx) == 4:
+                        logger.error(f'该证券代码{bx}获取证券id和证券类型失败，请检查！')
+            else:
+                logger.error(f'该证券代码{bx}获取证券id和证券类型失败，请检查！')
+
+        ax_list.extend(bx_list)
+        for li in ax_list:
+            logger.info(li)
+        return ax_list
 
 
 # 融资融券rate解析公共方法
@@ -879,7 +1060,8 @@ def securities_rzrq_parsing_data(rs, biz_type, data_):
                                     if int(round_rate) < 100:
                                         rate = None
                                         insert_data_list_noempty.append(
-                                            [broker_id, sec_id, secu_type, biz_type, adjust_status_out, old_rate, rate, 1,
+                                            [broker_id, sec_id, secu_type, biz_type, adjust_status_out, old_rate, rate,
+                                             1,
                                              1, datetime.datetime.now(), forever_end_dt, None])
                                     elif int(round_rate) > 200:
                                         logger.error(f'本次解析数据违反业务规则!存在严重异常,不落地数据库,解析结束!{row}')
@@ -887,14 +1069,16 @@ def securities_rzrq_parsing_data(rs, biz_type, data_):
                                     else:
                                         rate = int(round_rate)
                                         insert_data_list_noempty.append(
-                                            [broker_id, sec_id, secu_type, biz_type, adjust_status_in, old_rate, rate, 1, 1,
+                                            [broker_id, sec_id, secu_type, biz_type, adjust_status_in, old_rate, rate,
+                                             1, 1,
                                              datetime.datetime.now(), forever_end_dt, None])
                                 elif biz_type == 2:
                                     # 融券
                                     if int(round_rate) < 50:
                                         rate = None
                                         insert_data_list_noempty.append(
-                                            [broker_id, sec_id, secu_type, biz_type, adjust_status_out, old_rate, rate, 1,
+                                            [broker_id, sec_id, secu_type, biz_type, adjust_status_out, old_rate, rate,
+                                             1,
                                              1, datetime.datetime.now(), forever_end_dt, None])
                                     elif int(round_rate) > 200:
                                         logger.error(f'本次解析数据违反业务规则!存在严重异常,不落地数据库,解析结束!{row}')
@@ -902,7 +1086,8 @@ def securities_rzrq_parsing_data(rs, biz_type, data_):
                                     else:
                                         rate = int(round_rate)
                                         insert_data_list_noempty.append(
-                                            [broker_id, sec_id, secu_type, biz_type, adjust_status_in, old_rate, rate, 1, 1,
+                                            [broker_id, sec_id, secu_type, biz_type, adjust_status_in, old_rate, rate,
+                                             1, 1,
                                              datetime.datetime.now(), forever_end_dt, None])
                             elif adjust_status == adjust_status_high:
                                 # 调高 更新记录，更新cur_value,adjust_type,data_status,biz_status
@@ -912,7 +1097,8 @@ def securities_rzrq_parsing_data(rs, biz_type, data_):
                                     if int(round_rate) < 100:
                                         rate = None
                                         insert_data_list_noempty.append(
-                                            [broker_id, sec_id, secu_type, biz_type, adjust_status_out, old_rate, rate, 1,
+                                            [broker_id, sec_id, secu_type, biz_type, adjust_status_out, old_rate, rate,
+                                             1,
                                              1, datetime.datetime.now(), forever_end_dt, None])
                                     elif int(round_rate) > 200:
                                         logger.error(f'本次解析数据违反业务规则!存在严重异常,不落地数据库,解析结束!{row}')
@@ -920,14 +1106,16 @@ def securities_rzrq_parsing_data(rs, biz_type, data_):
                                     else:
                                         rate = int(round_rate)
                                         insert_data_list_noempty.append(
-                                            [broker_id, sec_id, secu_type, biz_type, adjust_status_high, old_rate, rate, 1,
+                                            [broker_id, sec_id, secu_type, biz_type, adjust_status_high, old_rate, rate,
+                                             1,
                                              1, datetime.datetime.now(), forever_end_dt, None])
                                 elif biz_type == 2:
                                     # 融券
                                     if int(round_rate) < 50:
                                         rate = None
                                         insert_data_list_noempty.append(
-                                            [broker_id, sec_id, secu_type, biz_type, adjust_status_out, old_rate, rate, 1,
+                                            [broker_id, sec_id, secu_type, biz_type, adjust_status_out, old_rate, rate,
+                                             1,
                                              1, datetime.datetime.now(), forever_end_dt, None])
                                     elif int(round_rate) > 200:
                                         logger.error(f'本次解析数据违反业务规则!存在严重异常,不落地数据库,解析结束!{row}')
@@ -935,7 +1123,8 @@ def securities_rzrq_parsing_data(rs, biz_type, data_):
                                     else:
                                         rate = int(round_rate)
                                         insert_data_list_noempty.append(
-                                            [broker_id, sec_id, secu_type, biz_type, adjust_status_high, old_rate, rate, 1,
+                                            [broker_id, sec_id, secu_type, biz_type, adjust_status_high, old_rate, rate,
+                                             1,
                                              1, datetime.datetime.now(), forever_end_dt, None])
                             elif adjust_status == adjust_status_low:
                                 # 调低 更新记录，更新cur_value,adjust_type,data_status,biz_status
@@ -945,7 +1134,8 @@ def securities_rzrq_parsing_data(rs, biz_type, data_):
                                     if int(round_rate) < 100:
                                         rate = None
                                         insert_data_list_noempty.append(
-                                            [broker_id, sec_id, secu_type, biz_type, adjust_status_out, old_rate, rate, 1,
+                                            [broker_id, sec_id, secu_type, biz_type, adjust_status_out, old_rate, rate,
+                                             1,
                                              1, datetime.datetime.now(), forever_end_dt, None])
                                     elif int(round_rate) > 200:
                                         logger.error(f'本次解析数据违反业务规则!存在严重异常,不落地数据库,解析结束!{row}')
@@ -953,14 +1143,16 @@ def securities_rzrq_parsing_data(rs, biz_type, data_):
                                     else:
                                         rate = int(round_rate)
                                         insert_data_list_noempty.append(
-                                            [broker_id, sec_id, secu_type, biz_type, adjust_status_low, old_rate, rate, 1,
+                                            [broker_id, sec_id, secu_type, biz_type, adjust_status_low, old_rate, rate,
+                                             1,
                                              1, datetime.datetime.now(), forever_end_dt, None])
                                 elif biz_type == 2:
                                     # 融券
                                     if int(round_rate) < 50:
                                         rate = None
                                         insert_data_list_noempty.append(
-                                            [broker_id, sec_id, secu_type, biz_type, adjust_status_out, old_rate, rate, 1,
+                                            [broker_id, sec_id, secu_type, biz_type, adjust_status_out, old_rate, rate,
+                                             1,
                                              1, datetime.datetime.now(), forever_end_dt, None])
                                     elif int(round_rate) > 200:
                                         logger.error(f'本次解析数据违反业务规则!存在严重异常,不落地数据库,解析结束!{row}')
@@ -968,7 +1160,8 @@ def securities_rzrq_parsing_data(rs, biz_type, data_):
                                     else:
                                         rate = int(round_rate)
                                         insert_data_list_noempty.append(
-                                            [broker_id, sec_id, secu_type, biz_type, adjust_status_low, old_rate, rate, 1,
+                                            [broker_id, sec_id, secu_type, biz_type, adjust_status_low, old_rate, rate,
+                                             1,
                                              1, datetime.datetime.now(), forever_end_dt, None])
                             elif adjust_status == adjust_status_out:
                                 update_business_security((str(rs[1])).replace('-', ''), sec_id, broker_id, biz_type)
@@ -1020,11 +1213,7 @@ def securities_rzrq_parsing_data(rs, biz_type, data_):
 
 # 集中度分组数据解析--可充抵保证金
 def securities_stockgroup_parsing_data(rs, biz_type, stockgroup_data):
-    for data in stockgroup_data:
-        boName = str(data[2]).replace(' ', '').replace('Ａ', 'A').replace('⑶', '(3)').replace('⑷', '(4)').replace(
-            '⑼', '(9)')
-        temp_deal(data, boName, True)
-
+    real_data = temp_deal(stockgroup_data, True)
     invalid_data_list = []
     if rs[3] == '上海交易所' or rs[3] == '深圳交易所':
         broker_key = '交易所'
@@ -1036,7 +1225,7 @@ def securities_stockgroup_parsing_data(rs, biz_type, stockgroup_data):
         logger.info(f'进入为空的判断')
         # 查询结果为空，第一次处理，从数据采集平台爬取到的数据进行入库处理,调整类型为调入
         insert_data_list = []
-        for i in stockgroup_data:
+        for i in real_data:
             if len(i) == 6:
                 insert_data_list.append(
                     [broker_id, i[4], i[5], biz_type, adjust_status_in, None, i[3], 1, 1, datetime.datetime.now(),
@@ -1051,7 +1240,7 @@ def securities_stockgroup_parsing_data(rs, biz_type, stockgroup_data):
             logger.info(f'业务数据入库完成,共{len(insert_data_list)}条')
     else:
         logger.info(f'进入不为空的判断')
-        for row in stockgroup_data:
+        for row in real_data:
             if len(row) == 6:
                 sec_code = row[1]
                 sec_id = row[4]

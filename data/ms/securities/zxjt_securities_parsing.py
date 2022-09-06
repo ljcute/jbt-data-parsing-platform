@@ -38,7 +38,7 @@ def zxjt_parsing_data(rs, data_):
             if len(temp) == 3:
                 logger.error(f'该条记录无证券id{temp},需人工修复!')
                 error_list.append(temp)
-        securities_rzrq_parsing_data(rs, 1, rz_data)
+        securities_rzrq_parsing_data(rs, 1, temp_data)
         logger.info(f'中信建投证券融资标的证券解析结束...')
 
         time.sleep(5)
@@ -50,7 +50,7 @@ def zxjt_parsing_data(rs, data_):
                 logger.error(f'该条记录无证券id{temp_},需人工修复!')
                 error_list.append(temp_)
 
-        securities_rzrq_parsing_data(rs, 2, rq_data)
+        securities_rzrq_parsing_data(rs, 2, temp_data)
         logger.info(f'中信建投证券融券标的证券解析结束...')
 
 
