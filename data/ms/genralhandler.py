@@ -702,7 +702,8 @@ def temp_deal(data, market_flag):
         for bx in bx_list:
             boName = str(bx[2]).replace(' ', '').replace('Ａ', 'A').replace('⑶', '(3)').replace('⑷', '(4)').replace(
                 '⑼', '(9)')
-            data_dict = {"boCode": str(bx[1]).replace(' ', ''), "boName": boName}
+            boCode = str(bx[1]).replace(' ', '').split('.')[0] if '.' in str(bx[1]).replace(' ', '') else str(bx[1]).replace(' ', '')
+            data_dict = {"boCode": boCode, "boName": boName}
             res = get_securities_type_job(data_dict)
             if res:
                 if 'ETF' in boName or 'LOF' in boName or '基金' in boName or boName.endswith('基'):
@@ -773,7 +774,7 @@ def temp_deal(data, market_flag):
                         logger.error(f'该证券代码{bx}获取证券id和证券类型失败，请检查！')
                 else:
                     if len(res) == 1:
-                        if res[0]['boName'] == boName and str(bx[1]).replace(' ', '') in res[0]['boIdCode']:
+                        if res[0]['boName'] == boName and boCode in res[0]['boIdCode']:
                             secu_id = res[0]['boId']
                             secu_type = res[0]['boIdType']
                             bx.append(secu_id)
@@ -782,7 +783,7 @@ def temp_deal(data, market_flag):
                             logger.error(f'该证券代码{bx}获取证券id和证券类型失败，请检查！')
                     elif len(res) > 1:
                         for r in res:
-                            if r['boName'] == boName and str(bx[1]).replace(' ', '') in r['boIdCode']:
+                            if r['boName'] == boName and boCode in r['boIdCode']:
                                 secu_id = r['boId']
                                 secu_type = r['boIdType']
                                 bx.append(secu_id)
@@ -790,6 +791,26 @@ def temp_deal(data, market_flag):
                                 break
                             else:
                                 continue
+
+                    if len(bx) == 4 or len(bx) == 3:
+                        if len(res) == 1:
+                            if boCode in res[0]['boIdCode']:
+                                secu_id = res[0]['boId']
+                                secu_type = res[0]['boIdType']
+                                bx.append(secu_id)
+                                bx.append(secu_type)
+                            else:
+                                logger.error(f'该证券代码{bx}获取证券id和证券类型失败，请检查！')
+                        elif len(res) > 1:
+                            for r in res:
+                                if boCode == r['boIdCode']:
+                                    secu_id = r['boId']
+                                    secu_type = r['boIdType']
+                                    bx.append(secu_id)
+                                    bx.append(secu_type)
+                                    break
+                                else:
+                                    continue
 
                     # 说明没有查到证券id
                     if len(bx) == 4:
@@ -874,7 +895,8 @@ def temp_deal(data, market_flag):
         for bx in bx_list:
             boName = str(bx[1]).replace(' ', '').replace('Ａ', 'A').replace('⑶', '(3)').replace('⑷', '(4)').replace(
                 '⑼', '(9)')
-            data_dict = {"boCode": str(bx[0]).replace(' ', ''), "boName": boName}
+            boCode = str(bx[0]).replace(' ', '').split('.')[0] if '.' in str(bx[0]).replace(' ', '') else str(bx[0]).replace(' ', '')
+            data_dict = {"boCode": boCode, "boName": boName}
             res = get_securities_type_job(data_dict)
             if res:
                 if 'ETF' in boName or 'LOF' in boName or '基金' in boName or boName.endswith('基'):
@@ -945,7 +967,7 @@ def temp_deal(data, market_flag):
                         logger.error(f'该证券代码{bx}获取证券id和证券类型失败，请检查！')
                 else:
                     if len(res) == 1:
-                        if res[0]['boName'] == boName and str(bx[0]).replace(' ', '') in res[0]['boIdCode']:
+                        if res[0]['boName'] == boName and boCode in res[0]['boIdCode']:
                             secu_id = res[0]['boId']
                             secu_type = res[0]['boIdType']
                             bx.append(secu_id)
@@ -954,7 +976,7 @@ def temp_deal(data, market_flag):
                             logger.error(f'该证券代码{bx}获取证券id和证券类型失败，请检查！')
                     elif len(res) > 1:
                         for r in res:
-                            if r['boName'] == boName and str(bx[0]).replace(' ', '') in r['boIdCode']:
+                            if r['boName'] == boName and boCode in r['boIdCode']:
                                 secu_id = r['boId']
                                 secu_type = r['boIdType']
                                 bx.append(secu_id)
@@ -962,6 +984,26 @@ def temp_deal(data, market_flag):
                                 break
                             else:
                                 continue
+
+                    if len(bx) == 4 or len(bx) == 3:
+                        if len(res) == 1:
+                            if boCode in res[0]['boIdCode']:
+                                secu_id = res[0]['boId']
+                                secu_type = res[0]['boIdType']
+                                bx.append(secu_id)
+                                bx.append(secu_type)
+                            else:
+                                logger.error(f'该证券代码{bx}获取证券id和证券类型失败，请检查！')
+                        elif len(res) > 1:
+                            for r in res:
+                                if boCode in r['boIdCode']:
+                                    secu_id = r['boId']
+                                    secu_type = r['boIdType']
+                                    bx.append(secu_id)
+                                    bx.append(secu_type)
+                                    break
+                                else:
+                                    continue
 
                     # 说明没有查到证券id
                     if len(bx) == 4:

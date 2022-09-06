@@ -78,7 +78,7 @@ class BaseHandler(object):
                     consumer.commit()
                     time.sleep(5)
                 except Exception as es:
-                    logger.error(f'此次解析任务失败{mq_content}，请检查！{es}')
+                    logger.error(f'此次解析任务失败{es}，请检查！{mq_content}')
 
     # 进行业务数据解析
     @classmethod
