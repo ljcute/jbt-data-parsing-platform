@@ -774,7 +774,7 @@ def temp_deal(data, market_flag):
                 '⑼', '(9)')
             boCode = str(bx[1]).replace(' ', '').split('.')[0] if '.' in str(bx[1]).replace(' ', '') else str(
                 bx[1]).replace(' ', '')
-            data_dict = {"boCode": boCode, "boName": boName}
+            data_dict = {"boCode": boCode}
             res = get_securities_type_job(data_dict)
             if res:
                 if 'ETF' in boName or 'LOF' in boName or '基金' in boName or boName.endswith('基'):
@@ -990,7 +990,7 @@ def temp_deal(data, market_flag):
                 '⑼', '(9)')
             boCode = str(bx[0]).replace(' ', '').split('.')[0] if '.' in str(bx[0]).replace(' ', '') else str(
                 bx[0]).replace(' ', '')
-            data_dict = {"boCode": boCode, "boName": boName}
+            data_dict = {"boCode": boCode}
             res = get_securities_type_job(data_dict)
             if res:
                 if 'ETF' in boName or 'LOF' in boName or '基金' in boName or boName.endswith('基'):
