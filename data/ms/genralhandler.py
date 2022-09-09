@@ -887,7 +887,29 @@ def temp_deal(data, market_flag):
                     if len(bx) == 4:
                         logger.error(f'该证券代码{bx}获取证券id和证券类型失败，请检查！')
             else:
-                logger.error(f'该证券代码{bx}获取证券id和证券类型失败，请检查！')
+                # 若注册中心查不到结果 但是带市场后缀 则拼接后缀去360查
+                temp_market = str(bx[0]).replace(' ', '')
+                args_code = None
+                if temp_market == '深圳' or temp_market == '深市' or temp_market == '2' or temp_market == '深交所' or temp_market == '深A' or temp_market == '深圳证券交易所':
+                    args_code = str(bx[1]).replace(' ', '') + '.SZ'
+                elif temp_market == '上海' or temp_market == '沪市' or temp_market == '1' or temp_market == '上交所' or temp_market == '沪A' or temp_market == '上海证券交易所':
+                    args_code = str(bx[1]).replace(' ', '') + '.SH'
+
+                args_list = [args_code]
+                query_datas = {
+                    "module": "pysec.etl.sec360.api.sec_api",
+                    "method": "query_sec",
+                    "args": args_list
+                }
+                query_result = post_data_job(query_datas)
+                res_data = query_result['data']
+                if res_data:
+                    secu_id = res_data[0]['sec_id']
+                    secu_type = get_secu_type(res_data[0]['sec_category'])
+                    bx.append(secu_id)
+                    bx.append(secu_type)
+                else:
+                    logger.error(f'该证券代码{bx}获取证券id和证券类型失败，请检查！')
 
         ax_list.extend(bx_list)
         for lo in ax_list:

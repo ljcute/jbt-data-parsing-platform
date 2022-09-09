@@ -78,7 +78,7 @@ class BaseHandler(object):
                     consumer.commit()
                     time.sleep(5)
                 except Exception as es:
-                    logger.error(f'此次解析任务失败{es}，请检查！{mq_content}')
+                    logger.error(f'此次解析任务失败:{es}，请检查！{mq_content}')
 
     # 进行业务数据解析
     @classmethod
@@ -112,10 +112,10 @@ class BaseHandler(object):
                 logger.info(f'数据处理日志表入库完成!')
             else:
                 logger.error(f'数据采集平台未查询到{data["data_source"]}对应数据，中止解析进行！')
-                # raise Exception(f'数据采集平台未查询到对应数据{rs[0]}，中止解析进行！')
+                raise Exception(f'数据采集平台未查询到{data["data_source"]}对应采集数据，中止解析进行！')
         else:
-            logger.error(f'数据解析失败，传入参数{data}为空!')
-            # raise Exception(f'数据解析失败，传入参数{data}为空!')
+            logger.error(f'数据解析失败，mq传入参数{data}为空!')
+            raise Exception(f'数据解析失败，mq传入参数{data}为空!')
 
     @classmethod
     def exchange_items_deal(cls, rs, data_):
