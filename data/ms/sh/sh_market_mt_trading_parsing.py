@@ -9,18 +9,11 @@ from data.ms.genralhandler import *
 
 
 def sh_parsing_data(rs, data_):
-    new_data = []
-    for dd in data_:
-        if dd[2] != '-':
-            new_data.append(dd)
-
     temp_list = []
     if rs[3] == '上海交易所':
-        for data in new_data:
-            data[1] = data[1] + '.SH'
-            rs = sec_code_rules_match(data[1])
-            if rs:
-                temp_list.append(rs['code'])
+        for data in data_:
+            data[1] = str(data[1]).replace(' ', '') + '.SH'
+            temp_list.append(data[1])
 
     query_datas = {
         "module": "pysec.etl.sec360.api.sec_api",
@@ -30,39 +23,16 @@ def sh_parsing_data(rs, data_):
     query_result = post_data_job(query_datas)
     sec_type_list = query_result['data']
     args = []
-    for temp_data in new_data:
+    for temp_data in data_:
         for sec in sec_type_list:
             if temp_data[1] == sec['sec_code_market']:
                 temp_data.append(sec['sec_id'])
                 secu_type = get_secu_type(sec['sec_category'])
                 temp_data.append(secu_type)
-                sec_code_market = sec['sec_code_market']
-                sec_category = sec['sec_category']
-                sec_type = None
-                if sec_category == 'sec_stock':
-                    sec_type = 'AS'
-                elif sec_category == 'sec_bond':
-                    sec_type = 'B'
-                elif sec_category == 'sec_fund':
-                    sec_type = 'OF'
-                sec_name = str(temp_data[2]).replace(' ', '').replace('Ａ', 'A').replace('⑶', '(3)') \
-                    .replace('⑷', '(4)').replace('⑼', '(9)')
-                args_dict = {
-                    "sec_code_market": sec_code_market,
-                    "sec_type": sec_type,
-                    "sec_name": sec_name,
-                    "update_flag": 1
-                }
-                args.append(args_dict)
+
         logger.info(temp_data)
 
-    sync_datas = {
-        "module": "pysec.etl.sec360.api.sec_api",
-        "method": "sync_sec",
-        "args": args
-    }
-    post_data_job(sync_datas)
-    data_parsing(rs, new_data)
+    data_parsing(rs, data_)
 
 
 def data_parsing(rs, data_):

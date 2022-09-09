@@ -10,17 +10,14 @@ from data.ms.genralhandler import *
 
 def sz_parsing_data(rs, data_):
     new_data = []
-    for dd in data_:
-        if dd[1] != '-':
-            new_data.append([dd[0], dd[1]])
+    for ss in data_:
+        new_data.append([ss[0], ss[1]])
 
     temp_list = []
     if rs[3] == '深圳交易所':
         for data in new_data:
             data[0] = data[0] + '.SZ'
-            rs = sec_code_rules_match(data[0])
-            if rs:
-                temp_list.append(rs['code'])
+            temp_list.append(data[0])
 
     query_datas = {
         "module": "pysec.etl.sec360.api.sec_api",
@@ -36,33 +33,12 @@ def sz_parsing_data(rs, data_):
                 temp_data.append(sec['sec_id'])
                 secu_type = get_secu_type(sec['sec_category'])
                 temp_data.append(secu_type)
-                sec_code_market = sec['sec_code_market']
-                sec_category = sec['sec_category']
-                sec_type = None
-                if sec_category == 'sec_stock':
-                    sec_type = 'AS'
-                elif sec_category == 'sec_bond':
-                    sec_type = 'B'
-                elif sec_category == 'sec_fund':
-                    sec_type = 'OF'
-                sec_name = str(temp_data[1]).replace(' ', '').replace('Ａ', 'A').replace('⑶', '(3)') \
-                    .replace('⑷', '(4)').replace('⑼', '(9)')
-                args_dict = {
-                    "sec_code_market": sec_code_market,
-                    "sec_type": sec_type,
-                    "sec_name": sec_name,
-                    "update_flag": 1
-                }
-                args.append(args_dict)
+
         logger.info(temp_data)
 
-    sync_datas = {
-        "module": "pysec.etl.sec360.api.sec_api",
-        "method": "sync_sec",
-        "args": args
-    }
-    post_data_job(sync_datas)
+
     if rs[2] == '2':
+        logger.info(f'担保券证券解析')
         sz_data_parsing(rs, 3, new_data)
     elif rs[2] == '3':
         logger.info(f'融资标的证券解析')
@@ -86,7 +62,7 @@ def sz_data_parsing(rs, biz_type, data_):
         insert_data_list = []
         for i in data_:
             if len(i) == 4:
-                insert_data_list.append([broker_id, None if i[2] == '-' else i[2], i[3], biz_type, adjust_status_in, None, None, 1, 1, rs[1],
+                insert_data_list.append([broker_id, None if i[1] == '-' else i[1], i[2], biz_type, adjust_status_in, None, None, 1, 1, rs[1],
                                          forever_end_dt, None])
             else:
                 logger.error(f'该条数据无证券id，请检查!{i}')
