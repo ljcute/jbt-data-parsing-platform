@@ -1101,25 +1101,25 @@ def temp_deal(data, market_flag):
                             else:
                                 continue
 
-                    if len(bx) == 4 or len(bx) == 3:
-                        if len(res) == 1:
-                            if boCode in res[0]['boIdCode']:
-                                secu_id = res[0]['boId']
-                                secu_type = res[0]['boIdType']
-                                bx.append(secu_id)
-                                bx.append(secu_type)
-                            else:
-                                logger.error(f'该证券代码{bx}获取证券id和证券类型失败，请检查！')
-                        elif len(res) > 1:
-                            for r in res:
-                                if boCode in r['boIdCode']:
-                                    secu_id = r['boId']
-                                    secu_type = r['boIdType']
-                                    bx.append(secu_id)
-                                    bx.append(secu_type)
-                                    break
-                                else:
-                                    continue
+                    # if len(bx) == 4 or len(bx) == 3:
+                    #     if len(res) == 1:
+                    #         if boCode in res[0]['boIdCode']:
+                    #             secu_id = res[0]['boId']
+                    #             secu_type = res[0]['boIdType']
+                    #             bx.append(secu_id)
+                    #             bx.append(secu_type)
+                    #         else:
+                    #             logger.error(f'该证券代码{bx}获取证券id和证券类型失败，请检查！')
+                    #     elif len(res) > 1:
+                    #         for r in res:
+                    #             if boCode in r['boIdCode']:
+                    #                 secu_id = r['boId']
+                    #                 secu_type = r['boIdType']
+                    #                 bx.append(secu_id)
+                    #                 bx.append(secu_type)
+                    #                 break
+                    #             else:
+                    #                 continue
 
                     # 说明没有查到证券id
                     if len(bx) == 3 or len(bx) == 4:

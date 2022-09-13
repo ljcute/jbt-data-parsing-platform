@@ -85,7 +85,7 @@ class BaseHandler(object):
     def parsing_data_job(cls, data):
         if data:
             # 从采集平台查询数据
-            rs = select_collected_data(data['biz_dt'], data['data_type'], data['data_source'])
+            rs = select_collected_data(str(data['biz_dt']).replace('-', ''), data['data_type'], data['data_source'])
             if rs:
                 start_dt = datetime.datetime.now()
 
@@ -111,8 +111,9 @@ class BaseHandler(object):
                                         1, rs[0][1], 1, 'success')
                 logger.info(f'数据处理日志表入库完成!')
             else:
-                logger.error(f'数据采集平台未查询到{data["data_source"]}对应数据，中止解析进行！')
-                raise Exception(f'数据采集平台未查询到{data["data_source"]}对应采集数据，中止解析进行！')
+                logger.info(f'数据采集平台未查询到{data["data_source"]}对应数据，中止解析进行！')
+                # logger.error(f'数据采集平台未查询到{data["data_source"]}对应数据，中止解析进行！')
+                # raise Exception(f'数据采集平台未查询到{data["data_source"]}对应采集数据，中止解析进行！')
         else:
             logger.error(f'数据解析失败，mq传入参数{data}为空!')
             raise Exception(f'数据解析失败，mq传入参数{data}为空!')
