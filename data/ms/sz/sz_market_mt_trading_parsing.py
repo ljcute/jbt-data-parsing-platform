@@ -55,15 +55,15 @@ def sz_data_parsing(rs, biz_type, data_):
     else:
         broker_key = rs[3]
     broker_id = broker_id_map.get(broker_key)
-    result = query_business_security_item(str(rs[1]), biz_type, broker_id)
+    result = query_business_security_item_jys(str(rs[1]), biz_type, broker_id, 2)
     if result.empty:
         # 查询结果为空，第一次处理，从数据采集平台爬取到的数据进行入库处理,调整类型为调入
         logger.info(f'进入为空的判断...')
         insert_data_list = []
         for i in data_:
             if len(i) == 4:
-                insert_data_list.append([broker_id, None if i[1] == '-' else i[1], i[2], biz_type, adjust_status_in, None, None, 1, 1, rs[1],
-                                         forever_end_dt, None])
+                insert_data_list.append([broker_id, None if i[2] == '-' else i[2], i[3], biz_type, adjust_status_in, None, None, 1, 1, rs[1],
+                                         forever_end_dt, 2])
             else:
                 logger.error(f'该条数据无证券id，请检查!{i}')
                 invalid_data_list.append(i)
@@ -84,7 +84,6 @@ def sz_data_parsing(rs, biz_type, data_):
             if len(row) == 4:
                 query_list.append(row[2])
 
-
         s_list = list(set(query_list).difference(set(haved_list)))
         if s_list:
             temp_insert_data_list = []
@@ -93,8 +92,12 @@ def sz_data_parsing(rs, biz_type, data_):
                     if b == temp_data[2]:
                         secu_type = temp_data[3]
                         temp_insert_data_list.append([broker_id, None if b == '-' else b, secu_type, biz_type, adjust_status_in, None, None, 1, 1,
-                                                      datetime.datetime.now(), forever_end_dt, None])
+                                                      datetime.datetime.now(), forever_end_dt, 2])
             logger.info(f'深圳交易所业务数据入库开始...')
             insert_broker_mt_business_security(temp_insert_data_list)
             logger.info(f'深圳交易所业务数据入库完成，共{len(temp_insert_data_list)}条')
 
+        b_list = list(set(haved_list).difference(set(query_list)))
+        if b_list:
+            for s in b_list:
+                update_business_security_jys((str(rs[1])).replace('-', ''), s, broker_id,  biz_type, 2)

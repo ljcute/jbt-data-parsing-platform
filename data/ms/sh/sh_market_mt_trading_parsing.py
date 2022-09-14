@@ -50,7 +50,7 @@ def data_parsing(rs, data_):
     else:
         broker_key = rs[3]
     broker_id = broker_id_map.get(broker_key)
-    result = query_business_security_item(str(rs[1]), biz_type, broker_id)
+    result = query_business_security_item_jys(str(rs[1]), biz_type, broker_id, 1)
     if result.empty:
         # 查询结果为空，第一次处理，从数据采集平台爬取到的数据进行入库处理,调整类型为调入
         logger.info(f'进入为空的判断...')
@@ -58,7 +58,7 @@ def data_parsing(rs, data_):
         for i in data_:
             if len(i) == 5:
                 insert_data_list.append([broker_id, None if i[3] == '-' else i[3], i[4], biz_type, adjust_status_in, None, None, 1, 1, rs[1],
-                                         forever_end_dt, None])
+                                         forever_end_dt, 1])
             else:
                 logger.error(f'该条数据无证券id，请检查!{i}')
                 invalid_data_list.append(i)
@@ -82,10 +82,17 @@ def data_parsing(rs, data_):
                 for temp_data in data_:
                     if b == temp_data[3]:
                         secu_type = temp_data[4]
-                        temp_insert_data_list.append([broker_id, None if b == '-' else b, secu_type, biz_type, adjust_status_in, None, None, 1, 1, datetime.datetime.now(), forever_end_dt, None])
+                        temp_insert_data_list.append([broker_id, None if b == '-' else b, secu_type, biz_type, adjust_status_in, None, None, 1, 1, datetime.datetime.now(), forever_end_dt, 1])
             logger.info(f'上海交易所业务数据入库开始...')
             insert_broker_mt_business_security(temp_insert_data_list)
             logger.info(f'上海交易所业务数据入库完成，共{len(temp_insert_data_list)}条')
+
+        b_list = list(set(haved_list).difference(set(query_list)))
+        if b_list:
+            for s in b_list:
+                update_business_security_jys((str(rs[1])).replace('-', ''), s, broker_id,  biz_type, 1)
+
+
 
 
 
