@@ -15,12 +15,12 @@ def zxjt_parsing_data(rs, data_):
     error_list = []
     if rs[2] == '99':
         for data in data_:
-            market = data[2]
-            sec_code = data[1]
-            sec_name = data[3]
+            market = data[1]
+            sec_code = data[0]
+            sec_name = data[2]
             bzj_rate = None if data[4] == '-' else rate_is_normal_one(data[4])
-            rz_rate = None if data[5] == '-' else rate_is_normal_two(data[5])
-            rq_rate = None if data[6] == '-' else rate_is_normal_two(data[6])
+            rz_rate = None if data[5] == '-' else rate_is_normal_one(data[5])
+            rq_rate = None if data[6] == '-' else rate_is_normal_one(data[6])
 
             bzj_data.append([market, sec_code, sec_name, bzj_rate])
             rz_data.append([sec_code, sec_name, rz_rate])
