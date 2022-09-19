@@ -226,11 +226,5 @@ class BaseHandler(object):
 
 if __name__ == '__main__':
     bs = BaseHandler()
-    # bs.kafka_mq_consumer()
-    data__ = {'user_id': 960529, 'biz_dt': '2022-09-12', 'data_type': '2', 'data_source': '东方财富证券', 'message': 'dfcf_securities_collect'}
-    bs.parsing_data_job(data__)
-    time.sleep(5)
-    logger.info('======')
-    data_ = {'user_id': 960529, 'biz_dt': '2022-09-12', 'data_type': '3', 'data_source': '东方财富证券', 'message': 'dfcf_securities_collect'}
-    bs.parsing_data_job(data_)
+    bs.kafka_mq_consumer()
 
