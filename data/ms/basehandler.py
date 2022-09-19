@@ -7,6 +7,7 @@
 # @Software: PyCharm
 import os
 import sys
+import time
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.append(BASE_DIR)
@@ -34,7 +35,7 @@ from data.ms.securities.zs_securities_parsing import zs_parsing_data
 from data.ms.securities.zt_securities_parsing import zt_parsing_data
 from data.ms.securities.zx_securities_parsing import zx_parsing_data
 from data.ms.securities.zxjt_securities_parsing import zxjt_parsing_data
-from data.ms.sh.sh_market_mt_trading_parsing import sh_parsing_data
+from data.ms.sh.sh_market_mt_trading_parsing import sh_parsing_data, query_normal_rate
 from data.ms.sz.sz_market_mt_trading_parsing import sz_parsing_data
 from utils.logs_utils import logger
 
@@ -225,4 +226,11 @@ class BaseHandler(object):
 
 if __name__ == '__main__':
     bs = BaseHandler()
-    bs.kafka_mq_consumer()
+    # bs.kafka_mq_consumer()
+    data__ = {'user_id': 960529, 'biz_dt': '2022-09-12', 'data_type': '2', 'data_source': '东方财富证券', 'message': 'dfcf_securities_collect'}
+    bs.parsing_data_job(data__)
+    time.sleep(5)
+    logger.info('======')
+    data_ = {'user_id': 960529, 'biz_dt': '2022-09-12', 'data_type': '3', 'data_source': '东方财富证券', 'message': 'dfcf_securities_collect'}
+    bs.parsing_data_job(data_)
+
