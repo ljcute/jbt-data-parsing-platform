@@ -7,6 +7,10 @@
 # @Software: PyCharm
 from data.ms.genralhandler import *
 
+base_dir = os.path.dirname(os.path.abspath(__file__))
+full_path = os.path.join(base_dir, '../../../config/config.ini')
+cf = ConfigParser()
+cf.read(full_path, encoding='utf-8')
 factor_request_url = cf.get('factor-url', 'url')
 
 
