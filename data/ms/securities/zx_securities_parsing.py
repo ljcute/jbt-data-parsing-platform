@@ -21,7 +21,11 @@ def zx_parsing_data(rs, data_):
             sec_code = data[1]
             sec_name = data[2]
             # rate = round(float(str(data[3])) * 100, 3)
-            rate = rate_is_normal_one(data[3])
+            status = data[5]
+            if status == '受限':
+                rate = None
+            else:
+                rate = rate_is_normal_one(data[3])
             bzj_data.append([market, sec_code, sec_name, rate])
         securities_bzj_parsing_data(rs, 3, bzj_data)
         logger.info(f'中信证券可充抵保证金证券解析结束...')
