@@ -59,7 +59,7 @@ def sh_parsing_data(rs, data_):
                 "dt": str(rs[1]),
                 "obj_type": "stock",
                 "object_ids": stock_temp_list,
-                "factors": "s_ex_guaranty_limit_rate"
+                "factors": "s_ex_discount_rate"
             }
         }
         stock_res_list = query_normal_rate(stock_query_data)['data']['data']
@@ -75,7 +75,7 @@ def sh_parsing_data(rs, data_):
                 "dt": str(rs[1]),
                 "obj_type": "bond",
                 "object_ids": bond_temp_list,
-                "factors": "b_ex_guaranty_limit_rate"
+                "factors": "b_ex_discount_rate"
             }
         }
         bond_res_list = query_normal_rate(bond_query_data)['data']['data']
@@ -91,7 +91,7 @@ def sh_parsing_data(rs, data_):
                 "dt": str(rs[1]),
                 "obj_type": "fund",
                 "object_ids": fund_temp_list,
-                "factors": "f_ex_guaranty_limit_rate"
+                "factors": "f_ex_discount_rate"
             }
         }
         fund_res_list = query_normal_rate(fund_query_data)['data']['data']
