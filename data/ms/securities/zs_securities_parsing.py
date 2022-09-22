@@ -18,7 +18,7 @@ def zs_parsing_data(rs, data_):
         for data in data_:
             if data['market'] == '1':
                 market = '沪市'
-            elif data['market'] == '0':
+            elif data['market'] == '2':
                 market = '深市'
             else:
                 market = '北市'
