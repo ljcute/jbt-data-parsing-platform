@@ -16,10 +16,10 @@ def sw_parsing_data(rs, data_):
     if rs[2] == '2':
         logger.info(f'申万宏源可充抵保证金证券解析开始...')
         for data in data_:
-            market = data[0]
-            sec_code = data[1]
-            sec_name = data[2]
-            rate = data[3]
+            market = data['0']
+            sec_code = data['1']
+            sec_name = data['2']
+            rate = data['3']
             bzj_data.append([market, sec_code, sec_name, rate])
         securities_bzj_parsing_data(rs, 3, bzj_data)
         logger.info(f'申万宏源可充抵保证金证券解析结束...')
@@ -27,10 +27,10 @@ def sw_parsing_data(rs, data_):
     elif rs[2] == '3':
         logger.info(f'申万宏源融资融券标的证券解析开始...')
         for data in data_:
-            sec_code = data[1]
-            sec_name = data[2]
-            rz_rate = None if data[3] == '-' else data[3]
-            rq_rate = None if data[4] == '-' else data[4]
+            sec_code = data['1']
+            sec_name = data['2']
+            rz_rate = None if data['3'] == '-' else data['3']
+            rq_rate = None if data['4'] == '-' else data['4']
             rzrq_data.append([sec_code, sec_name, rz_rate, rq_rate])
 
         temp_data = securities_normal_parsing_data(rzrq_data)

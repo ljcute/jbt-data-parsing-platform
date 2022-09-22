@@ -10,9 +10,6 @@ from data.ms.genralhandler import *
 
 def cj_parsing_data(rs, data_):
     bzj_data = []
-    rz_data = []
-    rq_data = []
-    rzrq_data = []
     if rs[2] == '2':
         logger.info(f'长江证券可充抵保证金证券解析开始...')
         for data in data_:

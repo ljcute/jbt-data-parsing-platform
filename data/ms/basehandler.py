@@ -10,6 +10,10 @@ import os
 import sys
 import time
 
+from data.ms.securities.ax_securities_parsing import ax_parsing_data
+from data.ms.securities.hait_securities_parsing import hait_parsing_data
+from data.ms.securities.zjcf_securities_parsing import zjcf_parsing_data
+
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.append(BASE_DIR)
 # sys.path.append(r'D:\jbt-data-parsing-platform')
@@ -229,6 +233,13 @@ class BaseHandler(object):
             gy_parsing_data(rs, data_)
         elif rs[3] == '中信建投':
             zxjt_parsing_data(rs, data_)
+        elif rs[3] == '安信证券':
+            ax_parsing_data(rs, data_)
+        elif rs[3] == '中金财富':
+            zjcf_parsing_data(rs, data_)
+        elif rs[3] == '海通证券':
+            hait_parsing_data(rs, data_)
+
 
 
 if __name__ == '__main__':

@@ -16,10 +16,10 @@ def xy_parsing_data(rs, data_):
     if rs[2] == '2':
         logger.info(f'兴业证券可充抵保证金证券解析开始...')
         for data in data_:
-            sec_code = data[1]
-            sec_name = data[2]
+            sec_code = data['1']
+            sec_name = data['2']
             # rate = round(float(str(data[3])) * 100, 3)
-            rate = rate_is_normal_one(data[3])
+            rate = rate_is_normal_one(data['3'])
             bzj_data.append([sec_code, sec_name, rate])
         securities_bzj_parsing_data_no_market(rs, bzj_data)
         logger.info(f'兴业证券可充抵保证金证券解析结束...')
@@ -27,10 +27,10 @@ def xy_parsing_data(rs, data_):
     elif rs[2] == '3':
         logger.info(f'兴业证券融资融券标的证券解析开始...')
         for data in data_:
-            sec_code = data[1]
-            sec_name = data[2]
-            rz_rate = None if data[3] == '-' or data[3] == '/' else rate_is_normal_one(data[3])
-            rq_rate = None if data[4] == '-' or data[4] == '/' else rate_is_normal_one(data[4])
+            sec_code = data['1']
+            sec_name = data['2']
+            rz_rate = None if data['3'] == '-' or data['3'] == '/' else rate_is_normal_one(data['3'])
+            rq_rate = None if data['4'] == '-' or data['4'] == '/' else rate_is_normal_one(data['4'])
             rzrq_data.append([sec_code, sec_name, rz_rate, rq_rate])
 
         temp_data = securities_normal_parsing_data(rzrq_data)

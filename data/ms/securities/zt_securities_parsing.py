@@ -16,10 +16,10 @@ def zt_parsing_data(rs, data_):
     if rs[2] == '2':
         logger.info(f'中泰证券可充抵保证金证券解析开始...')
         for data in data_:
-            sec_code = data[0]
-            sec_name = data[1]
+            sec_code = data['STOCK_CODE']
+            sec_name = data['STOCK_NAME']
             # rate = round(float(str(data[2])) * 100, 3)
-            rate = rate_is_normal_one(data[2])
+            rate = rate_is_normal_one(data['REBATE'])
             bzj_data.append([sec_code, sec_name, rate])
         securities_bzj_parsing_data_no_market(rs, bzj_data)
         logger.info(f'中泰证券可充抵保证金证券解析结束...')
@@ -27,12 +27,12 @@ def zt_parsing_data(rs, data_):
     elif rs[2] == '3':
         logger.info(f'中泰证券融资融券标的证券解析开始...')
         for data in data_:
-            sec_code = data[0]
-            sec_name = data[1]
+            sec_code = data['STOCK_CODE']
+            sec_name = data['STOCK_NAME']
             # rz_rate = round(float(str(data[2])) * 100, 3)
             # rq_rate = round(float(str(data[3])) * 100, 3)
-            rz_rate = rate_is_normal_one(data[3])
-            rq_rate = rate_is_normal_one(data[3])
+            rz_rate = rate_is_normal_one(data['FUND_RATIOS'])
+            rq_rate = rate_is_normal_one(data['STOCK_RATIOS'])
             rzrq_data.append([sec_code, sec_name, rz_rate, rq_rate])
 
         temp_data = securities_normal_parsing_data(rzrq_data)

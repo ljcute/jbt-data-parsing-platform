@@ -16,10 +16,10 @@ def gx_parsing_data(rs, data_):
     if rs[2] == '2':
         logger.info(f'国信证券可充抵保证金证券解析开始...')
         for data in data_:
-            sec_code = data[0]
-            sec_name = data[1]
+            sec_code = data['zqdm']
+            sec_name = data['zqmc']
             # rate = round(float(str(data[2])) * 100, 3)
-            rate = rate_is_normal_one(data[2])
+            rate = rate_is_normal_one(data['zsl'])
             bzj_data.append([sec_code, sec_name, rate])
         securities_bzj_parsing_data_no_market(rs, bzj_data)
         logger.info(f'国信证券可充抵保证金证券解析结束...')
@@ -27,10 +27,10 @@ def gx_parsing_data(rs, data_):
     elif rs[2] == '4':
         logger.info(f'国信证券融资标的证券解析开始...')
         for data in data_:
-            sec_code = data[1]
-            sec_name = data[2]
+            sec_code = data['zqdm']
+            sec_name = data['zqmc']
             # rate = round(float(str(data[3])) * 100, 3)
-            rate = rate_is_normal_one(data[3])
+            rate = rate_is_normal_one(data['rzbzjbl'])
             rz_data.append([sec_code, sec_name, rate])
 
         temp_data = securities_normal_parsing_data_no_market(rz_data)
@@ -45,10 +45,10 @@ def gx_parsing_data(rs, data_):
     elif rs[2] == '5':
         logger.info(f'国信证券融券标的证券解析开始...')
         for data in data_:
-            sec_code = data[1]
-            sec_name = data[2]
+            sec_code = data['zqdm']
+            sec_name = data['zqmc']
             # rate = round(float(str(data[3])) * 100, 3)
-            rate = rate_is_normal_one(data[3])
+            rate = rate_is_normal_one(data['rzbzjbl'])
             rq_data.append([sec_code, sec_name, rate])
 
         temp_data = securities_normal_parsing_data_no_market(rq_data)
