@@ -16,11 +16,11 @@ def gtja_parsing_data(rs, data_):
     if rs[2] == '2':
         logger.info(f'国泰君安证券可充抵保证金证券解析开始...')
         for data in data_:
-            market = data[3]
-            sec_code = data[0]
-            sec_name = data[1]
+            market = data['branch']
+            sec_code = data['secCode']
+            sec_name = data['secAbbr']
             # rate = round(float(str(data[2]).strip('%')), 3)
-            rate = rate_is_normal_two(data[2])
+            rate = rate_is_normal_two(data['rate'])
             bzj_data.append([market, sec_code, sec_name, rate])
         securities_bzj_parsing_data(rs, 3, bzj_data)
         logger.info(f'国泰君安证券可充抵保证金证券解析结束...')
@@ -28,10 +28,10 @@ def gtja_parsing_data(rs, data_):
     elif rs[2] == '4':
         logger.info(f'国泰君安证券融资标的证券解析开始...')
         for data in data_:
-            sec_code = data[0]
-            sec_name = data[1]
+            sec_code = data['secCode']
+            sec_name = data['secAbbr']
             # rate = round(float(str(data[2]).strip('%')), 3)
-            rate = rate_is_normal_two(data[2])
+            rate = rate_is_normal_two(data['rate'])
             rz_data.append([sec_code, sec_name, rate])
 
         temp_data = securities_normal_parsing_data_no_market(rz_data)
@@ -47,10 +47,10 @@ def gtja_parsing_data(rs, data_):
     elif rs[2] == '5':
         logger.info(f'国泰君安证券融券标的证券解析开始...')
         for data in data_:
-            sec_code = data[0]
-            sec_name = data[1]
+            sec_code = data['secCode']
+            sec_name = data['secAbbr']
             # rate = round(float(str(data[2]).strip('%')), 3)
-            rate = rate_is_normal_two(data[2])
+            rate = rate_is_normal_two(data['rate'])
             rq_data.append([sec_code, sec_name, rate])
 
         temp_data = securities_normal_parsing_data_no_market(rq_data)

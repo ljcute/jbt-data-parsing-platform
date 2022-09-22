@@ -16,11 +16,16 @@ def zs_parsing_data(rs, data_):
     if rs[2] == '2':
         logger.info(f'招商证券可充抵保证金证券解析开始...')
         for data in data_:
-            market = data[0]
-            sec_code = data[1]
-            sec_name = data[2]
+            if data['market'] == '1':
+                market = '沪市'
+            elif data['market'] == '0':
+                market = '深市'
+            else:
+                market = '北市'
+            sec_code = data['stkcode']
+            sec_name = data['stkname']
             # rate = round(float(str(data[3])) * 100, 3)
-            rate = rate_is_normal_one(data[3])
+            rate = rate_is_normal_one(data['pledgerate'])
             bzj_data.append([market, sec_code, sec_name, rate])
         securities_bzj_parsing_data(rs, 3, bzj_data)
         logger.info(f'招商证券可充抵保证金证券解析结束...')
@@ -28,10 +33,10 @@ def zs_parsing_data(rs, data_):
     elif rs[2] == '4':
         logger.info(f'招商证券融资标的证券解析开始...')
         for data in data_:
-            sec_code = data[1]
-            sec_name = data[2]
+            sec_code = data['stkcode']
+            sec_name = data['stkname']
             # rate = round(float(str(data[3])) * 100, 3)
-            rate = rate_is_normal_one(data[3])
+            rate = rate_is_normal_one(data['marginratefund'])
             rz_data.append([sec_code, sec_name, rate])
 
         temp_data = securities_normal_parsing_data_no_market(rz_data)
@@ -46,10 +51,10 @@ def zs_parsing_data(rs, data_):
     elif rs[2] == '5':
         logger.info(f'招商证券融券标的证券解析开始...')
         for data in data_:
-            sec_code = data[1]
-            sec_name = data[2]
+            sec_code = data['stkcode']
+            sec_name = data['stkname']
             # rate = round(float(str(data[3])) * 100, 3)
-            rate = rate_is_normal_one(data[3])
+            rate = rate_is_normal_one(data['marginratefund'])
             rq_data.append([sec_code, sec_name, rate])
 
         temp_data = securities_normal_parsing_data_no_market(rq_data)

@@ -16,8 +16,12 @@ factor_request_url = cf.get('factor-url', 'url')
 
 def sh_parsing_data(rs, data_):
     temp_list = []
+    ls = []
     if rs[3] == '上海交易所':
-        for data in data_:
+        for a in data_:
+            ls.append([a['0'], a['1'], a['2']])
+
+        for data in ls:
             data[1] = str(data[1]).replace(' ', '') + '.SH'
             temp_list.append(data[1])
 
@@ -30,7 +34,7 @@ def sh_parsing_data(rs, data_):
     sec_type_list = query_result['data']
     args = []
     actual_date = rs[1]
-    for temp_data in data_:
+    for temp_data in ls:
         for sec in sec_type_list:
             if temp_data[1] == sec['sec_code_market']:
                 secu_id = sec['sec_id']
@@ -44,7 +48,7 @@ def sh_parsing_data(rs, data_):
         stock_temp_list = []
         bond_temp_list = []
         fund_temp_list = []
-        for i in data_:
+        for i in ls:
             if i[4] == 'stock':
                 stock_temp_list.append([i[3]])
             elif i[4] == 'bond':
@@ -63,7 +67,7 @@ def sh_parsing_data(rs, data_):
             }
         }
         stock_res_list = query_normal_rate(stock_query_data)['data']['data']
-        for b in data_:
+        for b in ls:
             for res in stock_res_list:
                 if str(b[3]) == res[0]:
                     b.append(res[1])
@@ -79,7 +83,7 @@ def sh_parsing_data(rs, data_):
             }
         }
         bond_res_list = query_normal_rate(bond_query_data)['data']['data']
-        for bb in data_:
+        for bb in ls:
             for res in bond_res_list:
                 if str(bb[3]) == res[0]:
                     bb.append(res[1])
@@ -95,21 +99,21 @@ def sh_parsing_data(rs, data_):
             }
         }
         fund_res_list = query_normal_rate(fund_query_data)['data']['data']
-        for bbb in data_:
+        for bbb in ls:
             for res in fund_res_list:
                 if str(bbb[3]) == res[0]:
                     bbb.append(res[1])
 
         a = []
         b = []
-        for bb in data_:
+        for bb in ls:
             if len(bb) == 5:
                 a.append(bb)
             elif len(bb) == 6:
                 b.append(bb)
 
         logger.error(f'如下数据无法通过全量因子库查询到对应折算率上限:{a}')
-    data_parsing(rs, data_)
+    data_parsing(rs, ls)
 
 
 # 调用全量因子库接口
@@ -152,25 +156,33 @@ def data_parsing(rs, data_):
         if biz_type == 3:
             for i in data_:
                 if len(i) == 5:
-                    insert_data_list.append([broker_id, None if i[3] == '-' else i[3], i[4], biz_type, adjust_status_in, None, None, 1, 1, rs[1],
-                                             forever_end_dt, 1])
+                    insert_data_list.append(
+                        [broker_id, None if i[3] == '-' else i[3], i[4], biz_type, adjust_status_in, None, None, 1, 1,
+                         rs[1],
+                         forever_end_dt, 1])
                 # else:
                 #     logger.error(f'该条数据无证券id，请检查!{i}')
                 #     invalid_data_list.append(i)
 
                 if len(i) == 6:
-                    insert_data_list.append([broker_id, None if i[3] == '-' else i[3], i[4], biz_type, adjust_status_in, None, i[5], 1, 1, rs[1],
+                    insert_data_list.append(
+                        [broker_id, None if i[3] == '-' else i[3], i[4], biz_type, adjust_status_in, None, i[5], 1, 1,
+                         rs[1],
                          forever_end_dt, 1])
         elif biz_type == 1:
             for i in data_:
                 if len(i) == 5:
-                    insert_data_list.append([broker_id, None if i[3] == '-' else i[3], i[4], biz_type, adjust_status_in, None, 100, 1, 1, rs[1],
-                                             forever_end_dt, 1])
+                    insert_data_list.append(
+                        [broker_id, None if i[3] == '-' else i[3], i[4], biz_type, adjust_status_in, None, 100, 1, 1,
+                         rs[1],
+                         forever_end_dt, 1])
         elif biz_type == 2:
             for i in data_:
                 if len(i) == 5:
-                    insert_data_list.append([broker_id, None if i[3] == '-' else i[3], i[4], biz_type, adjust_status_in, None, 50, 1, 1, rs[1],
-                                             forever_end_dt, 1])
+                    insert_data_list.append(
+                        [broker_id, None if i[3] == '-' else i[3], i[4], biz_type, adjust_status_in, None, 50, 1, 1,
+                         rs[1],
+                         forever_end_dt, 1])
         if insert_data_list:
             logger.info(f'上海交易所业务数据入库开始...')
             insert_broker_mt_business_security(insert_data_list)
@@ -191,7 +203,10 @@ def data_parsing(rs, data_):
                 for temp_data in data_:
                     if b == temp_data[3]:
                         secu_type = temp_data[4]
-                        temp_insert_data_list.append([broker_id, None if b == '-' else b, secu_type, biz_type, adjust_status_in, None, temp_data[5] if len(temp_data) == 6 else None, 1, 1, datetime.datetime.now(), forever_end_dt, 1])
+                        temp_insert_data_list.append(
+                            [broker_id, None if b == '-' else b, secu_type, biz_type, adjust_status_in, None,
+                             temp_data[5] if len(temp_data) == 6 else None, 1, 1, datetime.datetime.now(),
+                             forever_end_dt, 1])
             logger.info(f'上海交易所业务数据入库开始...')
             insert_broker_mt_business_security(temp_insert_data_list)
             logger.info(f'上海交易所业务数据入库完成，共{len(temp_insert_data_list)}条')
@@ -199,10 +214,4 @@ def data_parsing(rs, data_):
         b_list = list(set(haved_list).difference(set(query_list)))
         if b_list:
             for s in b_list:
-                update_business_security_jys((str(rs[1])).replace('-', ''), s, broker_id,  biz_type, 1)
-
-
-
-
-
-
+                update_business_security_jys((str(rs[1])).replace('-', ''), s, broker_id, biz_type, 1)

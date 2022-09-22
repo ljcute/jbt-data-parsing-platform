@@ -12,7 +12,7 @@ from data.ms.sh.sh_market_mt_trading_parsing import query_normal_rate
 def sz_parsing_data(rs, data_):
     new_data = []
     for ss in data_:
-        new_data.append([ss[0], ss[1]])
+        new_data.append([ss['0'], ss['1']])
 
     temp_list = []
     if rs[3] == '深圳交易所':

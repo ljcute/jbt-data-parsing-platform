@@ -17,15 +17,13 @@ def zx_parsing_data(rs, data_):
     if rs[2] == '2':
         logger.info(f'中信证券可充抵保证金证券解析开始...')
         for data in data_:
-            market = data[0]
-            sec_code = data[1]
-            sec_name = data[2]
-            # rate = round(float(str(data[3])) * 100, 3)
-            status = data[5]
-            if status == '受限':
+            market = data['exchangeCode']
+            sec_code = data['stockCode']
+            sec_name = data['stockName']
+            if data['status'] == '受限':
                 rate = None
             else:
-                rate = rate_is_normal_one(data[3])
+                rate = rate_is_normal_one(data['percent'])
             bzj_data.append([market, sec_code, sec_name, rate])
         securities_bzj_parsing_data(rs, 3, bzj_data)
         logger.info(f'中信证券可充抵保证金证券解析结束...')
@@ -35,7 +33,7 @@ def zx_parsing_data(rs, data_):
         # 集中度分组数据解析
         for _data in data_:
             stockgroup_name = None
-            stock_group = _data[6]
+            stock_group = _data['stockgroup_name']
             if stock_group == 'A':
                 stockgroup_name = 1
             elif stock_group == 'B':
@@ -48,10 +46,9 @@ def zx_parsing_data(rs, data_):
                 stockgroup_name = 5
             elif stock_group == 'F':
                 stockgroup_name = 6
-            # stockgroup_name = _data[6]
-            market = _data[0]
-            sec_code = _data[1]
-            sec_name = _data[2]
+            market = _data['exchangeCode']
+            sec_code = _data['stockCode']
+            sec_name = _data['stockName']
             stockgroup_data.append([market, sec_code, sec_name, stockgroup_name])
         # print(stockgroup_data)
         # print(len(stockgroup_data))
@@ -66,12 +63,12 @@ def zx_parsing_data(rs, data_):
     elif rs[2] == '3':
         logger.info(f'中信证券融资融券标的证券解析开始...')
         for data in data_:
-            sec_code = data[0]
-            sec_name = data[1]
+            sec_code = data['stockCode']
+            sec_name = data['stockName']
             # rz_rate = round(float(str(data[2])) * 100, 3)
             # rq_rate = round(float(str(data[3])) * 100, 3)
-            rz_rate = rate_is_normal_one(data[2])
-            rq_rate = rate_is_normal_one(data[3])
+            rz_rate = rate_is_normal_one(data['rzPercent'])
+            rq_rate = rate_is_normal_one(data['rqPercent'])
             rzrq_data.append([sec_code, sec_name, rz_rate, rq_rate])
 
         temp_data = securities_normal_parsing_data(rzrq_data)

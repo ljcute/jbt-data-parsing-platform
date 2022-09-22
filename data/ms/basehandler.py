@@ -5,6 +5,7 @@
 # @Site    : 
 # @File    : basehandler.py
 # @Software: PyCharm
+import json
 import os
 import sys
 import time
@@ -65,25 +66,29 @@ class BaseHandler(object):
         mq_content = None
         while True:
             for msg in consumer:
-                try:
-                    recv = msg.value.decode('unicode_escape')
-                    recv = recv[1:-1]
-                    recv_ = eval(recv)
-                    mq_content = {'biz_dt': recv_['biz_dt'], 'data_type': recv_['data_type'],
-                                  'data_source': recv_['data_source'], 'message': recv_['message']}
-                    logger.info(f'此次消费的消息内容为：{mq_content}')
-                    if recv_:
-                        cls.parsing_data_job(recv_)
-                    else:
-                        logger.error(f'消费消息失败，请检查{mq_content}')
-                    consumer.commit()
-                    time.sleep(5)
-                except Exception as es:
-                    logger.error(f'此次解析任务失败:{es}，请检查！{mq_content}')
+                recv = msg.value.decode('unicode_escape')
+                recv = recv[1:-1]
+                recv_ = eval(recv)
+                mq_content = {'biz_dt': recv_['biz_dt'], 'data_type': recv_['data_type'],
+                              'data_source': recv_['data_source'], 'message': recv_['message']}
+                logger.info(f'此次消费的消息内容为：{mq_content}')
+                if recv_:
+                    cls.parsing_data_job(recv_)
+                else:
+                    logger.error(f'消费消息失败，请检查{mq_content}')
+                consumer.commit()
+                logger.info('此次消息已消费完成!')
+                time.sleep(5)
+                # try:
+                #
+                # except Exception as es:
+                #     logger.error(f'此次解析任务失败:{es}，请检查！{mq_content}')
 
     # 进行业务数据解析
     @classmethod
     def parsing_data_job(cls, data):
+        global null
+        null = '-'
         if data:
             # 从采集平台查询数据
             rs = select_collected_data(str(data['biz_dt']).replace('-', ''), data['data_type'], data['data_source'])
@@ -93,13 +98,13 @@ class BaseHandler(object):
                 if data['data_source'] == '财通证券':
                     data_ = eval((rs[0][4]).replace("null", "999"))['data']
                 else:
-                    data_ = eval(rs[0][4])['data']
+                    data_ = eval(rs[0][4])
                 insert_data_process_controler(rs[0][0], data['message'], rs[0][2], rs[0][3], 1, rs[0][1], 1, 'success')
                 logger.info(f'数据处理控制器表入库完成!')
 
-                if data['data_type'] == '0':
+                if str(data['data_type']) == '0':
                     cls.exchange_items_deal(rs[0], data_)
-                elif data['data_type'] == '1':
+                elif str(data['data_type']) == '1':
                     cls.exchange_total_deal(data_, data['message'], rs[0])
                 else:
                     cls.securities_deal(rs[0], data_)
@@ -124,11 +129,14 @@ class BaseHandler(object):
         exchange_market = None
         if rs[3] == '上海交易所':
             exchange_market = 'SSE'
+            insert_exchange_mt_transactions_total(rs[1], exchange_market, data_[0]['1'], data_[0]['2'], data_[0]['3'],
+                                                  data_[0]['4']
+                                                  , data_[0]['5'], data_[0]['6'], 1, 414, 414)
         elif rs[3] == '深圳交易所':
             exchange_market = 'SZSE'
-        logger.info(f'exchange_market={exchange_market}')
-        insert_exchange_mt_transactions_total(rs[1], exchange_market, data_[0][0], data_[0][1], data_[0][2], data_[0][3]
-                                              , data_[0][4], data_[0][5], 1, 414, 414)
+            insert_exchange_mt_transactions_total(rs[1], exchange_market, data_[0]['0'], data_[0]['1'], data_[0]['2'],
+                                                  data_[0]['3']
+                                                  , data_[0]['4'], data_[0]['5'], 1, 414, 414)
         logger.info(f'交易市场融资融券交易总量表入库完成!')
 
     @classmethod
@@ -137,17 +145,17 @@ class BaseHandler(object):
         secu_code_list = []
         for _data in data_:
             if message == 'sh_market_mt_trading_collect':
-                _secu_code = _data[1] + '.SH'
+                _secu_code = _data['1'] + '.SH'
                 secu_code_list.append(_secu_code)
-                sql_data_list.append((_data[1], _secu_code, _data[2], rs[1], _data[3], _data[4],
-                                      _data[5], _data[6], _data[7], _data[8], 1, 411, 411))
+                sql_data_list.append((_data['1'], _secu_code, _data['2'], rs[1], _data['3'], _data['4'],
+                                      _data['5'], _data['6'], _data['7'], _data['8'], 1, 411, 411))
             elif message == 'sz_market_mt_trading_collect':
-                _secu_code = _data[0] + '.SZ'
+                _secu_code = _data['0'] + '.SZ'
                 secu_code_list.append(_secu_code)
-                sql_data_list.append((_data[0], _secu_code, _data[1], rs[1], _data[2], _data[3],
-                                      _data[4], _data[5], _data[6], _data[7], 1, 411, 411))
+                sql_data_list.append((_data['0'], _secu_code, _data['1'], rs[1], _data['2'], _data['3'],
+                                      _data['4'], _data['5'], _data['6'], _data['7'], 1, 411, 411))
             else:
-                _secu_code = _data[1]
+                _secu_code = _data['1']
 
         etl_datas = {
             "module": "pysec.etl.sec360.api.sec_api",
@@ -192,7 +200,7 @@ class BaseHandler(object):
             ht_parsing_data(rs, data_)
         elif rs[3] == '财通证券':
             ct_parsing_data(rs, data_)
-        elif rs[3] == '东方财富证券':
+        elif rs[3] == '东方财富':
             dfcf_parsing_data(rs, data_)
         elif rs[3] == '长城证券':
             cc_parsing_data(rs, data_)
@@ -200,9 +208,9 @@ class BaseHandler(object):
             cj_parsing_data(rs, data_)
         # elif rs[3] == '东兴证券':
         #     dx_parsing_data(rs, data_)
-        elif rs[3] == '国泰君安证券':
+        elif rs[3] == '国泰君安':
             gtja_parsing_data(rs, data_)
-        elif rs[3] == '中国银河证券':
+        elif rs[3] == '中国银河':
             yh_parsing_data(rs, data_)
         elif rs[3] == '申万宏源':
             sw_parsing_data(rs, data_)

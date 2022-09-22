@@ -15,12 +15,17 @@ def zxjt_parsing_data(rs, data_):
     error_list = []
     if rs[2] == '99':
         for data in data_:
-            market = data[1]
-            sec_code = data[0]
-            sec_name = data[2]
-            bzj_rate = None if data[4] == '-' else rate_is_normal_one(data[4])
-            rz_rate = None if data[5] == '-' else rate_is_normal_one(data[5])
-            rq_rate = None if data[6] == '-' else rate_is_normal_one(data[6])
+            if data['market'] == "0":
+                market = '深圳'
+            elif data['market'] == "1":
+                market = '上海'
+            else:
+                market = '北京'
+            sec_code = data['stkCode']
+            sec_name = data['stkName']
+            bzj_rate = None if data['pledgerate'] == '-' else rate_is_normal_one(data['pledgerate'])
+            rz_rate = None if data['marginratefund'] == '-' else rate_is_normal_one(data['marginratefund'])
+            rq_rate = None if data['marginratestk'] == '-' else rate_is_normal_one(data['marginratestk'])
 
             bzj_data.append([market, sec_code, sec_name, bzj_rate])
             rz_data.append([sec_code, sec_name, rz_rate])
