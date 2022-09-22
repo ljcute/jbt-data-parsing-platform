@@ -66,23 +66,22 @@ class BaseHandler(object):
         mq_content = None
         while True:
             for msg in consumer:
-                recv = msg.value.decode('unicode_escape')
-                recv = recv[1:-1]
-                recv_ = eval(recv)
-                mq_content = {'biz_dt': recv_['biz_dt'], 'data_type': recv_['data_type'],
-                              'data_source': recv_['data_source'], 'message': recv_['message']}
-                logger.info(f'此次消费的消息内容为：{mq_content}')
-                if recv_:
-                    cls.parsing_data_job(recv_)
-                else:
-                    logger.error(f'消费消息失败，请检查{mq_content}')
-                consumer.commit()
-                logger.info('此次消息已消费完成!')
-                time.sleep(5)
-                # try:
-                #
-                # except Exception as es:
-                #     logger.error(f'此次解析任务失败:{es}，请检查！{mq_content}')
+                try:
+                    recv = msg.value.decode('unicode_escape')
+                    recv = recv[1:-1]
+                    recv_ = eval(recv)
+                    mq_content = {'biz_dt': recv_['biz_dt'], 'data_type': recv_['data_type'],
+                                  'data_source': recv_['data_source'], 'message': recv_['message']}
+                    logger.info(f'此次消费的消息内容为：{mq_content}')
+                    if recv_:
+                        cls.parsing_data_job(recv_)
+                    else:
+                        logger.error(f'消费消息失败，请检查{mq_content}')
+                    consumer.commit()
+                    logger.info('此次消息已消费完成!')
+                    time.sleep(5)
+                except Exception as es:
+                    logger.error(f'此次解析任务失败:{es}，请检查！{mq_content}')
 
     # 进行业务数据解析
     @classmethod
