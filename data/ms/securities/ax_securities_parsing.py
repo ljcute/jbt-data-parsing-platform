@@ -36,25 +36,25 @@ def ax_parsing_data(rs, data_):
         for data in data_:
             sec_code = data['secuCode']
             sec_name = data['secuName']
-            rz_rate = data['fiMarginRatio']
-            rq_rate = data['slMarginRatio']
+            rz_rate = rate_is_normal_one(data['fiMarginRatio'])
+            rq_rate = rate_is_normal_one(data['slMarginRatio'])
             rzrq_data.append([sec_code, sec_name, rz_rate, rq_rate])
 
         temp_data = securities_normal_parsing_data(rzrq_data)
         for temp in temp_data:
-            if len(temp) == 5:
-                rz_data.append([temp[0], temp[1], temp[2], temp[4]])
-                rq_data.append([temp[0], temp[1], temp[3], temp[4]])
+            if len(temp) == 6:
+                rz_data.append([temp[0], temp[1], temp[2], temp[4], temp[5]])
+                rq_data.append([temp[0], temp[1], temp[3], temp[4], temp[5]])
             else:
                 logger.error(f'该条记录无证券id{temp},需人工修复!')
 
         logger.info(f'安信证券融资标的证券解析开始...')
-        securities_rzrq_parsing_data(rs, 4, rz_data)
+        securities_rzrq_parsing_data(rs, 1, rz_data)
         logger.info(f'安信证券融资标的证券解析结束...')
 
         time.sleep(5)
         logger.info(f'安信证券融券标的证券解析开始...')
-        securities_rzrq_parsing_data(rs, 5, rq_data)
+        securities_rzrq_parsing_data(rs, 2, rq_data)
         logger.info(f'安信证券融券标的证券解析结束...')
 
         logger.info(f'安信证券融资融券标的证券解析结束...')
