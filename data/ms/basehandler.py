@@ -8,11 +8,6 @@
 import json
 import os
 import sys
-import time
-
-from data.ms.securities.ax_securities_parsing import ax_parsing_data
-from data.ms.securities.hait_securities_parsing import hait_parsing_data
-from data.ms.securities.zjcf_securities_parsing import zjcf_parsing_data
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.append(BASE_DIR)
@@ -40,6 +35,9 @@ from data.ms.securities.zs_securities_parsing import zs_parsing_data
 from data.ms.securities.zt_securities_parsing import zt_parsing_data
 from data.ms.securities.zx_securities_parsing import zx_parsing_data
 from data.ms.securities.zxjt_securities_parsing import zxjt_parsing_data
+from data.ms.securities.ax_securities_parsing import ax_parsing_data
+from data.ms.securities.hait_securities_parsing import hait_parsing_data
+from data.ms.securities.zjcf_securities_parsing import zjcf_parsing_data
 from data.ms.sh.sh_market_mt_trading_parsing import sh_parsing_data, query_normal_rate
 from data.ms.sz.sz_market_mt_trading_parsing import sz_parsing_data
 from utils.logs_utils import logger
