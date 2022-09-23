@@ -29,8 +29,8 @@ def xy_parsing_data(rs, data_):
         for data in data_:
             sec_code = data['1']
             sec_name = data['2']
-            rz_rate = None if data['3'] == '-' or data['3'] == '/' else rate_is_normal_one(data['3'])
-            rq_rate = None if data['4'] == '-' or data['4'] == '/' else rate_is_normal_one(data['4'])
+            rz_rate = None if data['3'] == '-' or data['3'] == '\\/' else rate_is_normal_one(data['3'])
+            rq_rate = None if data['4'] == '-' or data['4'] == '\\/' else rate_is_normal_one(data['4'])
             rzrq_data.append([sec_code, sec_name, rz_rate, rq_rate])
 
         temp_data = securities_normal_parsing_data(rzrq_data)
@@ -40,7 +40,6 @@ def xy_parsing_data(rs, data_):
                 rq_data.append([temp[0], temp[1], temp[3], temp[4], temp[5]])
             else:
                 logger.error(f'该条记录无证券id{temp},需人工修复!')
-
         logger.info(f'兴业证券融资标的证券解析开始...')
         securities_rzrq_parsing_data(rs, 1, rz_data)
         logger.info(f'兴业证券融资标的证券解析结束...')

@@ -199,13 +199,13 @@ class BaseHandler(object):
             zx_parsing_data(rs, data_)
         elif rs[3] == '华泰证券':
             ht_parsing_data(rs, data_)
-        elif rs[3] == '财通证券':
-            ct_parsing_data(rs, data_)
-        elif rs[3] == '东方财富':
-            dfcf_parsing_data(rs, data_)
-        elif rs[3] == '长城证券':
-            cc_parsing_data(rs, data_)
-        elif rs[3] == '长江证券':
+        # elif rs[3] == '财通证券':
+        #     ct_parsing_data(rs, data_)
+        # elif rs[3] == '东方财富':
+        #     dfcf_parsing_data(rs, data_)
+        # elif rs[3] == '长城证券':
+        #     cc_parsing_data(rs, data_)
+        # elif rs[3] == '长江证券':
             cj_parsing_data(rs, data_)
         # elif rs[3] == '东兴证券':
         #     dx_parsing_data(rs, data_)
@@ -221,10 +221,10 @@ class BaseHandler(object):
             zs_parsing_data(rs, data_)
         elif rs[3] == '国信证券':
             gx_parsing_data(rs, data_)
-        elif rs[3] == '光大证券':
-            gd_parsing_data(rs, data_)
-        elif rs[3] == '中泰证券':
-            zt_parsing_data(rs, data_)
+        # elif rs[3] == '光大证券':
+        #     gd_parsing_data(rs, data_)
+        # elif rs[3] == '中泰证券':
+        #     zt_parsing_data(rs, data_)
         elif rs[3] == '兴业证券':
             xy_parsing_data(rs, data_)
         elif rs[3] == '国元证券':
@@ -235,8 +235,8 @@ class BaseHandler(object):
             ax_parsing_data(rs, data_)
         elif rs[3] == '中金财富':
             zjcf_parsing_data(rs, data_)
-        elif rs[3] == '海通证券':
-            hait_parsing_data(rs, data_)
+        # elif rs[3] == '海通证券':
+        #     hait_parsing_data(rs, data_)
 
 
 
