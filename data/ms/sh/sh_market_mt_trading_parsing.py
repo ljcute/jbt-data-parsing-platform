@@ -111,8 +111,8 @@ def sh_parsing_data(rs, data_):
                 a.append(bb)
             elif len(bb) == 6:
                 b.append(bb)
-
-        logger.error(f'如下数据无法通过全量因子库查询到对应折算率上限:{a}')
+        if a:
+            logger.error(f'如下数据无法通过全量因子库查询到对应折算率上限:{a}')
     data_parsing(rs, ls)
 
 
