@@ -21,7 +21,20 @@ class Mysqldb(object):
     def get_conn(self):
         # **config代表不定长参数
         conn = pymysql.connect(**self.config)
-        return conn
+        # return conn
+        # global conn
+        # global cur
+        if conn is not None:
+            try:
+                conn.ping(True)
+                return conn
+            except Exception as e:
+                logger.error(e)
+        try:
+            conn = pymysql.Connect(**self.config)
+            return conn
+        except Exception as e:
+            logger.error(e)
 
     # 获取游标
     def get_cursor(self):

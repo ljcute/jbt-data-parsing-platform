@@ -51,6 +51,9 @@ kafkaList = cf.get('kafka', 'kafkaList')
 Topic = cf.get('kafka', 'topic')
 Group = cf.get('kafka', 'group')
 
+biz_type_map = {0: "交易所交易总量", 1: "交易所交易明细", 2: "融资融券可充抵保证金证券", 3: "融资融券标的证券"
+    , 4: "融资标的证券", 5: "融券标的证券", 99: "融资融券可充抵保证金证券和融资融券标的证券"}
+
 
 # 数据解析基类
 class BaseHandler(object):
@@ -65,8 +68,6 @@ class BaseHandler(object):
         )
         logger.info(f'============================')
         logger.info(f'数据解析开始......')
-        recv_ = None
-        mq_content = None
         while True:
             for msg in consumer:
                 try:
@@ -75,6 +76,9 @@ class BaseHandler(object):
                     recv_ = eval(recv)
                     mq_content = {'biz_dt': recv_['biz_dt'], 'data_type': recv_['data_type'],
                                   'data_source': recv_['data_source'], 'message': recv_['message']}
+                    data_source_info = recv_['data_source']
+                    data_type_info = recv_['data_type']
+                    biz_dt_info = recv_['biz_dt']
                     logger.info(f'此次消费的消息内容为：{mq_content}')
                     if recv_:
                         cls.parsing_data_job(recv_)
@@ -84,7 +88,8 @@ class BaseHandler(object):
                     logger.info('此次消息已消费完成!')
                     time.sleep(5)
                 except Exception as es:
-                    logger.error(f'此次解析任务失败，请检查！{mq_content}，具体异常信息为：{traceback.format_exc()}，Exception:{es}')
+                    logger.error(
+                        f'{data_source_info}的{biz_type_map.get(data_type_info)}解析任务失败，biz_dt为：{biz_dt_info}，请检查！具体异常信息为：{traceback.format_exc()}，Exception:{es}')
 
     # 进行业务数据解析
     @classmethod
@@ -200,13 +205,13 @@ class BaseHandler(object):
             zx_parsing_data(rs, data_)
         elif rs[3] == '华泰证券':
             ht_parsing_data(rs, data_)
-        # elif rs[3] == '财通证券':
-        #     ct_parsing_data(rs, data_)
-        # elif rs[3] == '东方财富':
-        #     dfcf_parsing_data(rs, data_)
-        # elif rs[3] == '长城证券':
-        #     cc_parsing_data(rs, data_)
-        # elif rs[3] == '长江证券':
+            # elif rs[3] == '财通证券':
+            #     ct_parsing_data(rs, data_)
+            # elif rs[3] == '东方财富':
+            #     dfcf_parsing_data(rs, data_)
+            # elif rs[3] == '长城证券':
+            #     cc_parsing_data(rs, data_)
+            # elif rs[3] == '长江证券':
             cj_parsing_data(rs, data_)
         # elif rs[3] == '东兴证券':
         #     dx_parsing_data(rs, data_)
@@ -240,8 +245,6 @@ class BaseHandler(object):
         #     hait_parsing_data(rs, data_)
 
 
-
 if __name__ == '__main__':
     bs = BaseHandler()
     bs.kafka_mq_consumer()
-
