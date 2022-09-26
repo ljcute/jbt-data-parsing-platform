@@ -212,7 +212,7 @@ class BaseHandler(object):
             # elif rs[3] == '长城证券':
             #     cc_parsing_data(rs, data_)
             # elif rs[3] == '长江证券':
-            cj_parsing_data(rs, data_)
+            # cj_parsing_data(rs, data_)
         # elif rs[3] == '东兴证券':
         #     dx_parsing_data(rs, data_)
         elif rs[3] == '国泰君安':
