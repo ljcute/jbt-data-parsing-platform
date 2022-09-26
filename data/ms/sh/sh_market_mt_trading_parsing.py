@@ -148,7 +148,7 @@ def data_parsing(rs, data_):
     else:
         broker_key = rs[3]
     broker_id = broker_id_map.get(broker_key)
-    result = query_business_security_item_jys(str(rs[1]), biz_type, broker_id, 1)
+    result = query_business_security_item_jys(get_yesterday_date(str(rs[1])), biz_type, broker_id, 1)
     if result.empty:
         # 查询结果为空，第一次处理，从数据采集平台爬取到的数据进行入库处理,调整类型为调入
         logger.info(f'进入为空的判断...')
@@ -205,7 +205,7 @@ def data_parsing(rs, data_):
                         secu_type = temp_data[4]
                         temp_insert_data_list.append(
                             [broker_id, None if b == '-' else b, secu_type, biz_type, adjust_status_in, None,
-                             temp_data[5] if len(temp_data) == 6 else None, 1, 1, datetime.datetime.now(),
+                             temp_data[5] if len(temp_data) == 6 else None, 1, 1, rs[1],
                              forever_end_dt, 1])
             logger.info(f'上海交易所业务数据入库开始...')
             insert_broker_mt_business_security(temp_insert_data_list)

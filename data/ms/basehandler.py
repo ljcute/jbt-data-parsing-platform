@@ -8,6 +8,7 @@
 import json
 import os
 import sys
+import traceback
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.append(BASE_DIR)
@@ -83,7 +84,7 @@ class BaseHandler(object):
                     logger.info('此次消息已消费完成!')
                     time.sleep(5)
                 except Exception as es:
-                    logger.error(f'此次解析任务失败:{es}，请检查！{mq_content}')
+                    logger.error(f'此次解析任务失败，请检查！{mq_content}，具体异常信息为：{traceback.format_exc()}，Exception:{es}')
 
     # 进行业务数据解析
     @classmethod

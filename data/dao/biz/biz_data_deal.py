@@ -33,20 +33,6 @@ config = {
 db = Mysqldb(config)
 
 
-def insert_data(a, b, c, d, e, f):
-    value = (a, b, c, d, e, f, str(datetime.datetime.now()), str(datetime.datetime.now()))
-    sql = f'insert into t_security_broker values {value}'
-    db.commit_data(sql)
-    # sql = 'select * from t_security_broker'
-    # pd = db.select_data_by_dataframe(sql)
-
-
-def select_rate_from_security(secu_id, biz_dt):
-    sql = f'select cur_value from t_broker_mt_business_security where secu_id = {secu_id} and data_status=1 ' \
-          f'and biz_status = 1 and start_dt <= {biz_dt} < end_dt'
-    rs = db.select_one(sql)
-
-
 def update_business_security(biz_date, secu_id, broker_id, biz_type):
     sql = f'update t_broker_mt_business_security set data_status =0,biz_status=2,end_dt= now(),update_dt = now() ' \
           f'where secu_id = {secu_id} and broker_id = {broker_id} and biz_type = {biz_type} and start_dt <= {biz_date} < end_dt and data_status=1 and biz_status=1'
