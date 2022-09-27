@@ -870,13 +870,19 @@ def temp_deal(data, market_flag):
                 '⑼', '(9)')
             boCode = str(bx[1]).replace(' ', '').split('.')[0] if '.' in str(bx[1]).replace(' ', '') else str(
                 bx[1]).replace(' ', '')
-            data_dict = {"boCode": boCode}
+            temp_market = str(bx[0]).replace(' ', '')
+            args_code = None
+            if temp_market == '深圳' or temp_market == '深市' or temp_market == '2' or temp_market == '深交所' or temp_market == '深A' or temp_market == '深圳证券交易所':
+                args_code = boCode.replace(' ', '') + '.SZ'
+            elif temp_market == '上海' or temp_market == '沪市' or temp_market == '1' or temp_market == '上交所' or temp_market == '沪A' or temp_market == '上海证券交易所':
+                args_code = boCode.replace(' ', '') + '.SH'
+            data_dict = {"boCode": args_code}
             res = get_securities_type_job(data_dict)
             if res:
                 if 'ETF' in boName or 'LOF' in boName or '基金' in boName or boName.endswith('基'):
                     temp_type = 'fund'
                     if len(res) == 1:
-                        if res[0]['boIdType'] == temp_type:
+                        if res[0]['boIdType'] == temp_type and (str(res[0]['boIdCode']).endswith('SZ') or str(res[0]['boIdCode']).endswith('SH') or str(res[0]['boIdCode']).endswith('BJ')):
                             # 提前知晓类型，就直接去判断类型，因为boid唯一
                             secu_id = res[0]['boId']
                             secu_type = res[0]['boIdType']
@@ -884,7 +890,7 @@ def temp_deal(data, market_flag):
                             bx.append(secu_type)
                     elif len(res) > 1:
                         for r in res:
-                            if r['boIdType'] == temp_type:
+                            if r['boIdType'] == temp_type and (str(r['boIdCode']).endswith('SZ') or str(r['boIdCode']).endswith('SH') or str(r['boIdCode']).endswith('BJ')):
                                 secu_id = r['boId']
                                 secu_type = r['boIdType']
                                 bx.append(secu_id)
@@ -900,14 +906,14 @@ def temp_deal(data, market_flag):
                     temp_type = 'bond'
                     # 先匹配名称 若还是查不到证券id和类型再匹配类型
                     if len(res) == 1:
-                        if res[0]['boName'] == boName:
+                        if res[0]['boName'] == boName and (str(res[0]['boIdCode']).endswith('SZ') or str(res[0]['boIdCode']).endswith('SH') or str(res[0]['boIdCode']).endswith('BJ')):
                             secu_id = res[0]['boId']
                             secu_type = res[0]['boIdType']
                             bx.append(secu_id)
                             bx.append(secu_type)
                     elif len(res) > 1:
                         for r in res:
-                            if r['boName'] == boName:
+                            if r['boName'] == boName and (str(r['boIdCode']).endswith('SZ') or str(r['boIdCode']).endswith('SH') or str(r['boIdCode']).endswith('BJ')):
                                 secu_id = r['boId']
                                 secu_type = r['boIdType']
                                 bx.append(secu_id)
@@ -919,7 +925,7 @@ def temp_deal(data, market_flag):
                     if len(bx) == 4:
                         # 匹配名字仍查不到证券id和类型，则匹配类型
                         if len(res) == 1:
-                            if res[0]['boIdType'] == temp_type:
+                            if res[0]['boIdType'] == temp_type and (str(res[0]['boIdCode']).endswith('SZ') or str(res[0]['boIdCode']).endswith('SH') or str(res[0]['boIdCode']).endswith('BJ')):
                                 # 提前知晓类型，就直接去判断类型，因为boid唯一
                                 secu_id = res[0]['boId']
                                 secu_type = res[0]['boIdType']
@@ -927,7 +933,7 @@ def temp_deal(data, market_flag):
                                 bx.append(secu_type)
                         elif len(res) > 1:
                             for r in res:
-                                if r['boIdType'] == temp_type:
+                                if r['boIdType'] == temp_type and (str(r['boIdCode']).endswith('SZ') or str(r['boIdCode']).endswith('SH') or str(r['boIdCode']).endswith('BJ')):
                                     secu_id = r['boId']
                                     secu_type = r['boIdType']
                                     bx.append(secu_id)
@@ -941,7 +947,7 @@ def temp_deal(data, market_flag):
                         logger.error(f'该证券代码{bx}获取证券id和证券类型失败，请检查！')
                 else:
                     if len(res) == 1:
-                        if res[0]['boName'] == boName and boCode in res[0]['boIdCode']:
+                        if res[0]['boName'] == boName and boCode in res[0]['boIdCode'] and (str(res[0]['boIdCode']).endswith('SZ') or str(res[0]['boIdCode']).endswith('SH') or str(res[0]['boIdCode']).endswith('BJ')):
                             secu_id = res[0]['boId']
                             secu_type = res[0]['boIdType']
                             bx.append(secu_id)
@@ -950,7 +956,7 @@ def temp_deal(data, market_flag):
                             logger.error(f'该证券代码{bx}获取证券id和证券类型失败，请检查！')
                     elif len(res) > 1:
                         for r in res:
-                            if r['boName'] == boName and boCode in r['boIdCode']:
+                            if r['boName'] == boName and boCode in r['boIdCode'] and (str(r['boIdCode']).endswith('SZ') or str(r['boIdCode']).endswith('SH') or str(r['boIdCode']).endswith('BJ')):
                                 secu_id = r['boId']
                                 secu_type = r['boIdType']
                                 bx.append(secu_id)
@@ -1114,7 +1120,7 @@ def temp_deal(data, market_flag):
                 if 'ETF' in boName or 'LOF' in boName or '基金' in boName or boName.endswith('基'):
                     temp_type = 'fund'
                     if len(res) == 1:
-                        if res[0]['boIdType'] == temp_type:
+                        if res[0]['boIdType'] == temp_type and (str(res[0]['boIdCode']).endswith('SZ') or str(res[0]['boIdCode']).endswith('SH') or str(res[0]['boIdCode']).endswith('BJ')):
                             # 提前知晓类型，就直接去判断类型，因为boid唯一
                             secu_id = res[0]['boId']
                             secu_type = res[0]['boIdType']
@@ -1122,7 +1128,7 @@ def temp_deal(data, market_flag):
                             bx.append(secu_type)
                     elif len(res) > 1:
                         for r in res:
-                            if r['boIdType'] == temp_type:
+                            if r['boIdType'] == temp_type and (str(r['boIdCode']).endswith('SZ') or str(r['boIdCode']).endswith('SH') or str(r['boIdCode']).endswith('BJ')):
                                 secu_id = r['boId']
                                 secu_type = r['boIdType']
                                 bx.append(secu_id)
@@ -1138,14 +1144,14 @@ def temp_deal(data, market_flag):
                     temp_type = 'bond'
                     # 先匹配名称 若还是查不到证券id和类型再匹配类型
                     if len(res) == 1:
-                        if res[0]['boName'] == boName:
+                        if res[0]['boName'] == boName and (str(res[0]['boIdCode']).endswith('SZ') or str(res[0]['boIdCode']).endswith('SH') or str(res[0]['boIdCode']).endswith('BJ')):
                             secu_id = res[0]['boId']
                             secu_type = res[0]['boIdType']
                             bx.append(secu_id)
                             bx.append(secu_type)
                     elif len(res) > 1:
                         for r in res:
-                            if r['boName'] == boName:
+                            if r['boName'] == boName and (str(r['boIdCode']).endswith('SZ') or str(r['boIdCode']).endswith('SH') or str(r['boIdCode']).endswith('BJ')):
                                 secu_id = r['boId']
                                 secu_type = r['boIdType']
                                 bx.append(secu_id)
@@ -1157,7 +1163,7 @@ def temp_deal(data, market_flag):
                     if len(bx) == 3 or len(bx) == 4:
                         # 匹配名字仍查不到证券id和类型，则匹配类型
                         if len(res) == 1:
-                            if res[0]['boIdType'] == temp_type:
+                            if res[0]['boIdType'] == temp_type and (str(res[0]['boIdCode']).endswith('SZ') or str(res[0]['boIdCode']).endswith('SH') or str(res[0]['boIdCode']).endswith('BJ')):
                                 # 提前知晓类型，就直接去判断类型，因为boid唯一
                                 secu_id = res[0]['boId']
                                 secu_type = res[0]['boIdType']
@@ -1165,7 +1171,7 @@ def temp_deal(data, market_flag):
                                 bx.append(secu_type)
                         elif len(res) > 1:
                             for r in res:
-                                if r['boIdType'] == temp_type:
+                                if r['boIdType'] == temp_type and (str(r['boIdCode']).endswith('SZ') or str(r['boIdCode']).endswith('SH') or str(r['boIdCode']).endswith('BJ')):
                                     secu_id = r['boId']
                                     secu_type = r['boIdType']
                                     bx.append(secu_id)
@@ -1179,7 +1185,7 @@ def temp_deal(data, market_flag):
                         logger.error(f'该证券代码{bx}获取证券id和证券类型失败，请检查！')
                 else:
                     if len(res) == 1:
-                        if res[0]['boName'] == boName and boCode in res[0]['boIdCode']:
+                        if res[0]['boName'] == boName and boCode in res[0]['boIdCode'] and (str(res[0]['boIdCode']).endswith('SZ') or str(res[0]['boIdCode']).endswith('SH') or str(res[0]['boIdCode']).endswith('BJ')):
                             secu_id = res[0]['boId']
                             secu_type = res[0]['boIdType']
                             bx.append(secu_id)
@@ -1188,7 +1194,7 @@ def temp_deal(data, market_flag):
                             logger.error(f'该证券代码{bx}获取证券id和证券类型失败，请检查！')
                     elif len(res) > 1:
                         for r in res:
-                            if r['boName'] == boName and boCode in r['boIdCode']:
+                            if r['boName'] == boName and boCode in r['boIdCode'] and (str(r['boIdCode']).endswith('SZ') or str(r['boIdCode']).endswith('SH') or str(r['boIdCode']).endswith('BJ')):
                                 secu_id = r['boId']
                                 secu_type = r['boIdType']
                                 bx.append(secu_id)
