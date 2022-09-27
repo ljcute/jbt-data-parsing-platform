@@ -524,6 +524,7 @@ def securities_bzj_parsing_data(rs, biz_type, data_):
                                     [broker_id, sec_id, secu_type, biz_type, adjust_status_out, old_rate, None, 1, 1,
                                      str(rs[1]), forever_end_dt, None])
                 else:
+                    update_business_security((str(rs[1])).replace('-', ''), row[4], broker_id, biz_type)
                     insert_data_list_noempty.append(
                         [broker_id, row[4], row[5], biz_type, adjust_status_out, None, None, 1, 1,
                          str(rs[1]), forever_end_dt, None])
@@ -758,6 +759,7 @@ def securities_bzj_parsing_data_no_market(rs, data_):
                                     [broker_id, sec_id, secu_type, 3, adjust_status_out, old_rate, None, 1, 1,
                                      str(rs[1]), forever_end_dt, None])
                 else:
+                    update_business_security((str(rs[1])).replace('-', ''), row[3], broker_id, 3)
                     insert_data_list_noempty.append([broker_id, row[3], row[4], 3, adjust_status_out, None, None, 1, 1,
                                                      str(rs[1]), forever_end_dt, None])
             else:
@@ -1486,6 +1488,7 @@ def securities_rzrq_parsing_data(rs, biz_type, data_):
                                     [broker_id, sec_id, secu_type, biz_type, adjust_status_out, old_rate, None, 1, 1,
                                      str(rs[1]), forever_end_dt, None])
                 else:
+                    update_business_security((str(rs[1])).replace('-', ''), row[3], broker_id, biz_type)
                     insert_data_list_noempty.append(
                         [broker_id, row[3], row[4], biz_type, adjust_status_low, None, None, 1,
                          1, str(rs[1]), forever_end_dt, None])
