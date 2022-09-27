@@ -10,6 +10,8 @@ import os
 import sys
 import traceback
 
+import pandas
+
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.append(BASE_DIR)
 # sys.path.append(r'D:\jbt-data-parsing-platform')
@@ -99,11 +101,28 @@ class BaseHandler(object):
         if data:
             # 从采集平台查询数据
             rs = select_collected_data(str(data['biz_dt']).replace('-', ''), data['data_type'], data['data_source'])
+            data_source_info = data['data_source']
+            data_type_info = data['data_type']
             if rs:
                 start_dt = datetime.datetime.now()
 
                 if data['data_source'] == '财通证券':
                     data_ = eval((rs[0][4]).replace("null", "999"))['data']
+                elif data['data_source'] == '华泰证券':
+                    data_ = eval(rs[0][4])
+                    pd = pandas.DataFrame(data_)
+                    dep_data = pd.duplicated('stockCode').sum()
+                    dep_line = pd[pd.duplicated('stockCode', keep='last')]  # 查看删除重复的行
+                    dep_list = dep_line.values.tolist()
+                    warn_list = []
+                    for i in dep_list:
+                        warn_list.append(i[3])
+                    logger.warn(
+                        f'{data_source_info}的{biz_type_map.get(data_type_info)}解析中包含{dep_data}条重复数据，具体证券代码如下：{list(set(warn_list))},请业务人员核对！')
+                    pd.sort_index(axis=0, ascending=True, inplace=True)
+                    pd.drop_duplicates(subset='stockCode', keep='last', inplace=True, ignore_index=False)
+                    data_ = pd.to_json(orient="records", force_ascii=False)
+                    data_ = eval(data_)
                 else:
                     data_ = eval(rs[0][4])
                 insert_data_process_controler(rs[0][0], data['message'], rs[0][2], rs[0][3], 1, rs[0][1], 1, 'success')
