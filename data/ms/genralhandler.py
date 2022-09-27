@@ -24,11 +24,11 @@ request_url_zc_center = cf.get('zc-center-url', 'url')
 
 # 比较调整前，调整后的rate值
 def get_adjust_status_by_two_rate(pre_value, current_rate):
-    if current_rate is None or current_rate == '-' or current_rate == '--':  # 当前rate是'-'表示调出
-        return adjust_status_out
-
     if pre_value is None and current_rate is None:
         return adjust_status_invariant
+
+    if current_rate is None or current_rate == '-' or current_rate == '--':  # 当前rate是'-'表示调出
+        return adjust_status_out
 
     if pre_value is None and current_rate is not None:
         return adjust_status_in
@@ -524,10 +524,15 @@ def securities_bzj_parsing_data(rs, biz_type, data_):
                                     [broker_id, sec_id, secu_type, biz_type, adjust_status_out, old_rate, None, 1, 1,
                                      str(rs[1]), forever_end_dt, None])
                 else:
-                    update_business_security((str(rs[1])).replace('-', ''), row[4], broker_id, biz_type)
-                    insert_data_list_noempty.append(
-                        [broker_id, row[4], row[5], biz_type, adjust_status_out, None, None, 1, 1,
-                         str(rs[1]), forever_end_dt, None])
+                    db_record = df_exists_index(result, row[1], row[4])
+                    if db_record is not None:
+                        old_rate = db_record[7]
+                        adjust_status = get_adjust_status_by_two_rate(old_rate, row[3])
+                        if adjust_status != adjust_status_invariant:
+                            update_business_security((str(rs[1])).replace('-', ''), row[4], broker_id, biz_type)
+                            insert_data_list_noempty.append(
+                                [broker_id, row[4], row[5], biz_type, adjust_status_out, None, None, 1, 1,
+                                 str(rs[1]), forever_end_dt, None])
             else:
                 invalid_data_list.append(row)
         if invalid_data_list:
@@ -759,9 +764,14 @@ def securities_bzj_parsing_data_no_market(rs, data_):
                                     [broker_id, sec_id, secu_type, 3, adjust_status_out, old_rate, None, 1, 1,
                                      str(rs[1]), forever_end_dt, None])
                 else:
-                    update_business_security((str(rs[1])).replace('-', ''), row[3], broker_id, 3)
-                    insert_data_list_noempty.append([broker_id, row[3], row[4], 3, adjust_status_out, None, None, 1, 1,
-                                                     str(rs[1]), forever_end_dt, None])
+                    db_record = df_exists_index(result, row[0], row[3])
+                    if db_record is not None:
+                        old_rate = db_record[7]
+                        adjust_status = get_adjust_status_by_two_rate(old_rate, row[3])
+                        if adjust_status != adjust_status_invariant:
+                            update_business_security((str(rs[1])).replace('-', ''), row[3], broker_id, 3)
+                            insert_data_list_noempty.append([broker_id, row[3], row[4], 3, adjust_status_out, None, None, 1, 1,
+                                                             str(rs[1]), forever_end_dt, None])
             else:
                 invalid_data_list.append(row)
         if invalid_data_list:
@@ -1488,10 +1498,15 @@ def securities_rzrq_parsing_data(rs, biz_type, data_):
                                     [broker_id, sec_id, secu_type, biz_type, adjust_status_out, old_rate, None, 1, 1,
                                      str(rs[1]), forever_end_dt, None])
                 else:
-                    update_business_security((str(rs[1])).replace('-', ''), row[3], broker_id, biz_type)
-                    insert_data_list_noempty.append(
-                        [broker_id, row[3], row[4], biz_type, adjust_status_low, None, None, 1,
-                         1, str(rs[1]), forever_end_dt, None])
+                    db_record = df_exists_index(result, row[0], row[3])
+                    if db_record is not None:
+                        old_rate = db_record[7]
+                        adjust_status = get_adjust_status_by_two_rate(old_rate, row[2])
+                        if adjust_status != adjust_status_invariant:
+                            update_business_security((str(rs[1])).replace('-', ''), row[3], broker_id, biz_type)
+                            insert_data_list_noempty.append(
+                                [broker_id, row[3], row[4], biz_type, adjust_status_low, None, None, 1,
+                                 1, str(rs[1]), forever_end_dt, None])
             else:
                 invalid_data_list.append(row)
         if invalid_data_list:
