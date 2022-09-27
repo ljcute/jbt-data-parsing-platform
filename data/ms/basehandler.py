@@ -120,7 +120,7 @@ class BaseHandler(object):
                     logger.warn(
                         f'{data_source_info}的{biz_type_map.get(data_type_info)}解析中包含{dep_data}条重复数据，具体证券代码如下：{list(set(warn_list))},请业务人员核对！')
                     pd.sort_index(axis=0, ascending=True, inplace=True)
-                    pd.drop_duplicates(subset='stockCode', keep='last', inplace=True, ignore_index=False)
+                    pd.drop_duplicates(subset='stockCode', keep='first', inplace=True, ignore_index=False)
                     data_ = pd.to_json(orient="records", force_ascii=False)
                     data_ = eval(data_)
                 else:
