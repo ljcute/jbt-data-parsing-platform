@@ -24,8 +24,14 @@ def zxjt_parsing_data(rs, data_):
             sec_code = data['stkCode']
             sec_name = data['stkName']
             bzj_rate = None if data['pledgerate'] == '-' else rate_is_normal_one(data['pledgerate'])
-            rz_rate = None if data['marginratefund'] == '-' else rate_is_normal_one(data['marginratefund'])
-            rq_rate = None if data['marginratestk'] == '-' else rate_is_normal_one(data['marginratestk'])
+            if data['marginratefund'] == '-' or data['fundctrlflag'] == '1':
+                rz_rate = None
+            else:
+                rz_rate = rate_is_normal_one(data['pledgerate'])
+            if data['marginratestk'] == '-' or data['stkctrlflag'] == '1':
+                rq_rate = None
+            else:
+                rq_rate = rate_is_normal_one(data['marginratestk'])
 
             bzj_data.append([market, sec_code, sec_name, bzj_rate])
             rz_data.append([sec_code, sec_name, rz_rate])

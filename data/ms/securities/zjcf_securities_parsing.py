@@ -36,8 +36,14 @@ def zjcf_parsing_data(rs, data_):
         for data in data_:
             sec_code = data['stockId']
             sec_name = data['stockName']
-            rz_rate = rate_is_normal_one(data['guaranteeMoney'])
-            rq_rate = rate_is_normal_one(data['guaranteeStock'])
+            if data['moneyTarget'] == 'N':
+                rz_rate = None
+            else:
+                rz_rate = rate_is_normal_one(data['guaranteeMoney'])
+            if data['stockTarget'] == 'N':
+                rq_rate = None
+            else:
+                rq_rate = rate_is_normal_one(data['guaranteeStock'])
             rzrq_data.append([sec_code, sec_name, rz_rate, rq_rate])
 
         temp_data = securities_normal_parsing_data(rzrq_data)
