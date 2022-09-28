@@ -21,6 +21,8 @@ cf.read(full_path, encoding='utf-8')
 request_url = cf.get('360etl-url', 'url')
 request_url_zc_center = cf.get('zc-center-url', 'url')
 
+biz_type_map = {3: "可充抵保证金证券", 1: "融资标的证券", 2: "融券标的证券", 4: "集中度分组"}
+
 
 # 比较调整前，调整后的rate值
 def get_adjust_status_by_two_rate(pre_value, current_rate):
@@ -65,6 +67,7 @@ def get_yesterday_date(today_str):
         day_step = 1
     last_work_day = rs - timedelta(days=day_step)
     return str(last_work_day).split(' ')[0].replace('-', '')
+
 
 # 判断券商状态设置
 def rate_is_normal_one(rate):
@@ -315,6 +318,7 @@ def securities_bzj_parsing_data(rs, biz_type, data_):
         broker_key = rs[3]
     broker_id = broker_id_map.get(broker_key)
     result = query_business_security_item(get_yesterday_date(str(rs[1])), biz_type, broker_id)
+    adjust_status_out_list = []
     if result.empty:
         logger.info(f'进入为空的判断')
         # 查询结果为空，第一次处理，从数据采集平台爬取到的数据进行入库处理,调整类型为调入
@@ -518,6 +522,7 @@ def securities_bzj_parsing_data(rs, biz_type, data_):
                                         logger.error(f'本次解析数据违反业务规则!存在严重异常,不落地数据库,解析结束!{row}')
                                         raise Exception(f'本次解析数据违反业务规则!存在严重异常,不落地数据库,解析结束!{row}')
                             elif adjust_status == adjust_status_out:
+                                adjust_status_out_list.append(row[1])
                                 update_business_security((str(rs[1])).replace('-', ''), sec_id, broker_id, biz_type)
                                 # 调出 更新记录，rate置为空，新增一条调处记录，更新其他字段,
                                 insert_data_list_noempty.append(
@@ -529,6 +534,7 @@ def securities_bzj_parsing_data(rs, biz_type, data_):
                         old_rate = db_record[7]
                         adjust_status = get_adjust_status_by_two_rate(old_rate, row[3])
                         if adjust_status != adjust_status_invariant:
+                            adjust_status_out_list.append(row[1])
                             update_business_security((str(rs[1])).replace('-', ''), row[4], broker_id, biz_type)
                             insert_data_list_noempty.append(
                                 [broker_id, row[4], row[5], biz_type, adjust_status_out, None, None, 1, 1,
@@ -537,6 +543,8 @@ def securities_bzj_parsing_data(rs, biz_type, data_):
                 invalid_data_list.append(row)
         if invalid_data_list:
             logger.error(f'{rs[3]}，如下数据无证券id，请检查!{invalid_data_list}')
+        if adjust_status_out_list:
+            logger.warn(f'{rs[1]}-{rs[3]}的{biz_type_map.get(int(biz_type))}为调出状态，共{len(adjust_status_out_list)}条，具体证券代码如下：{adjust_status_out_list}')
         if insert_data_list_noempty:
             logger.info(f'业务数据入库开始,t_broker_mt_business_security...')
             insert_broker_mt_business_security(insert_data_list_noempty)
@@ -554,6 +562,7 @@ def securities_bzj_parsing_data_no_market(rs, data_):
         broker_key = rs[3]
     broker_id = broker_id_map.get(broker_key)
     result = query_business_security_item(get_yesterday_date(str(rs[1])), 3, broker_id)
+    adjust_status_out_list = []
     if result.empty:
         logger.info(f'进入为空的判断')
         # 查询结果为空，第一次处理，从数据采集平台爬取到的数据进行入库处理,调整类型为调入
@@ -758,6 +767,7 @@ def securities_bzj_parsing_data_no_market(rs, data_):
                                         logger.error(f'本次解析数据违反业务规则!存在严重异常,不落地数据库,解析结束!{row}')
                                         raise Exception(f'本次解析数据违反业务规则!存在严重异常,不落地数据库,解析结束!{row}')
                             elif adjust_status == adjust_status_out:
+                                adjust_status_out_list.append(row[0])
                                 update_business_security((str(rs[1])).replace('-', ''), sec_id, broker_id, 3)
                                 # 调出 更新记录，rate置为空，新增一条调处记录，更新其他字段,
                                 insert_data_list_noempty.append(
@@ -769,13 +779,17 @@ def securities_bzj_parsing_data_no_market(rs, data_):
                         old_rate = db_record[7]
                         adjust_status = get_adjust_status_by_two_rate(old_rate, row[3])
                         if adjust_status != adjust_status_invariant:
+                            adjust_status_out_list.append(row[0])
                             update_business_security((str(rs[1])).replace('-', ''), row[3], broker_id, 3)
-                            insert_data_list_noempty.append([broker_id, row[3], row[4], 3, adjust_status_out, None, None, 1, 1,
-                                                             str(rs[1]), forever_end_dt, None])
+                            insert_data_list_noempty.append(
+                                [broker_id, row[3], row[4], 3, adjust_status_out, None, None, 1, 1,
+                                 str(rs[1]), forever_end_dt, None])
             else:
                 invalid_data_list.append(row)
         if invalid_data_list:
             logger.error(f'{rs[3]}，如下数据无证券id，请检查!{invalid_data_list}')
+        if adjust_status_out_list:
+            logger.warn(f'{rs[1]}-{rs[3]}的{biz_type_map.get(3)}为调出状态，共{len(adjust_status_out_list)}条，具体证券代码如下：{adjust_status_out_list}')
         if insert_data_list_noempty:
             logger.info(f'业务数据入库开始...')
             insert_broker_mt_business_security(insert_data_list_noempty)
@@ -882,7 +896,9 @@ def temp_deal(data, market_flag):
                 if 'ETF' in boName or 'LOF' in boName or '基金' in boName or boName.endswith('基'):
                     temp_type = 'fund'
                     if len(res) == 1:
-                        if res[0]['boIdType'] == temp_type and (str(res[0]['boIdCode']).endswith('SZ') or str(res[0]['boIdCode']).endswith('SH') or str(res[0]['boIdCode']).endswith('BJ')):
+                        if res[0]['boIdType'] == temp_type and (
+                                str(res[0]['boIdCode']).endswith('SZ') or str(res[0]['boIdCode']).endswith('SH') or str(
+                                res[0]['boIdCode']).endswith('BJ')):
                             # 提前知晓类型，就直接去判断类型，因为boid唯一
                             secu_id = res[0]['boId']
                             secu_type = res[0]['boIdType']
@@ -890,7 +906,9 @@ def temp_deal(data, market_flag):
                             bx.append(secu_type)
                     elif len(res) > 1:
                         for r in res:
-                            if r['boIdType'] == temp_type and (str(r['boIdCode']).endswith('SZ') or str(r['boIdCode']).endswith('SH') or str(r['boIdCode']).endswith('BJ')):
+                            if r['boIdType'] == temp_type and (
+                                    str(r['boIdCode']).endswith('SZ') or str(r['boIdCode']).endswith('SH') or str(
+                                    r['boIdCode']).endswith('BJ')):
                                 secu_id = r['boId']
                                 secu_type = r['boIdType']
                                 bx.append(secu_id)
@@ -906,14 +924,18 @@ def temp_deal(data, market_flag):
                     temp_type = 'bond'
                     # 先匹配名称 若还是查不到证券id和类型再匹配类型
                     if len(res) == 1:
-                        if res[0]['boName'] == boName and (str(res[0]['boIdCode']).endswith('SZ') or str(res[0]['boIdCode']).endswith('SH') or str(res[0]['boIdCode']).endswith('BJ')):
+                        if res[0]['boName'] == boName and (
+                                str(res[0]['boIdCode']).endswith('SZ') or str(res[0]['boIdCode']).endswith('SH') or str(
+                                res[0]['boIdCode']).endswith('BJ')):
                             secu_id = res[0]['boId']
                             secu_type = res[0]['boIdType']
                             bx.append(secu_id)
                             bx.append(secu_type)
                     elif len(res) > 1:
                         for r in res:
-                            if r['boName'] == boName and (str(r['boIdCode']).endswith('SZ') or str(r['boIdCode']).endswith('SH') or str(r['boIdCode']).endswith('BJ')):
+                            if r['boName'] == boName and (
+                                    str(r['boIdCode']).endswith('SZ') or str(r['boIdCode']).endswith('SH') or str(
+                                    r['boIdCode']).endswith('BJ')):
                                 secu_id = r['boId']
                                 secu_type = r['boIdType']
                                 bx.append(secu_id)
@@ -925,7 +947,9 @@ def temp_deal(data, market_flag):
                     if len(bx) == 4:
                         # 匹配名字仍查不到证券id和类型，则匹配类型
                         if len(res) == 1:
-                            if res[0]['boIdType'] == temp_type and (str(res[0]['boIdCode']).endswith('SZ') or str(res[0]['boIdCode']).endswith('SH') or str(res[0]['boIdCode']).endswith('BJ')):
+                            if res[0]['boIdType'] == temp_type and (
+                                    str(res[0]['boIdCode']).endswith('SZ') or str(res[0]['boIdCode']).endswith(
+                                    'SH') or str(res[0]['boIdCode']).endswith('BJ')):
                                 # 提前知晓类型，就直接去判断类型，因为boid唯一
                                 secu_id = res[0]['boId']
                                 secu_type = res[0]['boIdType']
@@ -933,7 +957,9 @@ def temp_deal(data, market_flag):
                                 bx.append(secu_type)
                         elif len(res) > 1:
                             for r in res:
-                                if r['boIdType'] == temp_type and (str(r['boIdCode']).endswith('SZ') or str(r['boIdCode']).endswith('SH') or str(r['boIdCode']).endswith('BJ')):
+                                if r['boIdType'] == temp_type and (
+                                        str(r['boIdCode']).endswith('SZ') or str(r['boIdCode']).endswith('SH') or str(
+                                        r['boIdCode']).endswith('BJ')):
                                     secu_id = r['boId']
                                     secu_type = r['boIdType']
                                     bx.append(secu_id)
@@ -947,7 +973,9 @@ def temp_deal(data, market_flag):
                         logger.error(f'该证券代码{bx}获取证券id和证券类型失败，请检查！')
                 else:
                     if len(res) == 1:
-                        if res[0]['boName'] == boName and boCode in res[0]['boIdCode'] and (str(res[0]['boIdCode']).endswith('SZ') or str(res[0]['boIdCode']).endswith('SH') or str(res[0]['boIdCode']).endswith('BJ')):
+                        if res[0]['boName'] == boName and boCode in res[0]['boIdCode'] and (
+                                str(res[0]['boIdCode']).endswith('SZ') or str(res[0]['boIdCode']).endswith('SH') or str(
+                                res[0]['boIdCode']).endswith('BJ')):
                             secu_id = res[0]['boId']
                             secu_type = res[0]['boIdType']
                             bx.append(secu_id)
@@ -956,7 +984,9 @@ def temp_deal(data, market_flag):
                             logger.error(f'该证券代码{bx}获取证券id和证券类型失败，请检查！')
                     elif len(res) > 1:
                         for r in res:
-                            if r['boName'] == boName and boCode in r['boIdCode'] and (str(r['boIdCode']).endswith('SZ') or str(r['boIdCode']).endswith('SH') or str(r['boIdCode']).endswith('BJ')):
+                            if r['boName'] == boName and boCode in r['boIdCode'] and (
+                                    str(r['boIdCode']).endswith('SZ') or str(r['boIdCode']).endswith('SH') or str(
+                                    r['boIdCode']).endswith('BJ')):
                                 secu_id = r['boId']
                                 secu_type = r['boIdType']
                                 bx.append(secu_id)
@@ -1120,7 +1150,9 @@ def temp_deal(data, market_flag):
                 if 'ETF' in boName or 'LOF' in boName or '基金' in boName or boName.endswith('基'):
                     temp_type = 'fund'
                     if len(res) == 1:
-                        if res[0]['boIdType'] == temp_type and (str(res[0]['boIdCode']).endswith('SZ') or str(res[0]['boIdCode']).endswith('SH') or str(res[0]['boIdCode']).endswith('BJ')):
+                        if res[0]['boIdType'] == temp_type and (
+                                str(res[0]['boIdCode']).endswith('SZ') or str(res[0]['boIdCode']).endswith('SH') or str(
+                                res[0]['boIdCode']).endswith('BJ')):
                             # 提前知晓类型，就直接去判断类型，因为boid唯一
                             secu_id = res[0]['boId']
                             secu_type = res[0]['boIdType']
@@ -1128,7 +1160,9 @@ def temp_deal(data, market_flag):
                             bx.append(secu_type)
                     elif len(res) > 1:
                         for r in res:
-                            if r['boIdType'] == temp_type and (str(r['boIdCode']).endswith('SZ') or str(r['boIdCode']).endswith('SH') or str(r['boIdCode']).endswith('BJ')):
+                            if r['boIdType'] == temp_type and (
+                                    str(r['boIdCode']).endswith('SZ') or str(r['boIdCode']).endswith('SH') or str(
+                                    r['boIdCode']).endswith('BJ')):
                                 secu_id = r['boId']
                                 secu_type = r['boIdType']
                                 bx.append(secu_id)
@@ -1144,14 +1178,18 @@ def temp_deal(data, market_flag):
                     temp_type = 'bond'
                     # 先匹配名称 若还是查不到证券id和类型再匹配类型
                     if len(res) == 1:
-                        if res[0]['boName'] == boName and (str(res[0]['boIdCode']).endswith('SZ') or str(res[0]['boIdCode']).endswith('SH') or str(res[0]['boIdCode']).endswith('BJ')):
+                        if res[0]['boName'] == boName and (
+                                str(res[0]['boIdCode']).endswith('SZ') or str(res[0]['boIdCode']).endswith('SH') or str(
+                                res[0]['boIdCode']).endswith('BJ')):
                             secu_id = res[0]['boId']
                             secu_type = res[0]['boIdType']
                             bx.append(secu_id)
                             bx.append(secu_type)
                     elif len(res) > 1:
                         for r in res:
-                            if r['boName'] == boName and (str(r['boIdCode']).endswith('SZ') or str(r['boIdCode']).endswith('SH') or str(r['boIdCode']).endswith('BJ')):
+                            if r['boName'] == boName and (
+                                    str(r['boIdCode']).endswith('SZ') or str(r['boIdCode']).endswith('SH') or str(
+                                    r['boIdCode']).endswith('BJ')):
                                 secu_id = r['boId']
                                 secu_type = r['boIdType']
                                 bx.append(secu_id)
@@ -1163,7 +1201,9 @@ def temp_deal(data, market_flag):
                     if len(bx) == 3 or len(bx) == 4:
                         # 匹配名字仍查不到证券id和类型，则匹配类型
                         if len(res) == 1:
-                            if res[0]['boIdType'] == temp_type and (str(res[0]['boIdCode']).endswith('SZ') or str(res[0]['boIdCode']).endswith('SH') or str(res[0]['boIdCode']).endswith('BJ')):
+                            if res[0]['boIdType'] == temp_type and (
+                                    str(res[0]['boIdCode']).endswith('SZ') or str(res[0]['boIdCode']).endswith(
+                                    'SH') or str(res[0]['boIdCode']).endswith('BJ')):
                                 # 提前知晓类型，就直接去判断类型，因为boid唯一
                                 secu_id = res[0]['boId']
                                 secu_type = res[0]['boIdType']
@@ -1171,7 +1211,9 @@ def temp_deal(data, market_flag):
                                 bx.append(secu_type)
                         elif len(res) > 1:
                             for r in res:
-                                if r['boIdType'] == temp_type and (str(r['boIdCode']).endswith('SZ') or str(r['boIdCode']).endswith('SH') or str(r['boIdCode']).endswith('BJ')):
+                                if r['boIdType'] == temp_type and (
+                                        str(r['boIdCode']).endswith('SZ') or str(r['boIdCode']).endswith('SH') or str(
+                                        r['boIdCode']).endswith('BJ')):
                                     secu_id = r['boId']
                                     secu_type = r['boIdType']
                                     bx.append(secu_id)
@@ -1185,7 +1227,9 @@ def temp_deal(data, market_flag):
                         logger.error(f'该证券代码{bx}获取证券id和证券类型失败，请检查！')
                 else:
                     if len(res) == 1:
-                        if res[0]['boName'] == boName and boCode in res[0]['boIdCode'] and (str(res[0]['boIdCode']).endswith('SZ') or str(res[0]['boIdCode']).endswith('SH') or str(res[0]['boIdCode']).endswith('BJ')):
+                        if res[0]['boName'] == boName and boCode in res[0]['boIdCode'] and (
+                                str(res[0]['boIdCode']).endswith('SZ') or str(res[0]['boIdCode']).endswith('SH') or str(
+                                res[0]['boIdCode']).endswith('BJ')):
                             secu_id = res[0]['boId']
                             secu_type = res[0]['boIdType']
                             bx.append(secu_id)
@@ -1194,7 +1238,9 @@ def temp_deal(data, market_flag):
                             logger.error(f'该证券代码{bx}获取证券id和证券类型失败，请检查！')
                     elif len(res) > 1:
                         for r in res:
-                            if r['boName'] == boName and boCode in r['boIdCode'] and (str(r['boIdCode']).endswith('SZ') or str(r['boIdCode']).endswith('SH') or str(r['boIdCode']).endswith('BJ')):
+                            if r['boName'] == boName and boCode in r['boIdCode'] and (
+                                    str(r['boIdCode']).endswith('SZ') or str(r['boIdCode']).endswith('SH') or str(
+                                    r['boIdCode']).endswith('BJ')):
                                 secu_id = r['boId']
                                 secu_type = r['boIdType']
                                 bx.append(secu_id)
@@ -1245,6 +1291,7 @@ def securities_rzrq_parsing_data(rs, biz_type, data_):
         broker_key = rs[3]
     broker_id = broker_id_map.get(broker_key)
     result = query_business_security_item(get_yesterday_date(str(rs[1])), biz_type, broker_id)
+    adjust_status_out_list = []
     if result.empty:
         logger.info(f'进入为空的判断')
         # 查询结果为空，第一次处理，从数据采集平台爬取到的数据进行入库处理,调整类型为调入
@@ -1256,6 +1303,7 @@ def securities_rzrq_parsing_data(rs, biz_type, data_):
                         # 融资
                         if int(i[2]) < 100:
                             rate = None
+                            adjust_status_out_list.append(i[0])
                             insert_data_list.append(
                                 [broker_id, i[3], i[4], biz_type, adjust_status_out, None, rate, 1, 1,
                                  str(rs[1]),
@@ -1273,6 +1321,7 @@ def securities_rzrq_parsing_data(rs, biz_type, data_):
                         # 融券
                         if int(i[2]) < 50:
                             rate = None
+                            adjust_status_out_list.append(i[0])
                             insert_data_list.append(
                                 [broker_id, i[3], i[4], biz_type, adjust_status_out, None, rate, 1, 1,
                                  str(rs[1]),
@@ -1287,6 +1336,7 @@ def securities_rzrq_parsing_data(rs, biz_type, data_):
                                  str(rs[1]), forever_end_dt,
                                  None])
                 else:
+                    adjust_status_out_list.append(i[0])
                     insert_data_list.append(
                         [broker_id, i[3], i[4], biz_type, adjust_status_out, None, None, 1, 1,
                          str(rs[1]),
@@ -1323,6 +1373,7 @@ def securities_rzrq_parsing_data(rs, biz_type, data_):
                             # 融资
                             if int(temp_data[2]) < 100:
                                 rate = None
+                                adjust_status_out_list.append(temp_data[0])
                                 insert_data_list_new.append(
                                     [broker_id, temp_data[3], temp_data[4], biz_type, adjust_status_out, None, rate, 1,
                                      1,
@@ -1342,6 +1393,7 @@ def securities_rzrq_parsing_data(rs, biz_type, data_):
                             # 融券
                             if int(temp_data[2]) < 50:
                                 rate = None
+                                adjust_status_out_list.append(temp_data[0])
                                 insert_data_list_new.append(
                                     [broker_id, temp_data[3], temp_data[4], biz_type, adjust_status_out, None, rate, 1,
                                      1,
@@ -1358,6 +1410,7 @@ def securities_rzrq_parsing_data(rs, biz_type, data_):
                                      str(rs[1]), forever_end_dt,
                                      None])
                     elif b == temp_data[3] and temp_data[2] is None:
+                        adjust_status_out_list.append(temp_data[0])
                         insert_data_list_new.append(
                             [broker_id, temp_data[3], temp_data[4], biz_type, adjust_status_out, None, None, 1, 1,
                              str(rs[1]), forever_end_dt, None])
@@ -1393,6 +1446,7 @@ def securities_rzrq_parsing_data(rs, biz_type, data_):
                                     # 融资
                                     if int(round_rate) < 100:
                                         rate = None
+                                        adjust_status_out_list.append(row[0])
                                         insert_data_list_noempty.append(
                                             [broker_id, sec_id, secu_type, biz_type, adjust_status_out, old_rate, rate,
                                              1,
@@ -1410,6 +1464,7 @@ def securities_rzrq_parsing_data(rs, biz_type, data_):
                                     # 融券
                                     if int(round_rate) < 50:
                                         rate = None
+                                        adjust_status_out_list.append(row[0])
                                         insert_data_list_noempty.append(
                                             [broker_id, sec_id, secu_type, biz_type, adjust_status_out, old_rate, rate,
                                              1,
@@ -1430,6 +1485,7 @@ def securities_rzrq_parsing_data(rs, biz_type, data_):
                                     # 融资
                                     if int(round_rate) < 100:
                                         rate = None
+                                        adjust_status_out_list.append(row[0])
                                         insert_data_list_noempty.append(
                                             [broker_id, sec_id, secu_type, biz_type, adjust_status_out, old_rate, rate,
                                              1,
@@ -1447,6 +1503,7 @@ def securities_rzrq_parsing_data(rs, biz_type, data_):
                                     # 融券
                                     if int(round_rate) < 50:
                                         rate = None
+                                        adjust_status_out_list.append(row[0])
                                         insert_data_list_noempty.append(
                                             [broker_id, sec_id, secu_type, biz_type, adjust_status_out, old_rate, rate,
                                              1,
@@ -1467,6 +1524,7 @@ def securities_rzrq_parsing_data(rs, biz_type, data_):
                                     # 融资
                                     if int(round_rate) < 100:
                                         rate = None
+                                        adjust_status_out_list.append(row[0])
                                         insert_data_list_noempty.append(
                                             [broker_id, sec_id, secu_type, biz_type, adjust_status_out, old_rate, rate,
                                              1,
@@ -1484,6 +1542,7 @@ def securities_rzrq_parsing_data(rs, biz_type, data_):
                                     # 融券
                                     if int(round_rate) < 50:
                                         rate = None
+                                        adjust_status_out_list.append(row[0])
                                         insert_data_list_noempty.append(
                                             [broker_id, sec_id, secu_type, biz_type, adjust_status_out, old_rate, rate,
                                              1,
@@ -1498,6 +1557,7 @@ def securities_rzrq_parsing_data(rs, biz_type, data_):
                                              1,
                                              1, str(rs[1]), forever_end_dt, None])
                             elif adjust_status == adjust_status_out:
+                                adjust_status_out_list.append(row[0])
                                 update_business_security((str(rs[1])).replace('-', ''), sec_id, broker_id, biz_type)
                                 # 调出 更新记录，rate置为空，新增一条调处记录，更新其他字段,
                                 insert_data_list_noempty.append(
@@ -1509,6 +1569,7 @@ def securities_rzrq_parsing_data(rs, biz_type, data_):
                         old_rate = db_record[7]
                         adjust_status = get_adjust_status_by_two_rate(old_rate, row[2])
                         if adjust_status != adjust_status_invariant:
+                            adjust_status_out_list.append(row[0])
                             update_business_security((str(rs[1])).replace('-', ''), row[3], broker_id, biz_type)
                             insert_data_list_noempty.append(
                                 [broker_id, row[3], row[4], biz_type, adjust_status_low, None, None, 1,
@@ -1517,7 +1578,8 @@ def securities_rzrq_parsing_data(rs, biz_type, data_):
                 invalid_data_list.append(row)
         if invalid_data_list:
             logger.error(f'{rs[3]},如下数据无证券id，请检查!{invalid_data_list}')
-
+        if adjust_status_out_list:
+            logger.warn(f'{rs[1]}-{rs[3]}的{biz_type_map.get(int(biz_type))}为调出状态，共{len(adjust_status_out_list)}条，具体证券代码如下：{adjust_status_out_list}')
         if insert_data_list_noempty:
             logger.info(f'业务数据入库开始...')
             insert_broker_mt_business_security(insert_data_list_noempty)
@@ -1534,6 +1596,7 @@ def securities_stockgroup_parsing_data(rs, biz_type, stockgroup_data):
         broker_key = rs[3]
     broker_id = broker_id_map.get(broker_key)
     result = query_business_security_item(get_yesterday_date(str(rs[1])), biz_type, broker_id)
+    adjust_status_out_list = []
     if result.empty:
         logger.info(f'进入为空的判断')
         # 查询结果为空，第一次处理，从数据采集平台爬取到的数据进行入库处理,调整类型为调入
@@ -1622,6 +1685,7 @@ def securities_stockgroup_parsing_data(rs, biz_type, stockgroup_data):
                             if insert_data_list:
                                 insert_broker_mt_business_security(insert_data_list)
                         elif adjust_status == adjust_status_out:
+                            adjust_status_out_list.append(row[1])
                             update_business_security((str(rs[1])).replace('-', ''), sec_id, broker_id, biz_type)
                             # 调出 更新记录，rate置为空，新增一条调处记录，更新其他字段,
                             insert_data_list = [
@@ -1638,3 +1702,5 @@ def securities_stockgroup_parsing_data(rs, biz_type, stockgroup_data):
                 invalid_data_list.append(row)
         if invalid_data_list:
             logger.error(f'{rs[3]},如下数据无证券id，请检查!{invalid_data_list}')
+        if adjust_status_out_list:
+            logger.warn(f'{rs[1]}-{rs[3]}的{biz_type_map.get(int(biz_type))}为调出状态，共{len(adjust_status_out_list)}条，具体证券代码如下：{adjust_status_out_list}')
