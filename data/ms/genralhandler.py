@@ -418,10 +418,11 @@ def securities_bzj_parsing_data(rs, biz_type, data_):
                 insert_broker_mt_business_security(insert_data_list_new)
                 logger.info(f'业务数据入库完成，共{len(insert_data_list_new)}条')
 
+        # 当调出
         b_list = list(set(haved_list).difference(set(query_list)))
         if b_list:
             for s in b_list:
-                update_business_security((str(rs[1])).replace('-', ''), s, broker_id, biz_type)
+                update_business_security((str(rs[1])).replace('-', ''), s, broker_id, biz_type, adjust_status_out)
 
         insert_data_list_noempty = []
         for row in real_data:
@@ -439,7 +440,7 @@ def securities_bzj_parsing_data(rs, biz_type, data_):
                         if adjust_status != adjust_status_invariant:
                             if adjust_status == adjust_status_in:
                                 # 调入 新增记录,更新之前一条位失效（仅限同一天内）
-                                update_business_security((str(rs[1])).replace('-', ''), sec_id, broker_id, biz_type)
+                                update_business_security_one((str(rs[1])).replace('-', ''), sec_id, broker_id, biz_type)
                                 if secu_type == 'stock':
                                     if 0 <= int(round_rate) <= 70:
                                         insert_data_list_noempty.append(
@@ -469,7 +470,7 @@ def securities_bzj_parsing_data(rs, biz_type, data_):
                                         raise Exception(f'本次解析数据违反业务规则!存在严重异常,不落地数据库,解析结束!{row}')
                             elif adjust_status == adjust_status_high:
                                 # 调高 更新记录，更新cur_value,adjust_type,data_status,biz_status
-                                update_business_security((str(rs[1])).replace('-', ''), sec_id, broker_id, biz_type)
+                                update_business_security_one((str(rs[1])).replace('-', ''), sec_id, broker_id, biz_type)
                                 if secu_type == 'stock':
                                     if 0 <= int(round_rate) <= 70:
                                         insert_data_list_noempty.append(
@@ -496,7 +497,7 @@ def securities_bzj_parsing_data(rs, biz_type, data_):
                                         raise Exception(f'本次解析数据违反业务规则!存在严重异常,不落地数据库,解析结束!{row}')
                             elif adjust_status == adjust_status_low:
                                 # 调低 更新记录，更新cur_value,adjust_type,data_status,biz_status
-                                update_business_security((str(rs[1])).replace('-', ''), sec_id, broker_id, biz_type)
+                                update_business_security_one((str(rs[1])).replace('-', ''), sec_id, broker_id, biz_type)
                                 if secu_type == 'stock':
                                     if 0 <= int(round_rate) <= 70:
                                         insert_data_list_noempty.append(
@@ -523,7 +524,7 @@ def securities_bzj_parsing_data(rs, biz_type, data_):
                                         raise Exception(f'本次解析数据违反业务规则!存在严重异常,不落地数据库,解析结束!{row}')
                             elif adjust_status == adjust_status_out:
                                 adjust_status_out_list.append(row[1])
-                                update_business_security((str(rs[1])).replace('-', ''), sec_id, broker_id, biz_type)
+                                update_business_security_one((str(rs[1])).replace('-', ''), sec_id, broker_id, biz_type)
                                 # 调出 更新记录，rate置为空，新增一条调处记录，更新其他字段,
                                 insert_data_list_noempty.append(
                                     [broker_id, sec_id, secu_type, biz_type, adjust_status_out, old_rate, None, 1, 1,
@@ -534,8 +535,7 @@ def securities_bzj_parsing_data(rs, biz_type, data_):
                         old_rate = db_record[7]
                         adjust_status = get_adjust_status_by_two_rate(old_rate, row[3])
                         if adjust_status != adjust_status_invariant:
-                            adjust_status_out_list.append(row[1])
-                            update_business_security((str(rs[1])).replace('-', ''), row[4], broker_id, biz_type)
+                            update_business_security_one((str(rs[1])).replace('-', ''), row[4], broker_id, biz_type)
                             insert_data_list_noempty.append(
                                 [broker_id, row[4], row[5], biz_type, adjust_status_out, None, None, 1, 1,
                                  str(rs[1]), forever_end_dt, None])
@@ -660,7 +660,7 @@ def securities_bzj_parsing_data_no_market(rs, data_):
         b_list = list(set(haved_list).difference(set(query_list)))
         if b_list:
             for s in b_list:
-                update_business_security((str(rs[1])).replace('-', ''), s, broker_id, 3)
+                update_business_security((str(rs[1])).replace('-', ''), s, broker_id, 3, adjust_status_out)
 
         insert_data_list_noempty = []
         for row in real_data:
@@ -678,7 +678,7 @@ def securities_bzj_parsing_data_no_market(rs, data_):
                         if adjust_status != adjust_status_invariant:
                             if adjust_status == adjust_status_in:
                                 # 调入 新增记录,更新之前一条位失效（仅限同一天内）
-                                update_business_security((str(rs[1])).replace('-', ''), sec_id, broker_id, 3)
+                                update_business_security_one((str(rs[1])).replace('-', ''), sec_id, broker_id, 3)
                                 if secu_type == 'stock':
                                     if 0 <= int(round_rate) <= 70:
                                         insert_data_list_noempty.append(
@@ -708,7 +708,7 @@ def securities_bzj_parsing_data_no_market(rs, data_):
                                         raise Exception(f'本次解析数据违反业务规则!存在严重异常,不落地数据库,解析结束!{row}')
                             elif adjust_status == adjust_status_high:
                                 # 调高 更新记录，更新cur_value,adjust_type,data_status,biz_status
-                                update_business_security((str(rs[1])).replace('-', ''), sec_id, broker_id, 3)
+                                update_business_security_one((str(rs[1])).replace('-', ''), sec_id, broker_id, 3)
                                 if secu_type == 'stock':
                                     if 0 <= int(round_rate) <= 70:
                                         insert_data_list_noempty.append(
@@ -738,7 +738,7 @@ def securities_bzj_parsing_data_no_market(rs, data_):
                                         raise Exception(f'本次解析数据违反业务规则!存在严重异常,不落地数据库,解析结束!{row}')
                             elif adjust_status == adjust_status_low:
                                 # 调低 更新记录，更新cur_value,adjust_type,data_status,biz_status
-                                update_business_security((str(rs[1])).replace('-', ''), sec_id, broker_id, 3)
+                                update_business_security_one((str(rs[1])).replace('-', ''), sec_id, broker_id, 3)
                                 if secu_type == 'stock':
                                     if 0 <= int(round_rate) <= 70:
                                         insert_data_list_noempty.append(
@@ -768,7 +768,7 @@ def securities_bzj_parsing_data_no_market(rs, data_):
                                         raise Exception(f'本次解析数据违反业务规则!存在严重异常,不落地数据库,解析结束!{row}')
                             elif adjust_status == adjust_status_out:
                                 adjust_status_out_list.append(row[0])
-                                update_business_security((str(rs[1])).replace('-', ''), sec_id, broker_id, 3)
+                                update_business_security_one((str(rs[1])).replace('-', ''), sec_id, broker_id, 3)
                                 # 调出 更新记录，rate置为空，新增一条调处记录，更新其他字段,
                                 insert_data_list_noempty.append(
                                     [broker_id, sec_id, secu_type, 3, adjust_status_out, old_rate, None, 1, 1,
@@ -779,8 +779,7 @@ def securities_bzj_parsing_data_no_market(rs, data_):
                         old_rate = db_record[7]
                         adjust_status = get_adjust_status_by_two_rate(old_rate, row[3])
                         if adjust_status != adjust_status_invariant:
-                            adjust_status_out_list.append(row[0])
-                            update_business_security((str(rs[1])).replace('-', ''), row[3], broker_id, 3)
+                            update_business_security_one((str(rs[1])).replace('-', ''), row[3], broker_id, 3)
                             insert_data_list_noempty.append(
                                 [broker_id, row[3], row[4], 3, adjust_status_out, None, None, 1, 1,
                                  str(rs[1]), forever_end_dt, None])
@@ -1303,7 +1302,6 @@ def securities_rzrq_parsing_data(rs, biz_type, data_):
                         # 融资
                         if int(i[2]) < 100:
                             rate = None
-                            adjust_status_out_list.append(i[0])
                             insert_data_list.append(
                                 [broker_id, i[3], i[4], biz_type, adjust_status_out, None, rate, 1, 1,
                                  str(rs[1]),
@@ -1321,7 +1319,6 @@ def securities_rzrq_parsing_data(rs, biz_type, data_):
                         # 融券
                         if int(i[2]) < 50:
                             rate = None
-                            adjust_status_out_list.append(i[0])
                             insert_data_list.append(
                                 [broker_id, i[3], i[4], biz_type, adjust_status_out, None, rate, 1, 1,
                                  str(rs[1]),
@@ -1336,7 +1333,6 @@ def securities_rzrq_parsing_data(rs, biz_type, data_):
                                  str(rs[1]), forever_end_dt,
                                  None])
                 else:
-                    adjust_status_out_list.append(i[0])
                     insert_data_list.append(
                         [broker_id, i[3], i[4], biz_type, adjust_status_out, None, None, 1, 1,
                          str(rs[1]),
@@ -1373,7 +1369,6 @@ def securities_rzrq_parsing_data(rs, biz_type, data_):
                             # 融资
                             if int(temp_data[2]) < 100:
                                 rate = None
-                                adjust_status_out_list.append(temp_data[0])
                                 insert_data_list_new.append(
                                     [broker_id, temp_data[3], temp_data[4], biz_type, adjust_status_out, None, rate, 1,
                                      1,
@@ -1393,7 +1388,6 @@ def securities_rzrq_parsing_data(rs, biz_type, data_):
                             # 融券
                             if int(temp_data[2]) < 50:
                                 rate = None
-                                adjust_status_out_list.append(temp_data[0])
                                 insert_data_list_new.append(
                                     [broker_id, temp_data[3], temp_data[4], biz_type, adjust_status_out, None, rate, 1,
                                      1,
@@ -1410,7 +1404,6 @@ def securities_rzrq_parsing_data(rs, biz_type, data_):
                                      str(rs[1]), forever_end_dt,
                                      None])
                     elif b == temp_data[3] and temp_data[2] is None:
-                        adjust_status_out_list.append(temp_data[0])
                         insert_data_list_new.append(
                             [broker_id, temp_data[3], temp_data[4], biz_type, adjust_status_out, None, None, 1, 1,
                              str(rs[1]), forever_end_dt, None])
@@ -1422,7 +1415,7 @@ def securities_rzrq_parsing_data(rs, biz_type, data_):
         b_list = list(set(haved_list).difference(set(query_list)))
         if b_list:
             for s in b_list:
-                update_business_security((str(rs[1])).replace('-', ''), s, broker_id, biz_type)
+                update_business_security((str(rs[1])).replace('-', ''), s, broker_id, biz_type, adjust_status_out)
 
         insert_data_list_noempty = []
         for row in data_:
@@ -1441,12 +1434,11 @@ def securities_rzrq_parsing_data(rs, biz_type, data_):
                             logger.info(f'进入比例调整处理逻辑...')
                             if adjust_status == adjust_status_in:
                                 # 调入 新增记录,更新之前一条位失效（仅限同一天内）
-                                update_business_security((str(rs[1])).replace('-', ''), sec_id, broker_id, biz_type)
+                                update_business_security_one((str(rs[1])).replace('-', ''), sec_id, broker_id, biz_type)
                                 if biz_type == 1:
                                     # 融资
                                     if int(round_rate) < 100:
                                         rate = None
-                                        adjust_status_out_list.append(row[0])
                                         insert_data_list_noempty.append(
                                             [broker_id, sec_id, secu_type, biz_type, adjust_status_out, old_rate, rate,
                                              1,
@@ -1464,7 +1456,6 @@ def securities_rzrq_parsing_data(rs, biz_type, data_):
                                     # 融券
                                     if int(round_rate) < 50:
                                         rate = None
-                                        adjust_status_out_list.append(row[0])
                                         insert_data_list_noempty.append(
                                             [broker_id, sec_id, secu_type, biz_type, adjust_status_out, old_rate, rate,
                                              1,
@@ -1480,12 +1471,11 @@ def securities_rzrq_parsing_data(rs, biz_type, data_):
                                              str(rs[1]), forever_end_dt, None])
                             elif adjust_status == adjust_status_high:
                                 # 调高 更新记录，更新cur_value,adjust_type,data_status,biz_status
-                                update_business_security((str(rs[1])).replace('-', ''), sec_id, broker_id, biz_type)
+                                update_business_security_one((str(rs[1])).replace('-', ''), sec_id, broker_id, biz_type)
                                 if biz_type == 1:
                                     # 融资
                                     if int(round_rate) < 100:
                                         rate = None
-                                        adjust_status_out_list.append(row[0])
                                         insert_data_list_noempty.append(
                                             [broker_id, sec_id, secu_type, biz_type, adjust_status_out, old_rate, rate,
                                              1,
@@ -1503,7 +1493,6 @@ def securities_rzrq_parsing_data(rs, biz_type, data_):
                                     # 融券
                                     if int(round_rate) < 50:
                                         rate = None
-                                        adjust_status_out_list.append(row[0])
                                         insert_data_list_noempty.append(
                                             [broker_id, sec_id, secu_type, biz_type, adjust_status_out, old_rate, rate,
                                              1,
@@ -1519,12 +1508,11 @@ def securities_rzrq_parsing_data(rs, biz_type, data_):
                                              1, str(rs[1]), forever_end_dt, None])
                             elif adjust_status == adjust_status_low:
                                 # 调低 更新记录，更新cur_value,adjust_type,data_status,biz_status
-                                update_business_security((str(rs[1])).replace('-', ''), sec_id, broker_id, biz_type)
+                                update_business_security_one((str(rs[1])).replace('-', ''), sec_id, broker_id, biz_type)
                                 if biz_type == 1:
                                     # 融资
                                     if int(round_rate) < 100:
                                         rate = None
-                                        adjust_status_out_list.append(row[0])
                                         insert_data_list_noempty.append(
                                             [broker_id, sec_id, secu_type, biz_type, adjust_status_out, old_rate, rate,
                                              1,
@@ -1542,7 +1530,6 @@ def securities_rzrq_parsing_data(rs, biz_type, data_):
                                     # 融券
                                     if int(round_rate) < 50:
                                         rate = None
-                                        adjust_status_out_list.append(row[0])
                                         insert_data_list_noempty.append(
                                             [broker_id, sec_id, secu_type, biz_type, adjust_status_out, old_rate, rate,
                                              1,
@@ -1558,7 +1545,7 @@ def securities_rzrq_parsing_data(rs, biz_type, data_):
                                              1, str(rs[1]), forever_end_dt, None])
                             elif adjust_status == adjust_status_out:
                                 adjust_status_out_list.append(row[0])
-                                update_business_security((str(rs[1])).replace('-', ''), sec_id, broker_id, biz_type)
+                                update_business_security_one((str(rs[1])).replace('-', ''), sec_id, broker_id, biz_type)
                                 # 调出 更新记录，rate置为空，新增一条调处记录，更新其他字段,
                                 insert_data_list_noempty.append(
                                     [broker_id, sec_id, secu_type, biz_type, adjust_status_out, old_rate, None, 1, 1,
@@ -1569,8 +1556,7 @@ def securities_rzrq_parsing_data(rs, biz_type, data_):
                         old_rate = db_record[7]
                         adjust_status = get_adjust_status_by_two_rate(old_rate, row[2])
                         if adjust_status != adjust_status_invariant:
-                            adjust_status_out_list.append(row[0])
-                            update_business_security((str(rs[1])).replace('-', ''), row[3], broker_id, biz_type)
+                            update_business_security_one((str(rs[1])).replace('-', ''), row[3], broker_id, biz_type)
                             insert_data_list_noempty.append(
                                 [broker_id, row[3], row[4], biz_type, adjust_status_low, None, None, 1,
                                  1, str(rs[1]), forever_end_dt, None])
@@ -1643,7 +1629,7 @@ def securities_stockgroup_parsing_data(rs, biz_type, stockgroup_data):
         b_list = list(set(haved_list).difference(set(query_list)))
         if b_list:
             for s in b_list:
-                update_business_security((str(rs[1])).replace('-', ''), s, broker_id, biz_type)
+                update_business_security((str(rs[1])).replace('-', ''), s, broker_id, biz_type, adjust_status_out)
 
         for row in real_data:
             if len(row) == 6:
@@ -1659,7 +1645,7 @@ def securities_stockgroup_parsing_data(rs, biz_type, stockgroup_data):
                     if adjust_status != adjust_status_invariant:
                         if adjust_status == adjust_status_in:
                             # 调入 新增记录，更新之前的为失效（同一天内）
-                            update_business_security((str(rs[1])).replace('-', ''), sec_id, broker_id, biz_type)
+                            update_business_security_one((str(rs[1])).replace('-', ''), sec_id, broker_id, biz_type)
                             insert_data_list = [
                                 [broker_id, sec_id, secu_type, biz_type, adjust_status_in, old_rate, round_rate, 1, 1,
                                  str(rs[1]), forever_end_dt, None]]
@@ -1668,7 +1654,7 @@ def securities_stockgroup_parsing_data(rs, biz_type, stockgroup_data):
 
                         elif adjust_status == adjust_status_high:
                             # 调高 更新记录，更新cur_value,adjust_type,data_status,biz_status
-                            update_business_security((str(rs[1])).replace('-', ''), sec_id, broker_id, biz_type)
+                            update_business_security_one((str(rs[1])).replace('-', ''), sec_id, broker_id, biz_type)
 
                             insert_data_list = [
                                 [broker_id, sec_id, secu_type, biz_type, adjust_status_high, old_rate, round_rate, 1, 1,
@@ -1677,7 +1663,7 @@ def securities_stockgroup_parsing_data(rs, biz_type, stockgroup_data):
                                 insert_broker_mt_business_security(insert_data_list)
                         elif adjust_status == adjust_status_low:
                             # 调低 更新记录，更新cur_value,adjust_type,data_status,biz_status
-                            update_business_security((str(rs[1])).replace('-', ''), sec_id, broker_id, biz_type)
+                            update_business_security_one((str(rs[1])).replace('-', ''), sec_id, broker_id, biz_type)
 
                             insert_data_list = [
                                 [broker_id, sec_id, secu_type, biz_type, adjust_status_low, old_rate, round_rate, 1, 1,
@@ -1686,7 +1672,7 @@ def securities_stockgroup_parsing_data(rs, biz_type, stockgroup_data):
                                 insert_broker_mt_business_security(insert_data_list)
                         elif adjust_status == adjust_status_out:
                             adjust_status_out_list.append(row[1])
-                            update_business_security((str(rs[1])).replace('-', ''), sec_id, broker_id, biz_type)
+                            update_business_security_one((str(rs[1])).replace('-', ''), sec_id, broker_id, biz_type)
                             # 调出 更新记录，rate置为空，新增一条调处记录，更新其他字段,
                             insert_data_list = [
                                 [broker_id, sec_id, secu_type, biz_type, adjust_status_out, old_rate, None, 1, 1,

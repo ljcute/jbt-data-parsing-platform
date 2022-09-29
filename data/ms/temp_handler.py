@@ -189,18 +189,46 @@ if __name__ == '__main__':
               'message': 'zjcf_securities_collect'}
     data72 = {'user_id': 1, 'biz_dt': '2022-09-27', 'data_type': '3', 'data_source': '中金财富',
               'message': 'zjcf_securities_collect'}
-    data73 = {'user_id': 1, 'biz_dt': '2022-09-28', 'data_type': '2', 'data_source': '华泰证券',
+    data73 = {'user_id': 1, 'biz_dt': '2022-09-27', 'data_type': '2', 'data_source': '华泰证券',
               'message': 'ht_securities_collect'}
-    data74 = {'user_id': 1, 'biz_dt': '2022-09-28', 'data_type': '3', 'data_source': '华泰证券',
+    data74 = {'user_id': 1, 'biz_dt': '2022-09-27', 'data_type': '3', 'data_source': '华泰证券',
               'message': 'ht_securities_collect'}
+    data75 = {'user_id': 1, 'biz_dt': '2022-09-28', 'data_type': '2', 'data_source': '华泰证券',
+              'message': 'ht_securities_collect'}
+    data76 = {'user_id': 1, 'biz_dt': '2022-09-28', 'data_type': '3', 'data_source': '华泰证券',
+              'message': 'ht_securities_collect'}
+    data77 = {'user_id': 1, 'biz_dt': '2022-09-29', 'data_type': '2', 'data_source': '华泰证券',
+              'message': 'ht_securities_collect'}
+    data78 = {'user_id': 1, 'biz_dt': '2022-09-29', 'data_type': '3', 'data_source': '华泰证券',
+              'message': 'ht_securities_collect'}
+    data79 = {'user_id': 1, 'biz_dt': '2022-09-27', 'data_type': '99', 'data_source': '中信建投',
+             'message': 'zxjt_securities_collect'}
+    data80 = {'user_id': 1, 'biz_dt': '2022-09-28', 'data_type': '99', 'data_source': '中信建投',
+             'message': 'zxjt_securities_collect'}
+    data81 = {'user_id': 1, 'biz_dt': '2022-09-29', 'data_type': '99', 'data_source': '中信建投',
+             'message': 'zxjt_securities_collect'}
+    data82 = {'user_id': 1, 'biz_dt': '2022-09-27', 'data_type': '2', 'data_source': '中信证券',
+             'message': 'zx_securities_collect'}
+    data83 = {'user_id': 1, 'biz_dt': '2022-09-27', 'data_type': '3', 'data_source': '中信证券',
+             'message': 'zx_securities_collect'}
+    data84 = {'user_id': 1, 'biz_dt': '2022-09-28', 'data_type': '2', 'data_source': '中信证券',
+             'message': 'zx_securities_collect'}
+    data85 = {'user_id': 1, 'biz_dt': '2022-09-28', 'data_type': '3', 'data_source': '中信证券',
+             'message': 'zx_securities_collect'}
+    data86 = {'user_id': 1, 'biz_dt': '2022-09-29', 'data_type': '2', 'data_source': '中信证券',
+             'message': 'zx_securities_collect'}
+    data87 = {'user_id': 1, 'biz_dt': '2022-09-29', 'data_type': '3', 'data_source': '中信证券',
+             'message': 'zx_securities_collect'}
     # list = [data1, data2, data3, data4, data5, data6, data7, data8, data9, data10, data11, data12, data13,
     #         data14, data15, data16, data17, data18, data19, data20, data21, data22, data23, data24, data25, data26,
     #         data27, data28, data29, data30, data31, data32, data33, data34, data35, data36, data37, data38, data39,
     #         data40, data41, data42, data43, data44, data45, data46, data47, data48, data49, data50, data51,
     #         data52, data53, data54, data55, data56, data57, data58, data59, data60, data61, data62, data63, data64,
     #         data65, data66, data67, data68, data69, data70, data71, data72]
-    list = [data6, data33, data34, data42, data69, data70, data73, data74, data23, data24, data59,
-            data60, data71, data72, data35, data36, data48, data49]
+    # list = [data6, data33, data34, data42, data69, data70, data73, data74, data23, data24, data59,
+    #         data60, data71, data72, data35, data36, data48, data49]
+
+    list = [data73,data74,data75,data76,data77,data78,data79,data80,data81,data82,data83,data84,data85,data86,data87]
     print(f'手工补录解析数据开始！')
     try:
         for i in list:
