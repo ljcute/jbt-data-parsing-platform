@@ -185,12 +185,11 @@ if __name__ == '__main__':
     data72 = {'user_id': 1, 'biz_dt': '2022-09-29', 'data_type': '3', 'data_source': '中金财富',
               'message': 'zjcf_securities_collect'}
 
-    list = [data1, data2, data3, data4, data5, data6, data7, data8, data9, data10, data11, data12, data13,
-            data14, data15, data16, data17,
+    list = [data6, data7, data8, data9, data10, data11, data12, data13,data14, data15, data16, data17,
             data18, data19, data20, data21, data22, data25, data26, data27, data28, data29, data30, data31,
-            data32, data35, data36, data42, data43, data44, data45, data46, data47, data48, data49, data50,
-            data51, data52, data53, data54, data55, data56, data57, data58, data59, data60, data61, data62,
-            data63, data64, data65, data66, data67, data68, data69, data70, data71, data72]
+            data32, data35, data36, data1, data2, data3, data4, data5,data42, data43, data44, data45, data46,
+            data47,data48, data49, data50,data51, data52, data53, data54, data55, data56, data57, data58, data59,
+            data60, data61, data62,data63, data64, data65, data66, data67, data68, data69, data70, data71, data72]
 
     print(f'手工补录解析数据开始！')
     try:
