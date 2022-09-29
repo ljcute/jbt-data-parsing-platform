@@ -228,8 +228,8 @@ if __name__ == '__main__':
     # list = [data6, data33, data34, data42, data69, data70, data73, data74, data23, data24, data59,
     #         data60, data71, data72, data35, data36, data48, data49]
 
-    list = [data73, data74, data75, data76, data77, data78, data79, data80, data81, data82, data83, data84, data85,
-            data86, data87]
+    list = [data83, data82, data84, data85,
+            data86, data87, data73, data79, data80, data81, data74, data75, data76, data77, data78]
     print(f'手工补录解析数据开始！')
     try:
         for i in list:
