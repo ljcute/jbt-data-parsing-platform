@@ -110,7 +110,7 @@ class BaseHandler(object):
                 if data['data_source'] == '财通证券':
                     data_ = eval((rs[0][4]).replace("null", "999"))['data']
                 elif data['data_source'] == '华泰证券':
-                    if data_type_info == '2':
+                    if data_type_info == 2:
                         data_ = eval(rs[0][4])
                         pd = pandas.DataFrame(data_)
                         pd.sort_values(by=["exchangeType", "stockCode", "stockName", "assureRatio"], ascending=[True, True, True, True])
@@ -127,7 +127,7 @@ class BaseHandler(object):
                         pd.drop_duplicates(subset=["exchangeType", "stockCode"], keep='first', inplace=True, ignore_index=False)
                         data_ = pd.to_json(orient="records", force_ascii=False)
                         data_ = eval(data_)
-                    elif data_type_info == '2':
+                    elif data_type_info == 3:
                         data_ = eval(rs[0][4])
                         pd = pandas.DataFrame(data_)
                         pd.sort_values(by=["exchangeType", "stockCode", "stockName", "finRatio", "sloRatio"],
