@@ -383,35 +383,39 @@ def securities_bzj_parsing_data(rs, biz_type, data_):
             for b in s_list:
                 for temp_data in real_data:
                     if b == temp_data[4] and temp_data[3] is not None:
-                        secu_type = temp_data[5]
-                        if secu_type == 'stock':
-                            if 0 <= int(temp_data[3]) <= 70:
-                                insert_data_list_new.append(
-                                    [broker_id, b, secu_type, biz_type, adjust_status_in, None,
-                                     temp_data[3], 1, 1, str(rs[1]), forever_end_dt, None])
-                            else:
-                                logger.error(f'本次解析数据违反业务规则!存在严重异常,不落地数据库,解析结束!{temp_data}')
-                                raise Exception(f'本次解析数据违反业务规则!存在严重异常,不落地数据库,解析结束!{temp_data}')
-                        elif secu_type == 'fund':
-                            if 0 <= int(temp_data[3]) <= 95:
-                                insert_data_list_new.append(
-                                    [broker_id, b, secu_type, biz_type, adjust_status_in, None,
-                                     temp_data[3], 1, 1, str(rs[1]), forever_end_dt, None])
-                            else:
-                                logger.error(f'本次解析数据违反业务规则!存在严重异常,不落地数据库,解析结束!{temp_data}')
-                                raise Exception(f'本次解析数据违反业务规则!存在严重异常,不落地数据库,解析结束!{temp_data}')
-                        elif secu_type == 'bond':
-                            if 0 <= int(temp_data[3]) <= 95:
-                                insert_data_list_new.append(
-                                    [broker_id, b, secu_type, biz_type, adjust_status_in, None,
-                                     temp_data[3], 1, 1, str(rs[1]), forever_end_dt, None])
-                            else:
-                                logger.error(f'本次解析数据违反业务规则!存在严重异常,不落地数据库,解析结束!{temp_data}')
-                                raise Exception(f'本次解析数据违反业务规则!存在严重异常,不落地数据库,解析结束!{temp_data}')
+                        res = query_is_have_secu_id(str(rs[1]).replace('-', ''), biz_type, broker_id, b)
+                        if not res:
+                            secu_type = temp_data[5]
+                            if secu_type == 'stock':
+                                if 0 <= int(temp_data[3]) <= 70:
+                                    insert_data_list_new.append(
+                                        [broker_id, b, secu_type, biz_type, adjust_status_in, None,
+                                         temp_data[3], 1, 1, str(rs[1]), forever_end_dt, None])
+                                else:
+                                    logger.error(f'本次解析数据违反业务规则!存在严重异常,不落地数据库,解析结束!{temp_data}')
+                                    raise Exception(f'本次解析数据违反业务规则!存在严重异常,不落地数据库,解析结束!{temp_data}')
+                            elif secu_type == 'fund':
+                                if 0 <= int(temp_data[3]) <= 95:
+                                    insert_data_list_new.append(
+                                        [broker_id, b, secu_type, biz_type, adjust_status_in, None,
+                                         temp_data[3], 1, 1, str(rs[1]), forever_end_dt, None])
+                                else:
+                                    logger.error(f'本次解析数据违反业务规则!存在严重异常,不落地数据库,解析结束!{temp_data}')
+                                    raise Exception(f'本次解析数据违反业务规则!存在严重异常,不落地数据库,解析结束!{temp_data}')
+                            elif secu_type == 'bond':
+                                if 0 <= int(temp_data[3]) <= 95:
+                                    insert_data_list_new.append(
+                                        [broker_id, b, secu_type, biz_type, adjust_status_in, None,
+                                         temp_data[3], 1, 1, str(rs[1]), forever_end_dt, None])
+                                else:
+                                    logger.error(f'本次解析数据违反业务规则!存在严重异常,不落地数据库,解析结束!{temp_data}')
+                                    raise Exception(f'本次解析数据违反业务规则!存在严重异常,不落地数据库,解析结束!{temp_data}')
                     elif b == temp_data[4] and temp_data[3] is None:
-                        insert_data_list_new.append(
-                            [broker_id, b, temp_data[5], biz_type, adjust_status_out, None, None, 1, 1,
-                             str(rs[1]), forever_end_dt, None])
+                        res = query_is_have_secu_id(str(rs[1]).replace('-', ''), biz_type, broker_id, b)
+                        if not res:
+                            insert_data_list_new.append(
+                                [broker_id, b, temp_data[5], biz_type, adjust_status_out, None, None, 1, 1,
+                                 str(rs[1]), forever_end_dt, None])
 
             if insert_data_list_new:
                 logger.info(f'业务数据入库开始,t_broker_mt_business_security...')
@@ -544,7 +548,8 @@ def securities_bzj_parsing_data(rs, biz_type, data_):
         if invalid_data_list:
             logger.error(f'{rs[3]}，如下数据无证券id，请检查!{invalid_data_list}')
         if adjust_status_out_list:
-            logger.warn(f'{rs[1]}-{rs[3]}的{biz_type_map.get(int(biz_type))}为调出状态，共{len(adjust_status_out_list)}条，具体证券代码如下：{adjust_status_out_list}')
+            logger.warn(
+                f'{rs[1]}-{rs[3]}的{biz_type_map.get(int(biz_type))}为调出状态，共{len(adjust_status_out_list)}条，具体证券代码如下：{adjust_status_out_list}')
         if insert_data_list_noempty:
             logger.info(f'业务数据入库开始,t_broker_mt_business_security...')
             insert_broker_mt_business_security(insert_data_list_noempty)
@@ -624,34 +629,38 @@ def securities_bzj_parsing_data_no_market(rs, data_):
             for b in s_list:
                 for temp_data in real_data:
                     if b == temp_data[3] and temp_data[2] is not None:
-                        secu_type = temp_data[4]
-                        if secu_type == 'stock':
-                            if 0 <= int(temp_data[2]) <= 70:
-                                insert_data_list_new.append(
-                                    [broker_id, b, secu_type, 3, adjust_status_in, None,
-                                     temp_data[2], 1, 1, str(rs[1]), forever_end_dt, None])
-                            else:
-                                logger.error(f'本次解析数据违反业务规则!存在严重异常,不落地数据库,解析结束!{temp_data}')
-                                raise Exception(f'本次解析数据违反业务规则!存在严重异常,不落地数据库,解析结束!{temp_data}')
-                        elif secu_type == 'fund':
-                            if 0 <= int(temp_data[2]) <= 95:
-                                insert_data_list_new.append(
-                                    [broker_id, b, secu_type, 3, adjust_status_in, None,
-                                     temp_data[2], 1, 1, str(rs[1]), forever_end_dt, None])
-                            else:
-                                logger.error(f'本次解析数据违反业务规则!存在严重异常,不落地数据库,解析结束!{temp_data}')
-                                raise Exception(f'本次解析数据违反业务规则!存在严重异常,不落地数据库,解析结束!{temp_data}')
-                        elif secu_type == 'bond':
-                            if 0 <= int(temp_data[2]) <= 95:
-                                insert_data_list_new.append(
-                                    [broker_id, b, secu_type, 3, adjust_status_in, None,
-                                     temp_data[2], 1, 1, str(rs[1]), forever_end_dt, None])
-                            else:
-                                logger.error(f'本次解析数据违反业务规则!存在严重异常,不落地数据库,解析结束!{temp_data}')
-                                raise Exception(f'本次解析数据违反业务规则!存在严重异常,不落地数据库,解析结束!{temp_data}')
-                    if b == temp_data[3] and temp_data[2] is None:
-                        insert_data_list_new.append([broker_id, b, temp_data[4], 3, adjust_status_out, None,
-                                                     None, 1, 1, str(rs[1]), forever_end_dt, None])
+                        res = query_is_have_secu_id(str(rs[1]).replace('-', ''), 3, broker_id, b)
+                        if not res:
+                            secu_type = temp_data[4]
+                            if secu_type == 'stock':
+                                if 0 <= int(temp_data[2]) <= 70:
+                                    insert_data_list_new.append(
+                                        [broker_id, b, secu_type, 3, adjust_status_in, None,
+                                         temp_data[2], 1, 1, str(rs[1]), forever_end_dt, None])
+                                else:
+                                    logger.error(f'本次解析数据违反业务规则!存在严重异常,不落地数据库,解析结束!{temp_data}')
+                                    raise Exception(f'本次解析数据违反业务规则!存在严重异常,不落地数据库,解析结束!{temp_data}')
+                            elif secu_type == 'fund':
+                                if 0 <= int(temp_data[2]) <= 95:
+                                    insert_data_list_new.append(
+                                        [broker_id, b, secu_type, 3, adjust_status_in, None,
+                                         temp_data[2], 1, 1, str(rs[1]), forever_end_dt, None])
+                                else:
+                                    logger.error(f'本次解析数据违反业务规则!存在严重异常,不落地数据库,解析结束!{temp_data}')
+                                    raise Exception(f'本次解析数据违反业务规则!存在严重异常,不落地数据库,解析结束!{temp_data}')
+                            elif secu_type == 'bond':
+                                if 0 <= int(temp_data[2]) <= 95:
+                                    insert_data_list_new.append(
+                                        [broker_id, b, secu_type, 3, adjust_status_in, None,
+                                         temp_data[2], 1, 1, str(rs[1]), forever_end_dt, None])
+                                else:
+                                    logger.error(f'本次解析数据违反业务规则!存在严重异常,不落地数据库,解析结束!{temp_data}')
+                                    raise Exception(f'本次解析数据违反业务规则!存在严重异常,不落地数据库,解析结束!{temp_data}')
+                    elif b == temp_data[3] and temp_data[2] is None:
+                        res = query_is_have_secu_id(str(rs[1]).replace('-', ''), 3, broker_id, b)
+                        if not res:
+                            insert_data_list_new.append([broker_id, b, temp_data[4], 3, adjust_status_out, None,
+                                                         None, 1, 1, str(rs[1]), forever_end_dt, None])
             if insert_data_list_new:
                 logger.info(f'业务数据入库开始,t_broker_mt_business_security...')
                 insert_broker_mt_business_security(insert_data_list_new)
@@ -788,7 +797,8 @@ def securities_bzj_parsing_data_no_market(rs, data_):
         if invalid_data_list:
             logger.error(f'{rs[3]}，如下数据无证券id，请检查!{invalid_data_list}')
         if adjust_status_out_list:
-            logger.warn(f'{rs[1]}-{rs[3]}的{biz_type_map.get(3)}为调出状态，共{len(adjust_status_out_list)}条，具体证券代码如下：{adjust_status_out_list}')
+            logger.warn(
+                f'{rs[1]}-{rs[3]}的{biz_type_map.get(3)}为调出状态，共{len(adjust_status_out_list)}条，具体证券代码如下：{adjust_status_out_list}')
         if insert_data_list_noempty:
             logger.info(f'业务数据入库开始...')
             insert_broker_mt_business_security(insert_data_list_noempty)
@@ -897,7 +907,7 @@ def temp_deal(data, market_flag):
                     if len(res) == 1:
                         if res[0]['boIdType'] == temp_type and (
                                 str(res[0]['boIdCode']).endswith('SZ') or str(res[0]['boIdCode']).endswith('SH') or str(
-                                res[0]['boIdCode']).endswith('BJ')):
+                            res[0]['boIdCode']).endswith('BJ')):
                             # 提前知晓类型，就直接去判断类型，因为boid唯一
                             secu_id = res[0]['boId']
                             secu_type = res[0]['boIdType']
@@ -907,7 +917,7 @@ def temp_deal(data, market_flag):
                         for r in res:
                             if r['boIdType'] == temp_type and (
                                     str(r['boIdCode']).endswith('SZ') or str(r['boIdCode']).endswith('SH') or str(
-                                    r['boIdCode']).endswith('BJ')):
+                                r['boIdCode']).endswith('BJ')):
                                 secu_id = r['boId']
                                 secu_type = r['boIdType']
                                 bx.append(secu_id)
@@ -925,7 +935,7 @@ def temp_deal(data, market_flag):
                     if len(res) == 1:
                         if res[0]['boName'] == boName and (
                                 str(res[0]['boIdCode']).endswith('SZ') or str(res[0]['boIdCode']).endswith('SH') or str(
-                                res[0]['boIdCode']).endswith('BJ')):
+                            res[0]['boIdCode']).endswith('BJ')):
                             secu_id = res[0]['boId']
                             secu_type = res[0]['boIdType']
                             bx.append(secu_id)
@@ -934,7 +944,7 @@ def temp_deal(data, market_flag):
                         for r in res:
                             if r['boName'] == boName and (
                                     str(r['boIdCode']).endswith('SZ') or str(r['boIdCode']).endswith('SH') or str(
-                                    r['boIdCode']).endswith('BJ')):
+                                r['boIdCode']).endswith('BJ')):
                                 secu_id = r['boId']
                                 secu_type = r['boIdType']
                                 bx.append(secu_id)
@@ -948,7 +958,7 @@ def temp_deal(data, market_flag):
                         if len(res) == 1:
                             if res[0]['boIdType'] == temp_type and (
                                     str(res[0]['boIdCode']).endswith('SZ') or str(res[0]['boIdCode']).endswith(
-                                    'SH') or str(res[0]['boIdCode']).endswith('BJ')):
+                                'SH') or str(res[0]['boIdCode']).endswith('BJ')):
                                 # 提前知晓类型，就直接去判断类型，因为boid唯一
                                 secu_id = res[0]['boId']
                                 secu_type = res[0]['boIdType']
@@ -958,7 +968,7 @@ def temp_deal(data, market_flag):
                             for r in res:
                                 if r['boIdType'] == temp_type and (
                                         str(r['boIdCode']).endswith('SZ') or str(r['boIdCode']).endswith('SH') or str(
-                                        r['boIdCode']).endswith('BJ')):
+                                    r['boIdCode']).endswith('BJ')):
                                     secu_id = r['boId']
                                     secu_type = r['boIdType']
                                     bx.append(secu_id)
@@ -974,7 +984,7 @@ def temp_deal(data, market_flag):
                     if len(res) == 1:
                         if res[0]['boName'] == boName and boCode in res[0]['boIdCode'] and (
                                 str(res[0]['boIdCode']).endswith('SZ') or str(res[0]['boIdCode']).endswith('SH') or str(
-                                res[0]['boIdCode']).endswith('BJ')):
+                            res[0]['boIdCode']).endswith('BJ')):
                             secu_id = res[0]['boId']
                             secu_type = res[0]['boIdType']
                             bx.append(secu_id)
@@ -985,7 +995,7 @@ def temp_deal(data, market_flag):
                         for r in res:
                             if r['boName'] == boName and boCode in r['boIdCode'] and (
                                     str(r['boIdCode']).endswith('SZ') or str(r['boIdCode']).endswith('SH') or str(
-                                    r['boIdCode']).endswith('BJ')):
+                                r['boIdCode']).endswith('BJ')):
                                 secu_id = r['boId']
                                 secu_type = r['boIdType']
                                 bx.append(secu_id)
@@ -1151,7 +1161,7 @@ def temp_deal(data, market_flag):
                     if len(res) == 1:
                         if res[0]['boIdType'] == temp_type and (
                                 str(res[0]['boIdCode']).endswith('SZ') or str(res[0]['boIdCode']).endswith('SH') or str(
-                                res[0]['boIdCode']).endswith('BJ')):
+                            res[0]['boIdCode']).endswith('BJ')):
                             # 提前知晓类型，就直接去判断类型，因为boid唯一
                             secu_id = res[0]['boId']
                             secu_type = res[0]['boIdType']
@@ -1161,7 +1171,7 @@ def temp_deal(data, market_flag):
                         for r in res:
                             if r['boIdType'] == temp_type and (
                                     str(r['boIdCode']).endswith('SZ') or str(r['boIdCode']).endswith('SH') or str(
-                                    r['boIdCode']).endswith('BJ')):
+                                r['boIdCode']).endswith('BJ')):
                                 secu_id = r['boId']
                                 secu_type = r['boIdType']
                                 bx.append(secu_id)
@@ -1179,7 +1189,7 @@ def temp_deal(data, market_flag):
                     if len(res) == 1:
                         if res[0]['boName'] == boName and (
                                 str(res[0]['boIdCode']).endswith('SZ') or str(res[0]['boIdCode']).endswith('SH') or str(
-                                res[0]['boIdCode']).endswith('BJ')):
+                            res[0]['boIdCode']).endswith('BJ')):
                             secu_id = res[0]['boId']
                             secu_type = res[0]['boIdType']
                             bx.append(secu_id)
@@ -1188,7 +1198,7 @@ def temp_deal(data, market_flag):
                         for r in res:
                             if r['boName'] == boName and (
                                     str(r['boIdCode']).endswith('SZ') or str(r['boIdCode']).endswith('SH') or str(
-                                    r['boIdCode']).endswith('BJ')):
+                                r['boIdCode']).endswith('BJ')):
                                 secu_id = r['boId']
                                 secu_type = r['boIdType']
                                 bx.append(secu_id)
@@ -1202,7 +1212,7 @@ def temp_deal(data, market_flag):
                         if len(res) == 1:
                             if res[0]['boIdType'] == temp_type and (
                                     str(res[0]['boIdCode']).endswith('SZ') or str(res[0]['boIdCode']).endswith(
-                                    'SH') or str(res[0]['boIdCode']).endswith('BJ')):
+                                'SH') or str(res[0]['boIdCode']).endswith('BJ')):
                                 # 提前知晓类型，就直接去判断类型，因为boid唯一
                                 secu_id = res[0]['boId']
                                 secu_type = res[0]['boIdType']
@@ -1212,7 +1222,7 @@ def temp_deal(data, market_flag):
                             for r in res:
                                 if r['boIdType'] == temp_type and (
                                         str(r['boIdCode']).endswith('SZ') or str(r['boIdCode']).endswith('SH') or str(
-                                        r['boIdCode']).endswith('BJ')):
+                                    r['boIdCode']).endswith('BJ')):
                                     secu_id = r['boId']
                                     secu_type = r['boIdType']
                                     bx.append(secu_id)
@@ -1228,7 +1238,7 @@ def temp_deal(data, market_flag):
                     if len(res) == 1:
                         if res[0]['boName'] == boName and boCode in res[0]['boIdCode'] and (
                                 str(res[0]['boIdCode']).endswith('SZ') or str(res[0]['boIdCode']).endswith('SH') or str(
-                                res[0]['boIdCode']).endswith('BJ')):
+                            res[0]['boIdCode']).endswith('BJ')):
                             secu_id = res[0]['boId']
                             secu_type = res[0]['boIdType']
                             bx.append(secu_id)
@@ -1239,7 +1249,7 @@ def temp_deal(data, market_flag):
                         for r in res:
                             if r['boName'] == boName and boCode in r['boIdCode'] and (
                                     str(r['boIdCode']).endswith('SZ') or str(r['boIdCode']).endswith('SH') or str(
-                                    r['boIdCode']).endswith('BJ')):
+                                r['boIdCode']).endswith('BJ')):
                                 secu_id = r['boId']
                                 secu_type = r['boIdType']
                                 bx.append(secu_id)
@@ -1364,49 +1374,52 @@ def securities_rzrq_parsing_data(rs, biz_type, data_):
             for b in s_list:
                 for temp_data in data_:
                     if b == temp_data[3] and temp_data[2] is not None:
-                        secu_type = temp_data[4]
-                        if biz_type == 1:
-                            # 融资
-                            if int(temp_data[2]) < 100:
-                                rate = None
-                                insert_data_list_new.append(
-                                    [broker_id, temp_data[3], temp_data[4], biz_type, adjust_status_out, None, rate, 1,
-                                     1,
-                                     str(rs[1]),
-                                     forever_end_dt, None])
-                            elif int(temp_data[2]) > 200:
-                                logger.error(f'本次解析数据违反业务规则!存在严重异常,不落地数据库,解析结束!{temp_data}')
-                                raise Exception(f'本次解析数据违反业务规则!存在严重异常,不落地数据库,解析结束!{temp_data}')
-                            else:
-                                rate = int(temp_data[2])
-                                insert_data_list_new.append(
-                                    [broker_id, temp_data[3], temp_data[4], biz_type, adjust_status_in, None, rate, 1,
-                                     1,
-                                     str(rs[1]), forever_end_dt,
-                                     None])
-                        elif biz_type == 2:
-                            # 融券
-                            if int(temp_data[2]) < 50:
-                                rate = None
-                                insert_data_list_new.append(
-                                    [broker_id, temp_data[3], temp_data[4], biz_type, adjust_status_out, None, rate, 1,
-                                     1,
-                                     str(rs[1]),
-                                     forever_end_dt, None])
-                            elif int(temp_data[2]) > 200:
-                                logger.error(f'本次解析数据违反业务规则!存在严重异常,不落地数据库,解析结束!{temp_data}')
-                                raise Exception(f'本次解析数据违反业务规则!存在严重异常,不落地数据库,解析结束!{temp_data}')
-                            else:
-                                rate = int(temp_data[2])
-                                insert_data_list_new.append(
-                                    [broker_id, temp_data[3], temp_data[4], biz_type, adjust_status_in, None, rate, 1,
-                                     1,
-                                     str(rs[1]), forever_end_dt,
-                                     None])
+                        res = query_is_have_secu_id(str(rs[1]).replace('-', ''), biz_type, broker_id, b)
+                        if not res:
+                            if biz_type == 1:
+                                # 融资
+                                if int(temp_data[2]) < 100:
+                                    rate = None
+                                    insert_data_list_new.append(
+                                        [broker_id, temp_data[3], temp_data[4], biz_type, adjust_status_out, None, rate, 1,
+                                         1,
+                                         str(rs[1]),
+                                         forever_end_dt, None])
+                                elif int(temp_data[2]) > 200:
+                                    logger.error(f'本次解析数据违反业务规则!存在严重异常,不落地数据库,解析结束!{temp_data}')
+                                    raise Exception(f'本次解析数据违反业务规则!存在严重异常,不落地数据库,解析结束!{temp_data}')
+                                else:
+                                    rate = int(temp_data[2])
+                                    insert_data_list_new.append(
+                                        [broker_id, temp_data[3], temp_data[4], biz_type, adjust_status_in, None, rate, 1,
+                                         1,
+                                         str(rs[1]), forever_end_dt,
+                                         None])
+                            elif biz_type == 2:
+                                # 融券
+                                if int(temp_data[2]) < 50:
+                                    rate = None
+                                    insert_data_list_new.append(
+                                        [broker_id, temp_data[3], temp_data[4], biz_type, adjust_status_out, None, rate, 1,
+                                         1,
+                                         str(rs[1]),
+                                         forever_end_dt, None])
+                                elif int(temp_data[2]) > 200:
+                                    logger.error(f'本次解析数据违反业务规则!存在严重异常,不落地数据库,解析结束!{temp_data}')
+                                    raise Exception(f'本次解析数据违反业务规则!存在严重异常,不落地数据库,解析结束!{temp_data}')
+                                else:
+                                    rate = int(temp_data[2])
+                                    insert_data_list_new.append(
+                                        [broker_id, temp_data[3], temp_data[4], biz_type, adjust_status_in, None, rate, 1,
+                                         1,
+                                         str(rs[1]), forever_end_dt,
+                                         None])
                     elif b == temp_data[3] and temp_data[2] is None:
-                        insert_data_list_new.append(
-                            [broker_id, temp_data[3], temp_data[4], biz_type, adjust_status_out, None, None, 1, 1,
-                             str(rs[1]), forever_end_dt, None])
+                        res = query_is_have_secu_id(str(rs[1]).replace('-', ''), biz_type, broker_id, b)
+                        if not res:
+                            insert_data_list_new.append(
+                                [broker_id, temp_data[3], temp_data[4], biz_type, adjust_status_out, None, None, 1, 1,
+                                 str(rs[1]), forever_end_dt, None])
             if insert_data_list_new:
                 logger.info(f'业务数据入库开始,t_broker_mt_business_security...')
                 insert_broker_mt_business_security(insert_data_list_new)
@@ -1558,14 +1571,15 @@ def securities_rzrq_parsing_data(rs, biz_type, data_):
                         if adjust_status != adjust_status_invariant:
                             update_business_security_one((str(rs[1])).replace('-', ''), row[3], broker_id, biz_type)
                             insert_data_list_noempty.append(
-                                [broker_id, row[3], row[4], biz_type, adjust_status_low, None, None, 1,
+                                [broker_id, row[3], row[4], biz_type, adjust_status_out, None, None, 1,
                                  1, str(rs[1]), forever_end_dt, None])
             else:
                 invalid_data_list.append(row)
         if invalid_data_list:
             logger.error(f'{rs[3]},如下数据无证券id，请检查!{invalid_data_list}')
         if adjust_status_out_list:
-            logger.warn(f'{rs[1]}-{rs[3]}的{biz_type_map.get(int(biz_type))}为调出状态，共{len(adjust_status_out_list)}条，具体证券代码如下：{adjust_status_out_list}')
+            logger.warn(
+                f'{rs[1]}-{rs[3]}的{biz_type_map.get(int(biz_type))}为调出状态，共{len(adjust_status_out_list)}条，具体证券代码如下：{adjust_status_out_list}')
         if insert_data_list_noempty:
             logger.info(f'业务数据入库开始...')
             insert_broker_mt_business_security(insert_data_list_noempty)
@@ -1618,10 +1632,13 @@ def securities_stockgroup_parsing_data(rs, biz_type, stockgroup_data):
             for b in s_list:
                 for temp_data in real_data:
                     if b == temp_data[4] and temp_data[3] is not None:
-                        insert_data_list_new.append(
-                            [broker_id, temp_data[4], temp_data[5], biz_type, adjust_status_in, None, temp_data[3], 1,
-                             1,
-                             str(rs[1]), forever_end_dt, None])
+                        res = query_is_have_secu_id(str(rs[1]).replace('-', ''), biz_type, broker_id, b)
+                        if not res:
+                            insert_data_list_new.append(
+                                [broker_id, temp_data[4], temp_data[5], biz_type, adjust_status_in, None, temp_data[3],
+                                 1,
+                                 1,
+                                 str(rs[1]), forever_end_dt, None])
 
             if insert_data_list_new:
                 insert_broker_mt_business_security(insert_data_list_new)
@@ -1689,4 +1706,5 @@ def securities_stockgroup_parsing_data(rs, biz_type, stockgroup_data):
         if invalid_data_list:
             logger.error(f'{rs[3]},如下数据无证券id，请检查!{invalid_data_list}')
         if adjust_status_out_list:
-            logger.warn(f'{rs[1]}-{rs[3]}的{biz_type_map.get(int(biz_type))}为调出状态，共{len(adjust_status_out_list)}条，具体证券代码如下：{adjust_status_out_list}')
+            logger.warn(
+                f'{rs[1]}-{rs[3]}的{biz_type_map.get(int(biz_type))}为调出状态，共{len(adjust_status_out_list)}条，具体证券代码如下：{adjust_status_out_list}')

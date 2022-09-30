@@ -27,7 +27,8 @@ def zxjt_parsing_data(rs, data_):
             if data['marginratefund'] == '-' or data['fundctrlflag'] == '1':
                 rz_rate = None
             else:
-                rz_rate = rate_is_normal_one(data['pledgerate'])
+                rz_rate = rate_is_normal_one(data['marginratefund'])
+
             if data['marginratestk'] == '-' or data['stkctrlflag'] == '1':
                 rq_rate = None
             else:

@@ -67,8 +67,16 @@ def zx_parsing_data(rs, data_):
             sec_name = data['stockName']
             # rz_rate = round(float(str(data[2])) * 100, 3)
             # rq_rate = round(float(str(data[3])) * 100, 3)
-            rz_rate = rate_is_normal_one(data['rzPercent'])
-            rq_rate = rate_is_normal_one(data['rqPercent'])
+            if data['rzPercent'] == 0.0:
+                rz_rate = None
+            else:
+                rz_rate = rate_is_normal_one(data['rzPercent'])
+
+            if data['rqPercent'] == 0.0:
+                rq_rate = None
+            else:
+                rq_rate = rate_is_normal_one(data['rqPercent'])
+
             rzrq_data.append([sec_code, sec_name, rz_rate, rq_rate])
 
         temp_data = securities_normal_parsing_data(rzrq_data)

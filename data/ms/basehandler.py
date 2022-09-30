@@ -122,7 +122,7 @@ class BaseHandler(object):
                             warn_list.append(i[3])
                         if warn_list:
                             logger.warning(
-                                f'{biz_dt_info}-{data_source_info}的{biz_type_map.get(data_type_info)}解析中包含{dep_data}条重复数据，具体证券代码如下：{list(set(warn_list))},请业务人员核对！')
+                                f'{biz_dt_info}-{data_source_info}的{biz_type_map.get(data_type_info)}解析中包含{dep_data}条重复数据，具体证券代码如下：{list(warn_list)},请业务人员核对！')
                         # pd.sort_index(axis=0, ascending=True, inplace=True)
                         pd.drop_duplicates(subset=["exchangeType", "stockCode"], keep='first', inplace=True, ignore_index=False)
                         data_ = pd.to_json(orient="records", force_ascii=False)
@@ -159,7 +159,7 @@ class BaseHandler(object):
                         warn_list.append(i[1])
                     if warn_list:
                         logger.warning(
-                            f'{biz_dt_info}-{data_source_info}的{biz_type_map.get(data_type_info)}解析中包含{dep_data}条重复数据，具体证券代码如下：{list(set(warn_list))},请业务人员核对！')
+                            f'{biz_dt_info}-{data_source_info}的{biz_type_map.get(data_type_info)}解析中包含{dep_data}条重复数据，具体证券代码如下：{list(warn_list)},请业务人员核对！')
                     # pd.sort_index(axis=0, ascending=True, inplace=True)
                     pd.drop_duplicates(subset=["0", "1"], keep='first', inplace=True, ignore_index=False)
                     data_ = pd.to_json(orient="records", force_ascii=False)
