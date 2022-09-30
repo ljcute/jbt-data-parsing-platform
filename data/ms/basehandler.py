@@ -129,23 +129,24 @@ class BaseHandler(object):
                         data_ = eval(data_)
                     elif data_type_info == 3:
                         data_ = eval(rs[0][4])
-                        pd = pandas.DataFrame(data_)
-                        pd.sort_values(by=["exchangeType", "stockCode", "stockName", "finRatio", "sloRatio"],
-                                       ascending=[True, True, True, True,True])
-                        dep_data = pd.duplicated(["exchangeType", "stockCode"]).sum()
-                        dep_line = pd[pd.duplicated(["exchangeType", "stockCode"], keep='last')]  # 查看删除重复的行
-                        dep_list = dep_line.values.tolist()
-                        warn_list = []
-                        for i in dep_list:
-                            warn_list.append(i[3])
-                        if warn_list:
-                            logger.warning(
-                                f'{biz_dt_info}-{data_source_info}的{biz_type_map.get(data_type_info)}解析中包含{dep_data}条重复数据，具体证券代码如下：{list(set(warn_list))},请业务人员核对！')
-                        # pd.sort_index(axis=0, ascending=True, inplace=True)
-                        pd.drop_duplicates(subset=["exchangeType", "stockCode"], keep='first', inplace=True,
-                                           ignore_index=False)
-                        data_ = pd.to_json(orient="records", force_ascii=False)
-                        data_ = eval(data_)
+                        # data_ = eval(rs[0][4])
+                        # pd = pandas.DataFrame(data_)
+                        # pd.sort_values(by=["exchangeType", "stockCode", "stockName", "finRatio", "sloRatio"],
+                        #                ascending=[True, True, True, True,True])
+                        # dep_data = pd.duplicated(["exchangeType", "stockCode"]).sum()
+                        # dep_line = pd[pd.duplicated(["exchangeType", "stockCode"], keep='last')]  # 查看删除重复的行
+                        # dep_list = dep_line.values.tolist()
+                        # warn_list = []
+                        # for i in dep_list:
+                        #     warn_list.append(i[3])
+                        # if warn_list:
+                        #     logger.warning(
+                        #         f'{biz_dt_info}-{data_source_info}的{biz_type_map.get(data_type_info)}解析中包含{dep_data}条重复数据，具体证券代码如下：{list(set(warn_list))},请业务人员核对！')
+                        # # pd.sort_index(axis=0, ascending=True, inplace=True)
+                        # pd.drop_duplicates(subset=["exchangeType", "stockCode"], keep='first', inplace=True,
+                        #                    ignore_index=False)
+                        # data_ = pd.to_json(orient="records", force_ascii=False)
+                        # data_ = eval(data_)
                 elif data['data_source'] == '申万宏源':
                     data_ = eval(rs[0][4])
                     pd = pandas.DataFrame(data_)
