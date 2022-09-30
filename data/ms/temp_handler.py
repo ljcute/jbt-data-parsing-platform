@@ -422,8 +422,8 @@ if __name__ == '__main__':
     #         data161, data162, data163, data164, data165, data166, data167, data168, data169, data170,
     #         ]
 
-    list = [data26, data27, data28, data29, data30, data107, data108, data109, data110,
-            data171, data172, data173, data174, data175, data176, data177, data178, data179, data180]
+    list = [data26, data27, data28, data29, data30, data31, data32, data33, data34, data35, data36, data37, data38,
+            data39, data40,data171, data172, data173, data174, data175, data176, data177, data178, data179, data180]
 
     print(f'手工补录解析数据开始！')
     try:
