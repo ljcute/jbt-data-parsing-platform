@@ -43,24 +43,28 @@ class Mysqldb(object):
 
     # 查询sql语句返回所有数据
     def select_all(self, sql):
+        self.conn.ping(reconnect=True)
         self.cursor.execute(sql)
         logger.info(f'查询sql为:{sql}')
         return self.cursor.fetchall()
 
     # 查询sql语句返回一条数据
     def select_one(self, sql):
+        self.conn.ping(reconnect=True)
         self.cursor.execute(sql)
         logger.info(f'查询sql为:{sql}')
         return self.cursor.fetchone()
 
     # 查询sql语句返回指定条数数据
     def select_many(self, sql, num):
+        self.conn.ping(reconnect=True)
         self.cursor.execute(sql)
         logger.info(f'查询sql为:{sql}')
         return self.cursor.fetchmany(num)
 
     # 增删改除了sql语句不一样其他都一样，都需要提交
     def commit_data(self, sql, data_list=None):
+        self.conn.ping(reconnect=True)
         try:
             # 执行语句
             if data_list:
@@ -79,6 +83,7 @@ class Mysqldb(object):
 
     # 获取dataframe结构的查询
     def select_data_by_dataframe(self, sql):
+        self.conn.ping(reconnect=True)
         username = self.config['user']
         pwd = self.config['passwd']
         ip = self.config['host']
