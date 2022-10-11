@@ -273,6 +273,12 @@ if __name__ == '__main__':
                'message': 'gy_securities_collect'}
     data197 = {'user_id': 1, 'biz_dt': '2022-10-10', 'data_type': '5', 'data_source': '国元证券',
                'message': 'gy_securities_collect'}
+    data303 = {'user_id': 1, 'biz_dt': '2022-10-11', 'data_type': '2', 'data_source': '国元证券',
+               'message': 'gy_securities_collect'}
+    data304 = {'user_id': 1, 'biz_dt': '2022-10-11', 'data_type': '4', 'data_source': '国元证券',
+               'message': 'gy_securities_collect'}
+    data305 = {'user_id': 1, 'biz_dt': '2022-10-11', 'data_type': '5', 'data_source': '国元证券',
+               'message': 'gy_securities_collect'}
 
     data101 = {'user_id': 1, 'biz_dt': '2022-09-26', 'data_type': '2', 'data_source': '兴业证券',
                'message': 'xy_securities_collect'}
@@ -330,6 +336,12 @@ if __name__ == '__main__':
     data199 = {'user_id': 1, 'biz_dt': '2022-10-10', 'data_type': '2', 'data_source': '广发证券',
                'message': 'gf_securities_collect'}
     data200 = {'user_id': 1, 'biz_dt': '2022-10-10', 'data_type': '4', 'data_source': '广发证券',
+               'message': 'gf_securities_collect'}
+    data306 = {'user_id': 1, 'biz_dt': '2022-10-11', 'data_type': '5', 'data_source': '广发证券',
+               'message': 'gf_securities_collect'}
+    data307 = {'user_id': 1, 'biz_dt': '2022-10-11', 'data_type': '2', 'data_source': '广发证券',
+               'message': 'gf_securities_collect'}
+    data308 = {'user_id': 1, 'biz_dt': '2022-10-11', 'data_type': '4', 'data_source': '广发证券',
                'message': 'gf_securities_collect'}
 
     data126 = {'user_id': 1, 'biz_dt': '2022-09-26', 'data_type': '5', 'data_source': '中国银河',
@@ -496,7 +508,10 @@ if __name__ == '__main__':
     # list = [data171, data172, data173, data174, data175, data176, data177, data178, data179, data180, data210, data211]
 
     list = [data56, data57, data58, data59, data60, data61, data62, data63, data64, data65, data66, data67, data68,
-            data69, data70, data189, data190, data191, data300, data301, data302]
+            data69, data70, data189, data190, data191, data300, data301, data302, data86,data87,data88,data89,data90,
+            data91, data92, data93, data94, data95, data96, data97,data98, data99, data100, data195,data196, data197,
+            data303, data304, data305, data111, data112, data113,data114, data115,data116, data117, data118, data119,
+            data120, data121, data122, data123, data124,data125, data198,data199, data200,data306, data307, data308]
 
     logger.info(f'手工补录解析数据开始！')
     try:
