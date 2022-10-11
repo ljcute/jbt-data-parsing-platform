@@ -192,6 +192,12 @@ if __name__ == '__main__':
                'message': 'zs_securities_collect'}
     data191 = {'user_id': 1, 'biz_dt': '2022-10-10', 'data_type': '5', 'data_source': '招商证券',
                'message': 'zs_securities_collect'}
+    data300 = {'user_id': 1, 'biz_dt': '2022-10-11', 'data_type': '2', 'data_source': '招商证券',
+               'message': 'zs_securities_collect'}
+    data301 = {'user_id': 1, 'biz_dt': '2022-10-11', 'data_type': '4', 'data_source': '招商证券',
+               'message': 'zs_securities_collect'}
+    data302 = {'user_id': 1, 'biz_dt': '2022-10-11', 'data_type': '5', 'data_source': '招商证券',
+               'message': 'zs_securities_collect'}
 
     data71 = {'user_id': 1, 'biz_dt': '2022-09-26', 'data_type': '2', 'data_source': '国信证券',
               'message': 'gx_securities_collect'}
@@ -487,7 +493,10 @@ if __name__ == '__main__':
     #         data159, data160, data206, data207, data161, data162, data163, data164, data165, data166,
     #         data167, data168, data169, data170, data208, data209]
 
-    list = [data171, data172, data173, data174, data175, data176, data177, data178, data179, data180, data210, data211]
+    # list = [data171, data172, data173, data174, data175, data176, data177, data178, data179, data180, data210, data211]
+
+    list = [data56, data57, data58, data59, data60, data61, data62, data63, data64, data65, data66, data67, data68,
+            data69, data70, data189, data190, data191, data300, data301, data302]
 
     logger.info(f'手工补录解析数据开始！')
     try:
