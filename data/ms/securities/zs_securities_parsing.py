@@ -54,7 +54,7 @@ def zs_parsing_data(rs, data_):
             sec_code = data['stkcode']
             sec_name = data['stkname']
             # rate = round(float(str(data[3])) * 100, 3)
-            rate = rate_is_normal_one(data['marginratefund'])
+            rate = rate_is_normal_one(data['marginratestk'])
             rq_data.append([sec_code, sec_name, rate])
 
         temp_data = securities_normal_parsing_data_no_market(rq_data)
