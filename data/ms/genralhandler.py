@@ -992,8 +992,6 @@ def temp_deal(data, market_flag):
                             secu_type = res[0]['boIdType']
                             bx.append(secu_id)
                             bx.append(secu_type)
-                        else:
-                            logger.error(f'该证券代码{bx}获取证券id和证券类型失败，请检查！')
                     elif len(res) > 1:
                         for r in res:
                             if r['boName'] == boName and boCode in r['boIdCode'] and (
@@ -1028,8 +1026,6 @@ def temp_deal(data, market_flag):
                             secu_type = get_secu_type(res_data[0]['sec_category'])
                             bx.append(secu_id)
                             bx.append(secu_type)
-                        else:
-                            logger.error(f'该证券代码{bx}获取证券id和证券类型失败，请检查！')
                         # if len(res) == 1:
                         #     if boCode in res[0]['boIdCode']:
                         #         secu_id = res[0]['boId']
@@ -1050,7 +1046,7 @@ def temp_deal(data, market_flag):
                         #             continue
 
                     # 说明没有查到证券id
-                    if len(bx) == 4:
+                    if len(bx) == 4 or len(bx) == 3:
                         logger.error(f'该证券代码{bx}获取证券id和证券类型失败，请检查！')
             else:
                 # 若注册中心查不到结果 但是带市场后缀 则拼接后缀去360查
@@ -1246,8 +1242,6 @@ def temp_deal(data, market_flag):
                             secu_type = res[0]['boIdType']
                             bx.append(secu_id)
                             bx.append(secu_type)
-                        else:
-                            logger.error(f'该证券代码{bx}获取证券id和证券类型失败，请检查！')
                     elif len(res) > 1:
                         for r in res:
                             if r['boName'] == boName and boCode in r['boIdCode'] and (

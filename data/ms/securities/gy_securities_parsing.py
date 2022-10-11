@@ -16,20 +16,35 @@ def gy_parsing_data(rs, data_):
     if rs[2] == '2':
         logger.info(f'国元证券可充抵保证金证券解析开始...')
         for data in data_:
+            if data['stkex'] == '1':
+                market = '上海'
+                suffix = '.SH'
+            elif data['stkex'] == '0':
+                market = '深圳'
+                suffix = '.SZ'
+            else:
+                market = '北京'
+                suffix = '.BJ'
             sec_code = data['secu_code']
+            if str(sec_code).endswith('SZ') or str(sec_code).endswith('SH') or str(sec_code).endswith('BJ'):
+                sec_code = sec_code
+            else:
+                sec_code = str(sec_code).split('.')[0]
             sec_name = data['secu_name']
-            # rate = round(float(str(data[2])) * 100, 3)
             rate = rate_is_normal_one(data['exchange_rate'])
-            bzj_data.append([sec_code, sec_name, rate])
-        securities_bzj_parsing_data_no_market(rs, bzj_data)
+            bzj_data.append([market, sec_code, sec_name, rate])
+        securities_bzj_parsing_data(rs, 3, bzj_data)
         logger.info(f'国元证券可充抵保证金证券解析结束...')
 
     elif rs[2] == '4':
         logger.info(f'国元证券融资标的证券解析开始...')
         for data in data_:
             sec_code = data['secu_code']
+            if str(sec_code).endswith('SZ') or str(sec_code).endswith('SH') or str(sec_code).endswith('BJ'):
+                sec_code = sec_code
+            else:
+                sec_code = str(sec_code).split('.')[0]
             sec_name = data['secu_name']
-            # rate = round(float(str(data[2]).strip('%')), 3)
             rate = rate_is_normal_two(data['rz_ratio'])
             rz_data.append([sec_code, sec_name, rate])
 
@@ -47,6 +62,10 @@ def gy_parsing_data(rs, data_):
         logger.info(f'国元证券融券标的证券解析开始...')
         for data in data_:
             sec_code = data['secu_code']
+            if str(sec_code).endswith('SZ') or str(sec_code).endswith('SH') or str(sec_code).endswith('BJ'):
+                sec_code = sec_code
+            else:
+                sec_code = str(sec_code).split('.')[0]
             sec_name = data['secu_name']
             # rate = round(float(str(data[2]).strip('%')), 3)
             rate = rate_is_normal_two(data['rq_ratio'])
