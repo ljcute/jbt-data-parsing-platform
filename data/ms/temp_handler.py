@@ -487,7 +487,7 @@ if __name__ == '__main__':
     #         data159, data160, data206, data207, data161, data162, data163, data164, data165, data166,
     #         data167, data168, data169, data170, data208, data209]
 
-    list = [data171, data172, data173, data174, data175, data176, data177, data178, data179, data180, data210, data211]
+    list = [data175, data176, data177, data178, data179, data180, data210, data211]
 
     logger.info(f'手工补录解析数据开始！')
     try:
