@@ -426,7 +426,15 @@ def securities_bzj_parsing_data(rs, biz_type, data_):
         b_list = list(set(haved_list).difference(set(query_list)))
         if b_list:
             for s in b_list:
-                update_business_security((str(rs[1])).replace('-', ''), s, broker_id, biz_type, adjust_status_out)
+                rss = query_is_have_secu_id((str(rs[1])).replace('-', ''),biz_type,broker_id,s)
+                if rss:
+                    secu_type = rss[0][3]
+                    pre = rss[0][7]
+                    update_business_security((str(rs[1])).replace('-', ''), s, broker_id, biz_type)
+                    insert_data_list = []
+                    insert_data_list.append([broker_id, s, secu_type, biz_type, adjust_status_out, pre,
+                                         None, 1, 1, str(rs[1]), forever_end_dt, None])
+                    insert_broker_mt_business_security(insert_data_list)
 
         insert_data_list_noempty = []
         for row in real_data:
@@ -672,7 +680,15 @@ def securities_bzj_parsing_data_no_market(rs, data_):
         b_list = list(set(haved_list).difference(set(query_list)))
         if b_list:
             for s in b_list:
-                update_business_security((str(rs[1])).replace('-', ''), s, broker_id, 3, adjust_status_out)
+                rss = query_is_have_secu_id((str(rs[1])).replace('-', ''),3,broker_id,s)
+                if rss:
+                    secu_type = rss[0][3]
+                    pre = rss[0][7]
+                    update_business_security((str(rs[1])).replace('-', ''), s, broker_id, 3)
+                    insert_data_list = []
+                    insert_data_list.append([broker_id, s, secu_type, 3, adjust_status_out, pre,
+                                         None, 1, 1, str(rs[1]), forever_end_dt, None])
+                    insert_broker_mt_business_security(insert_data_list)
 
         insert_data_list_noempty = []
         for row in real_data:
@@ -1421,7 +1437,15 @@ def securities_rzrq_parsing_data(rs, biz_type, data_):
         b_list = list(set(haved_list).difference(set(query_list)))
         if b_list:
             for s in b_list:
-                update_business_security((str(rs[1])).replace('-', ''), s, broker_id, biz_type, adjust_status_out)
+                rss = query_is_have_secu_id((str(rs[1])).replace('-', ''),biz_type,broker_id,s)
+                if rss:
+                    secu_type = rss[0][3]
+                    pre = rss[0][7]
+                    update_business_security((str(rs[1])).replace('-', ''), s, broker_id, biz_type)
+                    insert_data_list = []
+                    insert_data_list.append([broker_id, s, secu_type, biz_type, adjust_status_out, pre,
+                                         None, 1, 1, str(rs[1]), forever_end_dt, None])
+                    insert_broker_mt_business_security(insert_data_list)
 
         insert_data_list_noempty = []
         for row in data_:
@@ -1639,7 +1663,15 @@ def securities_stockgroup_parsing_data(rs, biz_type, stockgroup_data):
         b_list = list(set(haved_list).difference(set(query_list)))
         if b_list:
             for s in b_list:
-                update_business_security((str(rs[1])).replace('-', ''), s, broker_id, biz_type, adjust_status_out)
+                rss = query_is_have_secu_id((str(rs[1])).replace('-', ''),biz_type,broker_id,s)
+                if rss:
+                    secu_type = rss[0][3]
+                    pre = rss[0][7]
+                    update_business_security((str(rs[1])).replace('-', ''), s, broker_id, biz_type)
+                    insert_data_list = []
+                    insert_data_list.append([broker_id, s, secu_type, biz_type, adjust_status_out, pre,
+                                         None, 1, 1, str(rs[1]), forever_end_dt, None])
+                    insert_broker_mt_business_security(insert_data_list)
 
         for row in real_data:
             if len(row) == 6:

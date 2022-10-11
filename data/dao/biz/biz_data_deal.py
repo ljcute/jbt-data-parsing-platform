@@ -33,8 +33,8 @@ config = {
 db = Mysqldb(config)
 
 
-def update_business_security(biz_date, secu_id, broker_id, biz_type, adjust_type):
-    sql = f'update t_broker_mt_business_security set adjust_type = {adjust_type}, end_dt= {biz_date},update_dt = now() ' \
+def update_business_security(biz_date, secu_id, broker_id, biz_type):
+    sql = f'update t_broker_mt_business_security set end_dt= {biz_date},update_dt = now() ' \
           f'where secu_id = {secu_id} and broker_id = {broker_id} and biz_type = {biz_type} and start_dt <= {biz_date} and {biz_date} < end_dt and data_status=1 and biz_status=1'
     db.commit_data(sql)
 
