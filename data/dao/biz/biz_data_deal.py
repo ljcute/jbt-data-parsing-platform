@@ -83,9 +83,22 @@ def query_is_have_secu_id(biz_dt, biz_type, broker_id, secu_id):
     rs = db.select_all(sql)
     return rs
 
+def query_is_have_secu_id_out(biz_dt, biz_type, broker_id, secu_id, adjust_type):
+    sql = f'select row_id,broker_id,secu_id,secu_type,biz_type,adjust_type,pre_value,cur_value from t_broker_mt_business_security ' \
+          f'where start_dt <= {biz_dt} and {biz_dt} < end_dt and biz_type ={biz_type} and broker_id = {broker_id} and secu_id = {secu_id} and data_status=1 and biz_status=1 and adjust_type = {adjust_type}'
+    rs = db.select_all(sql)
+    return rs
+
+
 def query_is_have_secu_id_jys(biz_dt, biz_type, broker_id, secu_id, data_desc):
     sql = f'select row_id,broker_id,secu_id,secu_type,biz_type,adjust_type,pre_value,cur_value from t_broker_mt_business_security ' \
           f'where start_dt <= {biz_dt} and {biz_dt} < end_dt and biz_type ={biz_type} and broker_id = {broker_id} and secu_id = {secu_id} and data_status=1 and biz_status=1 and data_desc = {data_desc}'
+    rs = db.select_all(sql)
+    return rs
+
+def query_is_have_secu_id_jys_out(biz_dt, biz_type, broker_id, secu_id, data_desc, adjust_type):
+    sql = f'select row_id,broker_id,secu_id,secu_type,biz_type,adjust_type,pre_value,cur_value from t_broker_mt_business_security ' \
+          f'where start_dt <= {biz_dt} and {biz_dt} < end_dt and biz_type ={biz_type} and broker_id = {broker_id} and secu_id = {secu_id} and data_status=1 and biz_status=1 and data_desc = {data_desc} and adjust_type = {adjust_type}'
     rs = db.select_all(sql)
     return rs
 
