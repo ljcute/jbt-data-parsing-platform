@@ -118,13 +118,19 @@ if __name__ == '__main__':
               'message': 'zxjt_securities_collect'}
     data30 = {'user_id': 1, 'biz_dt': '2022-09-30', 'data_type': '99', 'data_source': '中信建投',
               'message': 'zxjt_securities_collect'}
+    data31 = {'user_id': 1, 'biz_dt': '2022-10-10', 'data_type': '99', 'data_source': '中信建投',
+              'message': 'zxjt_securities_collect'}
+    data32 = {'user_id': 1, 'biz_dt': '2022-10-11', 'data_type': '99', 'data_source': '中信建投',
+              'message': 'zxjt_securities_collect'}
+    data33 = {'user_id': 1, 'biz_dt': '2022-10-12', 'data_type': '99', 'data_source': '中信建投',
+              'message': 'zxjt_securities_collect'}
 
-    data31 = {'user_id': 1, 'biz_dt': '2022-09-26', 'data_type': '2', 'data_source': '中信证券',
-              'message': 'zx_securities_collect'}
-    data32 = {'user_id': 1, 'biz_dt': '2022-09-26', 'data_type': '3', 'data_source': '中信证券',
-              'message': 'zx_securities_collect'}
-    data33 = {'user_id': 1, 'biz_dt': '2022-09-27', 'data_type': '2', 'data_source': '中信证券',
-              'message': 'zx_securities_collect'}
+    # data31 = {'user_id': 1, 'biz_dt': '2022-09-26', 'data_type': '2', 'data_source': '中信证券',
+    #           'message': 'zx_securities_collect'}
+    # data32 = {'user_id': 1, 'biz_dt': '2022-09-26', 'data_type': '3', 'data_source': '中信证券',
+    #           'message': 'zx_securities_collect'}
+    # data33 = {'user_id': 1, 'biz_dt': '2022-09-27', 'data_type': '2', 'data_source': '中信证券',
+    #           'message': 'zx_securities_collect'}
     data34 = {'user_id': 1, 'biz_dt': '2022-09-27', 'data_type': '3', 'data_source': '中信证券',
               'message': 'zx_securities_collect'}
     data35 = {'user_id': 1, 'biz_dt': '2022-09-28', 'data_type': '2', 'data_source': '中信证券',
@@ -300,6 +306,12 @@ if __name__ == '__main__':
                'message': 'gy_securities_collect'}
     data305 = {'user_id': 1, 'biz_dt': '2022-10-11', 'data_type': '5', 'data_source': '国元证券',
                'message': 'gy_securities_collect'}
+    data306 = {'user_id': 1, 'biz_dt': '2022-10-12', 'data_type': '2', 'data_source': '国元证券',
+               'message': 'gy_securities_collect'}
+    data307 = {'user_id': 1, 'biz_dt': '2022-10-12', 'data_type': '4', 'data_source': '国元证券',
+               'message': 'gy_securities_collect'}
+    data308 = {'user_id': 1, 'biz_dt': '2022-10-12', 'data_type': '5', 'data_source': '国元证券',
+               'message': 'gy_securities_collect'}
 
     data101 = {'user_id': 1, 'biz_dt': '2022-09-26', 'data_type': '2', 'data_source': '兴业证券',
                'message': 'xy_securities_collect'}
@@ -358,11 +370,17 @@ if __name__ == '__main__':
                'message': 'gf_securities_collect'}
     data200 = {'user_id': 1, 'biz_dt': '2022-10-10', 'data_type': '4', 'data_source': '广发证券',
                'message': 'gf_securities_collect'}
-    data306 = {'user_id': 1, 'biz_dt': '2022-10-11', 'data_type': '5', 'data_source': '广发证券',
+    data201 = {'user_id': 1, 'biz_dt': '2022-10-11', 'data_type': '5', 'data_source': '广发证券',
                'message': 'gf_securities_collect'}
-    data307 = {'user_id': 1, 'biz_dt': '2022-10-11', 'data_type': '2', 'data_source': '广发证券',
+    data202 = {'user_id': 1, 'biz_dt': '2022-10-11', 'data_type': '2', 'data_source': '广发证券',
                'message': 'gf_securities_collect'}
-    data308 = {'user_id': 1, 'biz_dt': '2022-10-11', 'data_type': '4', 'data_source': '广发证券',
+    data203 = {'user_id': 1, 'biz_dt': '2022-10-11', 'data_type': '4', 'data_source': '广发证券',
+               'message': 'gf_securities_collect'}
+    data204 = {'user_id': 1, 'biz_dt': '2022-10-12', 'data_type': '5', 'data_source': '广发证券',
+               'message': 'gf_securities_collect'}
+    data205 = {'user_id': 1, 'biz_dt': '2022-10-12', 'data_type': '2', 'data_source': '广发证券',
+               'message': 'gf_securities_collect'}
+    data206 = {'user_id': 1, 'biz_dt': '2022-10-12', 'data_type': '4', 'data_source': '广发证券',
                'message': 'gf_securities_collect'}
 
     data126 = {'user_id': 1, 'biz_dt': '2022-09-26', 'data_type': '5', 'data_source': '中国银河',
@@ -395,12 +413,12 @@ if __name__ == '__main__':
                'message': 'yh_securities_collect'}
     data140 = {'user_id': 1, 'biz_dt': '2022-09-30', 'data_type': '4', 'data_source': '中国银河',
                'message': 'yh_securities_collect'}
-    data201 = {'user_id': 1, 'biz_dt': '2022-10-10', 'data_type': '5', 'data_source': '中国银河',
-               'message': 'yh_securities_collect'}
-    data202 = {'user_id': 1, 'biz_dt': '2022-10-10', 'data_type': '2', 'data_source': '中国银河',
-               'message': 'yh_securities_collect'}
-    data203 = {'user_id': 1, 'biz_dt': '2022-10-10', 'data_type': '4', 'data_source': '中国银河',
-               'message': 'yh_securities_collect'}
+    # data201 = {'user_id': 1, 'biz_dt': '2022-10-10', 'data_type': '5', 'data_source': '中国银河',
+    #            'message': 'yh_securities_collect'}
+    # data202 = {'user_id': 1, 'biz_dt': '2022-10-10', 'data_type': '2', 'data_source': '中国银河',
+    #            'message': 'yh_securities_collect'}
+    # data203 = {'user_id': 1, 'biz_dt': '2022-10-10', 'data_type': '4', 'data_source': '中国银河',
+    #            'message': 'yh_securities_collect'}
 
     data141 = {'user_id': 1, 'biz_dt': '2022-09-26', 'data_type': '3', 'data_source': '安信证券',
                'message': 'ax_securities_collect'}
@@ -422,10 +440,10 @@ if __name__ == '__main__':
                'message': 'ax_securities_collect'}
     data150 = {'user_id': 1, 'biz_dt': '2022-09-30', 'data_type': '2', 'data_source': '安信证券',
                'message': 'ax_securities_collect'}
-    data204 = {'user_id': 1, 'biz_dt': '2022-10-10', 'data_type': '3', 'data_source': '安信证券',
-               'message': 'ax_securities_collect'}
-    data205 = {'user_id': 1, 'biz_dt': '2022-10-10', 'data_type': '2', 'data_source': '安信证券',
-               'message': 'ax_securities_collect'}
+    # data204 = {'user_id': 1, 'biz_dt': '2022-10-10', 'data_type': '3', 'data_source': '安信证券',
+    #            'message': 'ax_securities_collect'}
+    # data205 = {'user_id': 1, 'biz_dt': '2022-10-10', 'data_type': '2', 'data_source': '安信证券',
+    #            'message': 'ax_securities_collect'}
 
     data151 = {'user_id': 1, 'biz_dt': '2022-09-26', 'data_type': '2', 'data_source': '申万宏源',
                'message': 'sw_securities_collect'}
@@ -447,10 +465,10 @@ if __name__ == '__main__':
                'message': 'sw_securities_collect'}
     data160 = {'user_id': 1, 'biz_dt': '2022-09-30', 'data_type': '3', 'data_source': '申万宏源',
                'message': 'sw_securities_collect'}
-    data206 = {'user_id': 1, 'biz_dt': '2022-10-10', 'data_type': '2', 'data_source': '申万宏源',
-               'message': 'sw_securities_collect'}
-    data207 = {'user_id': 1, 'biz_dt': '2022-10-10', 'data_type': '3', 'data_source': '申万宏源',
-               'message': 'sw_securities_collect'}
+    # data206 = {'user_id': 1, 'biz_dt': '2022-10-10', 'data_type': '2', 'data_source': '申万宏源',
+    #            'message': 'sw_securities_collect'}
+    # data207 = {'user_id': 1, 'biz_dt': '2022-10-10', 'data_type': '3', 'data_source': '申万宏源',
+    #            'message': 'sw_securities_collect'}
 
     data161 = {'user_id': 1, 'biz_dt': '2022-09-26', 'data_type': '2', 'data_source': '中金财富',
                'message': 'zjcf_securities_collect'}
@@ -539,8 +557,12 @@ if __name__ == '__main__':
     #         data21, data22, data23, data24, data25, data181, data182, data183, data184, data185, data400
     #     , data401, data402, data403, data404, data405, data406, data407, data408, data409]
 
-    list = [data86, data87, data88, data89, data90, data91, data92, data93, data94, data95,
-            data96, data97, data98, data99, data100, data195, data196, data197, data303, data304, data305]
+    list = [data26, data27, data28, data29, data30, data31, data32, data33,
+            data111, data112, data113, data114, data115, data116, data117, data118, data119, data120, data121, data122,
+            data123,
+            data124, data125, data198, data199, data200, data201, data202, data203, data204, data205, data206,
+            data86, data87, data88, data89, data90, data91, data92, data93, data94, data95, data96, data97, data98,
+            data99, data100, data195, data196, data197, data303, data304, data305, data306, data307, data308]
 
     logger.info(f'手工补录解析数据开始！')
     try:
