@@ -179,9 +179,11 @@ def sz_data_parsing(rs, biz_type, data_):
             for b in s_list:
                 for temp_data in data_:
                     if b == temp_data[2]:
-                        secu_type = temp_data[3]
-                        temp_insert_data_list.append([broker_id, None if b == '-' else b, secu_type, biz_type, adjust_status_in, None, temp_data[4] if len(temp_data)== 5 else None, 1, 1,
-                                                      rs[1], forever_end_dt, 2])
+                        res = query_is_have_secu_id_jys(str(rs[1]).replace('-', ''), biz_type, broker_id, b, 2)
+                        if not res:
+                            secu_type = temp_data[3]
+                            temp_insert_data_list.append([broker_id, None if b == '-' else b, secu_type, biz_type, adjust_status_in, None, temp_data[4] if len(temp_data)== 5 else None, 1, 1,
+                                                          rs[1], forever_end_dt, 2])
             logger.info(f'深圳交易所业务数据入库开始...')
             insert_broker_mt_business_security(temp_insert_data_list)
             logger.info(f'深圳交易所业务数据入库完成，共{len(temp_insert_data_list)}条')
@@ -189,4 +191,12 @@ def sz_data_parsing(rs, biz_type, data_):
         b_list = list(set(haved_list).difference(set(query_list)))
         if b_list:
             for s in b_list:
-                update_business_security_jys((str(rs[1])).replace('-', ''), s, broker_id,  biz_type, 2)
+                rss = query_is_have_secu_id_jys((str(rs[1])).replace('-', ''),biz_type,broker_id,s, 2)
+                if rss:
+                    secu_type = rss[0][3]
+                    pre = rss[0][7]
+                    update_business_security_jys((str(rs[1])).replace('-', ''), s, broker_id,  biz_type, 2)
+                    insert_data_list = []
+                    insert_data_list.append([broker_id, s, secu_type, biz_type, adjust_status_out, pre,
+                                         None, 1, 1, str(rs[1]), forever_end_dt, None])
+                    insert_broker_mt_business_security(insert_data_list)
