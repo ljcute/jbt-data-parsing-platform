@@ -534,10 +534,13 @@ if __name__ == '__main__':
     #         data303, data304, data305, data111, data112, data113,data114, data115,data116, data117, data118, data119,
     #         data120, data121, data122, data123, data124,data125, data198,data199, data200,data306, data307, data308]
 
-    list = [data1, data2, data3, data4, data5, data6, data7, data8, data9, data10,
-            data11, data12, data13, data14, data15, data16, data17, data18, data19, data20,
-            data21, data22, data23, data24, data25, data181, data182, data183, data184, data185, data400
-        , data401, data402, data403, data404, data405, data406, data407, data408, data409]
+    # list = [data1, data2, data3, data4, data5, data6, data7, data8, data9, data10,
+    #         data11, data12, data13, data14, data15, data16, data17, data18, data19, data20,
+    #         data21, data22, data23, data24, data25, data181, data182, data183, data184, data185, data400
+    #     , data401, data402, data403, data404, data405, data406, data407, data408, data409]
+
+    list = [data86, data87, data88, data89, data90, data91, data92, data93, data94, data95,
+            data96, data97, data98, data99, data100, data195, data196, data197, data303, data304, data305]
 
     logger.info(f'手工补录解析数据开始！')
     try:
