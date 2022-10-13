@@ -8,6 +8,7 @@
 import os
 import sys
 import time
+import traceback
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.append(BASE_DIR)
@@ -557,19 +558,22 @@ if __name__ == '__main__':
     #         data21, data22, data23, data24, data25, data181, data182, data183, data184, data185, data400
     #     , data401, data402, data403, data404, data405, data406, data407, data408, data409]
 
-    list = [data26, data27, data28, data29, data30, data31, data32, data33,
-            data111, data112, data113, data114, data115, data116, data117, data118, data119, data120, data121, data122,
-            data123,
-            data124, data125, data198, data199, data200, data201, data202, data203, data204, data205, data206,
-            data86, data87, data88, data89, data90, data91, data92, data93, data94, data95, data96, data97, data98,
-            data99, data100, data195, data196, data197, data303, data304, data305, data306, data307, data308]
+    list = [data26, data27, data28, data29, data30, data31, data32, data33, data111, data112, data113, data114, data115,
+            data116, data117, data118, data119, data120, data121, data122, data123, data124, data125, data198, data199,
+            data200, data201, data202, data203, data204, data205, data206, data86, data87, data88, data89, data90,
+            data91, data92, data93, data94, data95, data96, data97, data98, data99, data100, data195, data196, data197,
+            data303, data304, data305, data306, data307, data308]
 
     logger.info(f'手工补录解析数据开始！')
     try:
         for i in list:
+            ds = i['data_source']
+            dt = i['data_type']
+            dt_ = i['biz_dt']
+            logger.info(f'开始解析：{ds}，类型为：{dt}的数据，业务日期为：{dt_}')
             TempHandler.parsing_data_job(i)
             time.sleep(5)
     except Exception as e:
-        pass
+        logger.info(f'具体异常为：{traceback.format_exc()}，e:{e}')
         time.sleep(2)
     logger.info(f'手工补录解析数据结束！')
