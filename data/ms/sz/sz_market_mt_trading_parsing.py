@@ -133,33 +133,34 @@ def sz_data_parsing(rs, biz_type, data_):
         insert_data_list = []
         if biz_type == 3:
             for i in data_:
-                res = query_is_have_secu_id_jys(str(rs[1]).replace('-', ''), biz_type, broker_id, i[2], 1)
-                if not res:
-                    if len(i) == 4:
-                        insert_data_list.append([broker_id, None if i[2] == '-' else i[2], i[3], biz_type, adjust_status_in, None, None, 1, 1, rs[1],
-                                                 forever_end_dt, 2])
+                if len(i) == 4:
+                    insert_data_list.append(
+                        [broker_id, None if i[2] == '-' else i[2], i[3], biz_type, adjust_status_in, None, None, 1, 1,
+                         rs[1],
+                         forever_end_dt, 2])
 
-                    if len(i) == 5:
-                        insert_data_list.append([broker_id, None if i[2] == '-' else i[2], i[3], biz_type, adjust_status_in, None, i[4], 1, 1, rs[1],
-                                                 forever_end_dt, 2])
+                if len(i) == 5:
+                    insert_data_list.append(
+                        [broker_id, None if i[2] == '-' else i[2], i[3], biz_type, adjust_status_in, None, i[4], 1, 1,
+                         rs[1],
+                         forever_end_dt, 2])
+
         elif biz_type == 1:
             for i in data_:
-                res = query_is_have_secu_id_jys(str(rs[1]).replace('-', ''), biz_type, broker_id, i[2], 1)
-                if not res:
-                    if len(i) == 4:
-                        insert_data_list.append(
-                            [broker_id, None if i[2] == '-' else i[2], i[3], biz_type, adjust_status_in, None, 100, 1, 1,
-                             rs[1],
-                             forever_end_dt, 2])
+                if len(i) == 4:
+                    insert_data_list.append(
+                        [broker_id, None if i[2] == '-' else i[2], i[3], biz_type, adjust_status_in, None, 100, 1, 1,
+                         rs[1],
+                         forever_end_dt, 2])
+
         elif biz_type == 2:
             for i in data_:
-                res = query_is_have_secu_id_jys(str(rs[1]).replace('-', ''), biz_type, broker_id, i[2], 1)
-                if not res:
-                    if len(i) == 4:
-                        insert_data_list.append(
-                            [broker_id, None if i[2] == '-' else i[2], i[3], biz_type, adjust_status_in, None, 50, 1, 1,
-                             rs[1],
-                             forever_end_dt, 2])
+                if len(i) == 4:
+                    insert_data_list.append(
+                        [broker_id, None if i[2] == '-' else i[2], i[3], biz_type, adjust_status_in, None, 50, 1, 1,
+                         rs[1],
+                         forever_end_dt, 2])
+
         if insert_data_list:
             logger.info(f'深圳交易所业务数据入库开始...')
             insert_broker_mt_business_security(insert_data_list)
