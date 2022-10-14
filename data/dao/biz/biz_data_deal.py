@@ -32,6 +32,10 @@ config = {
 # 实例化
 db = Mysqldb(config)
 
+def update_business_security_useless(biz_date, secu_id, broker_id, biz_type):
+    sql = f'update t_broker_mt_business_security set data_status = 0 ,biz_status = 2, end_dt= {biz_date},update_dt = now() ' \
+          f'where secu_id = {secu_id} and broker_id = {broker_id} and biz_type = {biz_type} and start_dt <= {biz_date} and {biz_date} < end_dt and data_status=1 and biz_status=1'
+    db.commit_data(sql)
 
 def update_business_security(biz_date, secu_id, broker_id, biz_type):
     sql = f'update t_broker_mt_business_security set end_dt= {biz_date},update_dt = now() ' \
@@ -63,6 +67,17 @@ def query_business_security_item(biz_dt, biz_type, broker_id):
                                'cur_value'])
     return df
 
+def query_business_secu_id_item(biz_dt, biz_type, broker_id, secu_id):
+    sql = f'select row_id,broker_id,secu_id,secu_type,biz_type,adjust_type,pre_value,cur_value from t_broker_mt_business_security ' \
+          f'where start_dt = {biz_dt} and secu_id = {secu_id} and biz_type ={biz_type} and broker_id = {broker_id} and data_status=1 and biz_status=1'
+    rs = db.select_all(sql)
+    columns = []
+    for i in rs:
+        columns.append(str(i[2]))
+    df = pd.DataFrame(list(rs), index=columns,
+                      columns=['row_id', 'broker_id', 'secu_id', 'secu_type', 'biz_type', 'adjust_type', 'pre_value',
+                               'cur_value'])
+    return df
 
 def query_business_security_item_jys(biz_dt, biz_type, broker_id, data_desc):
     sql = f'select row_id,broker_id,secu_id,secu_type,biz_type,adjust_type,pre_value,cur_value from t_broker_mt_business_security ' \

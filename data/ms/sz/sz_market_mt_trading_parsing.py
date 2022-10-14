@@ -188,9 +188,10 @@ def sz_data_parsing(rs, biz_type, data_):
                             secu_type = temp_data[3]
                             temp_insert_data_list.append([broker_id, None if b == '-' else b, secu_type, biz_type, adjust_status_in, None, temp_data[4] if len(temp_data)== 5 else None, 1, 1,
                                                           rs[1], forever_end_dt, 2])
-            logger.info(f'深圳交易所业务数据入库开始...')
-            insert_broker_mt_business_security(temp_insert_data_list)
-            logger.info(f'深圳交易所业务数据入库完成，共{len(temp_insert_data_list)}条')
+            if temp_insert_data_list:
+                logger.info(f'深圳交易所业务数据入库开始...')
+                insert_broker_mt_business_security(temp_insert_data_list)
+                logger.info(f'深圳交易所业务数据入库完成，共{len(temp_insert_data_list)}条')
 
         b_list = list(set(haved_list).difference(set(query_list)))
         if b_list:
@@ -204,4 +205,5 @@ def sz_data_parsing(rs, biz_type, data_):
                     insert_data_list = []
                     insert_data_list.append([broker_id, s, secu_type, biz_type, adjust_status_out, pre,
                                          None, 1, 1, str(rs[1]), forever_end_dt, None])
-                    insert_broker_mt_business_security(insert_data_list)
+                    if insert_data_list:
+                        insert_broker_mt_business_security(insert_data_list)
