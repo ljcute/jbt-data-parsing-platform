@@ -438,6 +438,8 @@ def securities_bzj_parsing_data(rs, biz_type, data_):
                                              None, 1, 1, str(rs[1]), forever_end_dt, None])
                     if insert_data_list:
                         insert_broker_mt_business_security(insert_data_list)
+        today_res = query_business_security_item_today((str(rs[1])).replace('-', ''),biz_type,broker_id)
+        today_list = today_res['secu_id'].values.tolist()
 
         insert_data_list_noempty = []
         for row in real_data:
@@ -649,6 +651,13 @@ def securities_bzj_parsing_data(rs, biz_type, data_):
                                         insert_data_list_noempty.append(
                                             [broker_id, sec_id, secu_type, biz_type, adjust_status_out, old_rate, None,
                                              1, 1,str(rs[1]), forever_end_dt, None])
+                        else:
+                            if sec_id in today_list:
+                                update_business_expalin((str(rs[1])).replace('-', ''), sec_id, broker_id, biz_type,
+                                                        forever_end_dt)
+                                update_business_expalin_other((str(rs[1])).replace('-', ''), sec_id, broker_id, biz_type,
+                                                              forever_end_dt)
+
                 else:
                     db_record = df_exists_index(result, row[1], row[4])
                     if db_record is not None:
@@ -799,6 +808,9 @@ def securities_bzj_parsing_data_no_market(rs, data_):
                                              None, 1, 1, str(rs[1]), forever_end_dt, None])
                     if insert_data_list:
                         insert_broker_mt_business_security(insert_data_list)
+
+        today_res = query_business_security_item_today((str(rs[1])).replace('-', ''),3,broker_id)
+        today_list = today_res['secu_id'].values.tolist()
 
         insert_data_list_noempty = []
         for row in real_data:
@@ -1034,6 +1046,12 @@ def securities_bzj_parsing_data_no_market(rs, data_):
                                         insert_data_list_noempty.append(
                                             [broker_id, sec_id, secu_type, 3, adjust_status_out, old_rate, None, 1, 1,
                                              str(rs[1]), forever_end_dt, None])
+                        else:
+                            if sec_id in today_list:
+                                update_business_expalin((str(rs[1])).replace('-', ''), sec_id, broker_id, 3,
+                                                        forever_end_dt)
+                                update_business_expalin_other((str(rs[1])).replace('-', ''), sec_id, broker_id, 3,
+                                                              forever_end_dt)
 
                 else:
                     db_record = df_exists_index(result, row[0], row[3])
@@ -1688,6 +1706,9 @@ def securities_rzrq_parsing_data(rs, biz_type, data_):
                     if insert_data_list:
                         insert_broker_mt_business_security(insert_data_list)
 
+        today_res = query_business_security_item_today((str(rs[1])).replace('-', ''),biz_type,broker_id)
+        today_list = today_res['secu_id'].values.tolist()
+
         insert_data_list_noempty = []
         for row in data_:
             if len(row) == 5:
@@ -1988,7 +2009,12 @@ def securities_rzrq_parsing_data(rs, biz_type, data_):
                                              1,
                                              1,
                                              str(rs[1]), forever_end_dt, None])
-
+                        else:
+                            if sec_id in today_list:
+                                update_business_expalin((str(rs[1])).replace('-', ''), sec_id, broker_id, biz_type,
+                                                        forever_end_dt)
+                                update_business_expalin_other((str(rs[1])).replace('-', ''), sec_id, broker_id, biz_type,
+                                                              forever_end_dt)
 
                 else:
                     db_record = df_exists_index(result, row[0], row[3])
@@ -2085,6 +2111,9 @@ def securities_stockgroup_parsing_data(rs, biz_type, stockgroup_data):
                                              None, 1, 1, str(rs[1]), forever_end_dt, None])
                     if insert_data_list:
                         insert_broker_mt_business_security(insert_data_list)
+
+        today_res = query_business_security_item_today((str(rs[1])).replace('-', ''),biz_type,broker_id)
+        today_list = today_res['secu_id'].values.tolist()
 
         for row in real_data:
             if len(row) == 6:
@@ -2188,12 +2217,12 @@ def securities_stockgroup_parsing_data(rs, biz_type, stockgroup_data):
                                          str(rs[1]), forever_end_dt, None]]
                                     if insert_data_list:
                                         insert_broker_mt_business_security(insert_data_list)
-
-                # else:
-                #     insert_list = [[broker_id, sec_id, secu_type, biz_type, adjust_status_in, None, round_rate, 1, 1,
-                #                     str(rs[1]), forever_end_dt, None]]
-                #     if insert_list:
-                #         insert_broker_mt_business_security(insert_list)
+                    else:
+                        if sec_id in today_list:
+                            update_business_expalin((str(rs[1])).replace('-', ''), sec_id, broker_id, biz_type,
+                                                    forever_end_dt)
+                            update_business_expalin_other((str(rs[1])).replace('-', ''), sec_id, broker_id, biz_type,
+                                                          forever_end_dt)
             else:
                 invalid_data_list.append(row)
         if invalid_data_list:
