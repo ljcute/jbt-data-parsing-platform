@@ -217,7 +217,7 @@ def data_parsing(rs, data_):
         b_list = list(set(haved_list).difference(set(query_list)))
         if b_list:
             for s in b_list:
-                rs1 = query_is_have_secu_id((str(rs[1])).replace('-', ''), biz_type, broker_id, s)
+                rs1 = query_is_have_secu_id_jys((str(rs[1])).replace('-', ''), biz_type, broker_id, s, 1)
                 secu_type = rs1[0][3]
                 pre = rs1[0][7]
                 rss = query_is_have_secu_id_jys_out((str(rs[1])).replace('-', ''),biz_type,broker_id,s, 1, adjust_status_out)
@@ -225,6 +225,6 @@ def data_parsing(rs, data_):
                     update_business_security_jys((str(rs[1])).replace('-', ''), s, broker_id, biz_type, 1)
                     insert_data_list = []
                     insert_data_list.append([broker_id, s, secu_type, biz_type, adjust_status_out, pre,
-                                         None, 1, 1, str(rs[1]), forever_end_dt, None])
+                                         None, 1, 1, str(rs[1]), forever_end_dt, 1])
                     if insert_data_list:
                         insert_broker_mt_business_security(insert_data_list)

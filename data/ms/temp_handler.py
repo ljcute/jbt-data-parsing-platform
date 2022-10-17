@@ -132,6 +132,17 @@ if __name__ == '__main__':
     data419 = {'user_id': 1, 'biz_dt': '2022-10-14', 'data_type': '3', 'data_source': '深圳交易所',
                'message': 'sz_exchange_mt_underlying_and_guaranty_security'}
 
+    data520 = {'user_id': 1, 'biz_dt': '2022-10-17', 'data_type': '4', 'data_source': '上海交易所',
+               'message': 'sh_exchange_mt_underlying_and_guaranty_security'}
+    data521 = {'user_id': 1, 'biz_dt': '2022-10-17', 'data_type': '5', 'data_source': '上海交易所',
+               'message': 'sh_exchange_mt_underlying_and_guaranty_security'}
+    data522 = {'user_id': 1, 'biz_dt': '2022-10-17', 'data_type': '2', 'data_source': '上海交易所',
+               'message': 'sh_exchange_mt_underlying_and_guaranty_security'}
+    data523 = {'user_id': 1, 'biz_dt': '2022-10-17', 'data_type': '2', 'data_source': '深圳交易所',
+               'message': 'sz_exchange_mt_underlying_and_guaranty_security'}
+    data524 = {'user_id': 1, 'biz_dt': '2022-10-17', 'data_type': '3', 'data_source': '深圳交易所',
+               'message': 'sz_exchange_mt_underlying_and_guaranty_security'}
+
     data26 = {'user_id': 1, 'biz_dt': '2022-09-26', 'data_type': '99', 'data_source': '中信建投',
               'message': 'zxjt_securities_collect'}
     data27 = {'user_id': 1, 'biz_dt': '2022-09-27', 'data_type': '99', 'data_source': '中信建投',
@@ -710,39 +721,46 @@ if __name__ == '__main__':
     data519 = {'user_id': 1, 'biz_dt': '2022-10-14', 'data_type': 3, 'data_source': '华泰证券',
                'message': 'ht_securities_collect'}
 
+    # list = [data1, data2, data3, data4, data5, data6, data7, data8, data9, data10,
+    #         data11, data12, data13, data14, data15, data16, data17, data18, data19, data20,
+    #         data21, data22, data23, data24, data25, data181, data182, data183, data184, data185,
+    #         data400, data401, data402, data403, data404, data405, data406, data407, data408, data409,
+    #         data410, data411, data412, data413, data414, data415, data416, data417, data418, data419,
+    #         data26, data27, data28, data29, data30, data31, data32, data33, data34, data420,
+    #         data421, data422, data423, data424, data35, data36, data37, data38, data39, data40,
+    #         data425, data426, data427, data428, data429, data430, data431, data432, data433, data434,
+    #         data41, data42, data43, data44, data45, data46, data47, data48, data49, data50,
+    #         data51, data52, data53, data54, data55, data186, data187, data188, data446, data435,
+    #         data436, data437, data438, data439, data440, data441, data442, data443, data444, data445,
+    #         data56, data57, data58, data59, data60, data61, data62, data63, data64, data65,
+    #         data66, data67, data68, data69, data70, data189, data190, data191, data300, data301, data302,
+    #         data455, data447, data448, data449, data450, data451, data452, data453, data454,
+    #         data71, data72, data73, data74, data75, data76, data77, data78, data79, data80,
+    #         data81, data82, data83, data84, data85, data192, data193, data194,
+    #         data456, data457, data458, data459, data460, data461, data462, data463, data464, data465, data466, data467,
+    #         data86, data87, data88, data89, data90, data91, data92, data93, data94, data95,
+    #         data96, data97, data98, data99, data100, data195, data196, data197,
+    #         data303, data304, data305, data306, data307, data308, data309, data310, data311, data468, data469, data470,
+    #         data101, data102, data103, data104, data105, data106, data471, data472,
+    #         data111, data112, data113, data114, data115, data116, data117, data118, data119, data120,
+    #         data121, data122, data123, data124, data125, data198, data199, data200,
+    #         data201, data202, data203, data204, data205, data206, data207, data208, data209, data473, data474, data475,
+    #         data126, data127, data128, data129, data130, data131, data132, data133, data134, data135,
+    #         data136, data137, data138, data139, data140, data476, data477, data478, data479, data480, data481, data482,
+    #         data483, data484, data485, data486, data487, data489, data490, data491,
+    #         data141, data142, data143, data144, data145, data146, data147, data148, data149, data150,
+    #         data492, data493, data494, data495, data496, data497, data498, data499, data500, data501,
+    #         data151, data152, data153, data154, data161, data162, data163, data164, data165, data166,
+    #         data167, data168, data169, data170, data502, data503, data504, data505, data506, data507, data508,
+    #         data509, data510, data511, data171, data172, data173, data174, data175, data176, data177, data178, data179,
+    #         data180, data210, data211, data512, data513, data514, data515, data516, data517, data518, data519]
+
     list = [data1, data2, data3, data4, data5, data6, data7, data8, data9, data10,
             data11, data12, data13, data14, data15, data16, data17, data18, data19, data20,
             data21, data22, data23, data24, data25, data181, data182, data183, data184, data185,
             data400, data401, data402, data403, data404, data405, data406, data407, data408, data409,
             data410, data411, data412, data413, data414, data415, data416, data417, data418, data419,
-            data26, data27, data28, data29, data30, data31, data32, data33, data34, data420,
-            data421, data422, data423, data424, data35, data36, data37, data38, data39, data40,
-            data425, data426, data427, data428, data429, data430, data431, data432, data433, data434,
-            data41, data42, data43, data44, data45, data46, data47, data48, data49, data50,
-            data51, data52, data53, data54, data55, data186, data187, data188, data446, data435,
-            data436, data437, data438, data439, data440, data441, data442, data443, data444, data445,
-            data56, data57, data58, data59, data60, data61, data62, data63, data64, data65,
-            data66, data67, data68, data69, data70, data189, data190, data191, data300, data301, data302,
-            data455, data447, data448, data449, data450, data451, data452, data453, data454,
-            data71, data72, data73, data74, data75, data76, data77, data78, data79, data80,
-            data81, data82, data83, data84, data85, data192, data193, data194,
-            data456, data457, data458, data459, data460, data461, data462, data463, data464, data465, data466, data467,
-            data86, data87, data88, data89, data90, data91, data92, data93, data94, data95,
-            data96, data97, data98, data99, data100, data195, data196, data197,
-            data303, data304, data305, data306, data307, data308, data309, data310, data311, data468, data469, data470,
-            data101, data102, data103, data104, data105, data106, data471, data472,
-            data111, data112, data113, data114, data115, data116, data117, data118, data119, data120,
-            data121, data122, data123, data124, data125, data198, data199, data200,
-            data201, data202, data203, data204, data205, data206, data207, data208, data209, data473, data474, data475,
-            data126, data127, data128, data129, data130, data131, data132, data133, data134, data135,
-            data136, data137, data138, data139, data140, data476, data477, data478, data479, data480, data481, data482,
-            data483, data484, data485, data486, data487, data489, data490, data491,
-            data141, data142, data143, data144, data145, data146, data147, data148, data149, data150,
-            data492, data493, data494, data495, data496, data497, data498, data499, data500, data501,
-            data151, data152, data153, data154, data161, data162, data163, data164, data165, data166,
-            data167, data168, data169, data170, data502, data503, data504, data505, data506, data507, data508,
-            data509, data510, data511, data171, data172, data173, data174, data175, data176, data177, data178, data179,
-            data180, data210, data211, data512, data513, data514, data515, data516, data517, data518, data519]
+            data520, data521, data522, data523, data524]
 
     logger.info(f'手工补录解析数据开始！')
     try:
