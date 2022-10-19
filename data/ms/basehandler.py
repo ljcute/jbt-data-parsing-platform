@@ -164,6 +164,23 @@ class BaseHandler(object):
                     pd.drop_duplicates(subset=["0", "1"], keep='first', inplace=True, ignore_index=False)
                     data_ = pd.to_json(orient="records", force_ascii=False)
                     data_ = eval(data_)
+                elif data['data_source'] == '中国银河':
+                    data_ = eval(rs[0][4])
+                    pd = pandas.DataFrame(data_)
+                    pd.sort_values(by=["0"], ascending=[True])
+                    dep_data = pd.duplicated(["0"]).sum()
+                    dep_line = pd[pd.duplicated(["0"], keep='last')]  # 查看删除重复的行
+                    dep_list = dep_line.values.tolist()
+                    warn_list = []
+                    for i in dep_list:
+                        warn_list.append(i[1])
+                    if warn_list:
+                        logger.warning(
+                            f'{biz_dt_info}-{data_source_info}的{biz_type_map.get(data_type_info)}解析中包含{dep_data}条重复数据，具体证券代码如下：{list(warn_list)},请业务人员核对！')
+                    # pd.sort_index(axis=0, ascending=True, inplace=True)
+                    pd.drop_duplicates(subset=["0"], keep='first', inplace=True, ignore_index=False)
+                    data_ = pd.to_json(orient="records", force_ascii=False)
+                    data_ = eval(data_)
                 else:
                     data_ = eval(rs[0][4])
                 insert_data_process_controler(rs[0][0], data['message'], rs[0][2], rs[0][3], 1, rs[0][1], 1, 'success')

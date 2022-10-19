@@ -466,6 +466,14 @@ if __name__ == '__main__':
                'message': 'xy_securities_collect'}
     data472 = {'user_id': 1, 'biz_dt': '2022-10-14', 'data_type': '3', 'data_source': '兴业证券',
                'message': 'xy_securities_collect'}
+    data525 = {'user_id': 1, 'biz_dt': '2022-10-17', 'data_type': '3', 'data_source': '兴业证券',
+               'message': 'xy_securities_collect'}
+    data526 = {'user_id': 1, 'biz_dt': '2022-10-17', 'data_type': '2', 'data_source': '兴业证券',
+               'message': 'xy_securities_collect'}
+    data527 = {'user_id': 1, 'biz_dt': '2022-10-18', 'data_type': '3', 'data_source': '兴业证券',
+               'message': 'xy_securities_collect'}
+    data528 = {'user_id': 1, 'biz_dt': '2022-10-18', 'data_type': '2', 'data_source': '兴业证券',
+               'message': 'xy_securities_collect'}
 
     data111 = {'user_id': 1, 'biz_dt': '2022-09-26', 'data_type': '5', 'data_source': '广发证券',
                'message': 'gf_securities_collect'}
@@ -587,6 +595,18 @@ if __name__ == '__main__':
     data490 = {'user_id': 1, 'biz_dt': '2022-10-14', 'data_type': '2', 'data_source': '中国银河',
                'message': 'yh_securities_collect'}
     data491 = {'user_id': 1, 'biz_dt': '2022-10-14', 'data_type': '4', 'data_source': '中国银河',
+               'message': 'yh_securities_collect'}
+    data529 = {'user_id': 1, 'biz_dt': '2022-10-17', 'data_type': '5', 'data_source': '中国银河',
+               'message': 'yh_securities_collect'}
+    data530 = {'user_id': 1, 'biz_dt': '2022-10-17', 'data_type': '2', 'data_source': '中国银河',
+               'message': 'yh_securities_collect'}
+    data531 = {'user_id': 1, 'biz_dt': '2022-10-17', 'data_type': '4', 'data_source': '中国银河',
+               'message': 'yh_securities_collect'}
+    data532 = {'user_id': 1, 'biz_dt': '2022-10-18', 'data_type': '5', 'data_source': '中国银河',
+               'message': 'yh_securities_collect'}
+    data533 = {'user_id': 1, 'biz_dt': '2022-10-18', 'data_type': '2', 'data_source': '中国银河',
+               'message': 'yh_securities_collect'}
+    data534 = {'user_id': 1, 'biz_dt': '2022-10-18', 'data_type': '4', 'data_source': '中国银河',
                'message': 'yh_securities_collect'}
 
     data141 = {'user_id': 1, 'biz_dt': '2022-09-26', 'data_type': '3', 'data_source': '安信证券',
@@ -755,12 +775,18 @@ if __name__ == '__main__':
     #         data509, data510, data511, data171, data172, data173, data174, data175, data176, data177, data178, data179,
     #         data180, data210, data211, data512, data513, data514, data515, data516, data517, data518, data519]
 
-    list = [data1, data2, data3, data4, data5, data6, data7, data8, data9, data10,
-            data11, data12, data13, data14, data15, data16, data17, data18, data19, data20,
-            data21, data22, data23, data24, data25, data181, data182, data183, data184, data185,
-            data400, data401, data402, data403, data404, data405, data406, data407, data408, data409,
-            data410, data411, data412, data413, data414, data415, data416, data417, data418, data419,
-            data520, data521, data522, data523, data524]
+    # list = [data1, data2, data3, data4, data5, data6, data7, data8, data9, data10,
+    #         data11, data12, data13, data14, data15, data16, data17, data18, data19, data20,
+    #         data21, data22, data23, data24, data25, data181, data182, data183, data184, data185,
+    #         data400, data401, data402, data403, data404, data405, data406, data407, data408, data409,
+    #         data410, data411, data412, data413, data414, data415, data416, data417, data418, data419,
+    #         data520, data521, data522, data523, data524]
+
+    list = [data101, data102, data103, data104, data105, data106, data471, data472,data525,data526,data527,data528,
+            data126, data127, data128, data129, data130, data131, data132, data133, data134, data135,
+            data136, data137, data138, data139, data140, data476, data477, data478, data479, data480, data481, data482,
+            data483, data484, data485, data486, data487, data489, data490, data491,data529,data530,data531,
+            data532,data533,data534]
 
     logger.info(f'手工补录解析数据开始！')
     try:
