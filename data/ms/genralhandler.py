@@ -8,6 +8,8 @@
 import re
 
 import requests
+
+from data.dao.raw.raw_data_deal import *
 from utils.logs_utils import logger
 from constants import *
 from decimal import Decimal
@@ -23,6 +25,29 @@ request_url_zc_center = cf.get('zc-center-url', 'url')
 
 biz_type_map = {3: "可充抵保证金证券", 1: "融资标的证券", 2: "融券标的证券", 4: "集中度分组"}
 
+# 通过深交所上交所数据池前置判断后缀
+def get_secu_id_pre_method(biz_dt, secu_id):
+    sh_ls = []
+    sz_ls = []
+    sh_rs = eval(select_sh_data(biz_dt)[0])
+    for i in sh_rs:
+        sh_ls.append(i['1'])
+    sz_rs = eval(select_sz_data(biz_dt)[0])
+    for j in sz_rs:
+        sz_ls.append(j['0'])
+
+    if '.' in secu_id:
+        temp_ls = secu_id.split('.')
+        secu_id = temp_ls[0]
+
+    if secu_id in sh_ls and secu_id in sz_ls:
+        return secu_id
+
+    if secu_id in sh_ls and secu_id not in sz_ls:
+        return secu_id + '.SH'
+
+    if secu_id in sz_ls and secu_id not in sh_ls:
+        return secu_id + '.SZ'
 
 # 比较调整前，调整后的rate值
 def get_adjust_status_by_two_rate(pre_value, current_rate):

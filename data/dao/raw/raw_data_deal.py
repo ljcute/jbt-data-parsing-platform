@@ -54,6 +54,19 @@ def select_sh_mt_trading_items_data():
     # result = db.select_data_by_dataframe(sql)
     return result
 
+def select_sh_data(biz_dt):
+    sql = f'select data_text from t_ndc_data_collect_log ' \
+          f'where data_type = 2 and data_source = "上海交易所" and data_status = 1 and biz_dt = {biz_dt} order by update_dt desc'
+    result = db.select_one(sql)
+    # result = db.select_data_by_dataframe(sql)
+    return result
+
+def select_sz_data(biz_dt):
+    sql = f'select data_text from t_ndc_data_collect_log ' \
+          f'where data_type = 2 and data_source = "深圳交易所" and data_status = 1 and biz_dt = {biz_dt} order by update_dt desc'
+    result = db.select_one(sql)
+    # result = db.select_data_by_dataframe(sql)
+    return result
 
 if __name__ == '__main__':
     pass
