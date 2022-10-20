@@ -135,7 +135,7 @@ def sz_data_parsing(rs, biz_type, data_):
             for i in data_:
                 if len(i) == 4:
                     insert_data_list.append(
-                        [broker_id, None if i[2] == '-' else i[2], i[3], biz_type, adjust_status_in, None, None, 1, 1,
+                        [broker_id, None if i[2] == '-' else i[2], i[3], biz_type, adjust_status_in, None, 0, 1, 1,
                          rs[1],
                          forever_end_dt, 2])
 
@@ -186,7 +186,7 @@ def sz_data_parsing(rs, biz_type, data_):
                         res = query_is_have_secu_id_jys(str(rs[1]).replace('-', ''), biz_type, broker_id, b, 2)
                         if not res:
                             secu_type = temp_data[3]
-                            temp_insert_data_list.append([broker_id, None if b == '-' else b, secu_type, biz_type, adjust_status_in, None, temp_data[4] if len(temp_data)== 5 else None, 1, 1,
+                            temp_insert_data_list.append([broker_id, None if b == '-' else b, secu_type, biz_type, adjust_status_in, None, temp_data[4] if len(temp_data)== 5 else 0, 1, 1,
                                                           rs[1], forever_end_dt, 2])
             if temp_insert_data_list:
                 logger.info(f'深圳交易所业务数据入库开始...')
@@ -218,7 +218,7 @@ def sz_data_parsing(rs, biz_type, data_):
                 sec_code = row[0]
                 sec_id = row[2]
                 secu_type = row[3]
-                round_rate = row[4] if len(row) == 5 else None
+                round_rate = row[4] if len(row) == 5 else 0
 
                 db_record = df_exists_index(result, sec_code, sec_id)
                 if db_record is not None:

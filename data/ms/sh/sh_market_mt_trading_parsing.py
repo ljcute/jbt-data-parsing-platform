@@ -156,8 +156,9 @@ def data_parsing(rs, data_):
         if biz_type == 3:
             for i in data_:
                 if len(i) == 5:
+                    # 未查询到折算率
                     insert_data_list.append(
-                        [broker_id, None if i[3] == '-' else i[3], i[4], biz_type, adjust_status_in, None, None, 1, 1,
+                        [broker_id, None if i[3] == '-' else i[3], i[4], biz_type, adjust_status_in, None, 0, 1, 1,
                          rs[1],
                          forever_end_dt, 1])
 
@@ -207,7 +208,7 @@ def data_parsing(rs, data_):
                             secu_type = temp_data[4]
                             temp_insert_data_list.append(
                                 [broker_id, None if b == '-' else b, secu_type, biz_type, adjust_status_in, None,
-                                 temp_data[5] if len(temp_data) == 6 else None, 1, 1, rs[1],
+                                 temp_data[5] if len(temp_data) == 6 else 0, 1, 1, rs[1],
                                  forever_end_dt, 1])
             if temp_insert_data_list:
                 logger.info(f'上海交易所业务数据入库开始...')
@@ -238,7 +239,7 @@ def data_parsing(rs, data_):
                 sec_code = row[1]
                 sec_id = row[3]
                 secu_type = row[4]
-                round_rate = row[5] if len(row) == 6 else None
+                round_rate = row[5] if len(row) == 6 else 0
 
                 db_record = df_exists_index(result, sec_code, sec_id)
                 if db_record is not None:
