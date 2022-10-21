@@ -789,6 +789,10 @@ if __name__ == '__main__':
                'message': 'ht_securities_collect'}
     data707 = {'user_id': 1, 'biz_dt': '2022-10-20', 'data_type': 3, 'data_source': '华泰证券',
                'message': 'ht_securities_collect'}
+    data708 = {'user_id': 1, 'biz_dt': '2022-10-21', 'data_type': 2, 'data_source': '华泰证券',
+               'message': 'ht_securities_collect'}
+    data709 = {'user_id': 1, 'biz_dt': '2022-10-21', 'data_type': 3, 'data_source': '华泰证券',
+               'message': 'ht_securities_collect'}
 
     # list = [data1, data2, data3, data4, data5, data6, data7, data8, data9, data10,
     #         data11, data12, data13, data14, data15, data16, data17, data18, data19, data20,
@@ -840,7 +844,7 @@ if __name__ == '__main__':
 
     list = [data171, data172, data173, data174, data175, data176, data177, data178, data179,
             data180, data210, data211, data512, data513, data514, data515, data516, data517, data518, data519,
-            data700, data701, data702, data703, data704, data705, data706, data707]
+            data700, data701, data702, data703, data704, data705, data706, data707, data708, data709]
 
     logger.info(f'手工补录解析数据开始！')
     try:
