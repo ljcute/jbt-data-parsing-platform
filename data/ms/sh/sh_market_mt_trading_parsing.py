@@ -203,12 +203,19 @@ def data_parsing(rs, data_):
             for b in s_list:
                 for temp_data in data_:
                     if b == temp_data[3]:
+                        cur_value = None
+                        if biz_type == 1:
+                            cur_value = 100
+                        elif biz_type == 2:
+                            cur_value = 50
+                        elif biz_type == 3:
+                            cur_value = temp_data[5] if len(temp_data) == 6 else 0
                         res = query_is_have_secu_id_jys(str(rs[1]).replace('-', ''), biz_type, broker_id, b, 1)
                         if not res:
                             secu_type = temp_data[4]
                             temp_insert_data_list.append(
                                 [broker_id, None if b == '-' else b, secu_type, biz_type, adjust_status_in, None,
-                                 temp_data[5] if len(temp_data) == 6 else 0, 1, 1, rs[1],
+                                 cur_value, 1, 1, rs[1],
                                  forever_end_dt, 1])
             if temp_insert_data_list:
                 logger.info(f'上海交易所业务数据入库开始...')
