@@ -196,12 +196,13 @@ def sz_data_parsing(rs, biz_type, data_):
                             temp_insert_data_list.append([broker_id, None if b == '-' else b, secu_type, biz_type, adjust_status_in, None, cur_value, 1, 1,
                                                           rs[1], forever_end_dt, 2])
             if temp_insert_data_list:
-                logger.info(f'深圳交易所业务数据入库开始...')
+                logger.info(f'深圳交易所调入业务数据入库开始...')
                 insert_broker_mt_business_security(temp_insert_data_list)
-                logger.info(f'深圳交易所业务数据入库完成，共{len(temp_insert_data_list)}条')
+                logger.info(f'深圳交易所调出业务数据入库完成，共{len(temp_insert_data_list)}条')
 
         b_list = list(set(haved_list).difference(set(query_list)))
         if b_list:
+            insert_data_list = []
             for s in b_list:
                 rs1 = query_is_have_secu_id_jys((str(rs[1])).replace('-', ''), biz_type, broker_id, s, 2)
                 secu_type = rs1[0][3]
@@ -209,11 +210,13 @@ def sz_data_parsing(rs, biz_type, data_):
                 rss = query_is_have_secu_id_jys_out((str(rs[1])).replace('-', ''),biz_type,broker_id,s, 2, adjust_status_out)
                 if not rss:
                     update_business_security_jys((str(rs[1])).replace('-', ''), s, broker_id,  biz_type, 2)
-                    insert_data_list = []
                     insert_data_list.append([broker_id, s, secu_type, biz_type, adjust_status_out, pre,
                                          None, 1, 1, str(rs[1]), forever_end_dt, 2])
-                    if insert_data_list:
-                        insert_broker_mt_business_security(insert_data_list)
+            if insert_data_list:
+                logger.info(f'深圳交易所调入业务数据入库开始...')
+                insert_broker_mt_business_security(insert_data_list)
+                logger.info(f'深圳交易所调出业务数据入库完成，共{len(insert_data_list)}条')
+
 
         if biz_type == 3:
 
@@ -236,20 +239,23 @@ def sz_data_parsing(rs, biz_type, data_):
                             temp_result = query_business_secu_id_item_jys((str(rs[1])).replace('-', ''), biz_type, broker_id,
                                                                       sec_id, 2)
                             if temp_result.empty:
-                                if adjust_status == adjust_status_high:
-                                    # 调高 更新记录，更新cur_value,adjust_type,data_status,biz_status
+                                if adjust_status == adjust_status_in:
                                     update_business_security_one_jys((str(rs[1])).replace('-', ''), sec_id, broker_id, biz_type,2)
-
-                                    insert_data_list_noempty = [
-                                        [broker_id, sec_id, secu_type, biz_type, adjust_status_high, old_rate, round_rate,
-                                         1, 1,str(rs[1]), forever_end_dt, 2]]
+                                    insert_data_list_noempty.append([broker_id, sec_id, secu_type, biz_type, adjust_status_in, old_rate, round_rate,
+                                         1, 1,str(rs[1]), forever_end_dt, 2])
+                                elif adjust_status == adjust_status_high:
+                                    update_business_security_one_jys((str(rs[1])).replace('-', ''), sec_id, broker_id, biz_type,2)
+                                    insert_data_list_noempty.append([broker_id, sec_id, secu_type, biz_type, adjust_status_high, old_rate, round_rate,
+                                         1, 1,str(rs[1]), forever_end_dt, 2])
                                 elif adjust_status == adjust_status_low:
-                                    # 调低 更新记录，更新cur_value,adjust_type,data_status,biz_status
                                     update_business_security_one_jys((str(rs[1])).replace('-', ''), sec_id, broker_id, biz_type,2)
-
-                                    insert_data_list_noempty = [
-                                        [broker_id, sec_id, secu_type, biz_type, adjust_status_low, old_rate, round_rate, 1,
-                                         1,str(rs[1]), forever_end_dt, 2]]
+                                    insert_data_list_noempty.append([broker_id, sec_id, secu_type, biz_type, adjust_status_low, old_rate, round_rate, 1,
+                                         1,str(rs[1]), forever_end_dt, 2])
+                                elif adjust_status == adjust_status_out:
+                                    # 几乎不会进入这里的调出
+                                    update_business_security_one_jys((str(rs[1])).replace('-', ''), sec_id, broker_id, biz_type,2)
+                                    insert_data_list_noempty.append([broker_id, sec_id, secu_type, biz_type, adjust_status_out, old_rate,
+                                         None, 1,1, str(rs[1]), forever_end_dt, 2])
                             else:
                                 # 如果有，则不为第一次解析，需要判断pre_value是否相同
                                 pre_temp_vaule = temp_result.values.tolist()[0][7]
@@ -260,22 +266,18 @@ def sz_data_parsing(rs, biz_type, data_):
                                     update_business_security_useless_jys((str(rs[1])).replace('-', ''), sec_id, broker_id,
                                                                      biz_type,2)
                                     # 再做对应逻辑判断
-                                    if adjust_status == adjust_status_high:
-                                        # 调高 更新记录，更新cur_value,adjust_type,data_status,biz_status
-                                        update_business_security_one_jys((str(rs[1])).replace('-', ''), sec_id, broker_id,
-                                                                         biz_type, 2)
-
-                                        insert_data_list_noempty = [
-                                            [broker_id, sec_id, secu_type, biz_type, adjust_status_high, old_rate,
-                                             round_rate,1, 1, str(rs[1]), forever_end_dt, 2]]
+                                    if adjust_status == adjust_status_in:
+                                        insert_data_list_noempty.append([broker_id, sec_id, secu_type, biz_type, adjust_status_in, old_rate,
+                                             round_rate,1, 1, str(rs[1]), forever_end_dt, 2])
+                                    elif adjust_status == adjust_status_high:
+                                        insert_data_list_noempty.append([broker_id, sec_id, secu_type, biz_type, adjust_status_high, old_rate,
+                                             round_rate,1, 1, str(rs[1]), forever_end_dt, 2])
                                     elif adjust_status == adjust_status_low:
-                                        # 调低 更新记录，更新cur_value,adjust_type,data_status,biz_status
-                                        update_business_security_one_jys((str(rs[1])).replace('-', ''), sec_id, broker_id,
-                                                                         biz_type, 2)
-
-                                        insert_data_list_noempty = [
-                                            [broker_id, sec_id, secu_type, biz_type, adjust_status_low, old_rate,
-                                             round_rate, 1,1, str(rs[1]), forever_end_dt, 2]]
+                                        insert_data_list_noempty.append([broker_id, sec_id, secu_type, biz_type, adjust_status_low, old_rate,
+                                             round_rate, 1,1, str(rs[1]), forever_end_dt, 2])
+                                    elif adjust_status == adjust_status_out:
+                                        insert_data_list_noempty.append([broker_id, sec_id, secu_type, biz_type, adjust_status_out, old_rate,
+                                             None, 1, 1, str(rs[1]), forever_end_dt, 2])
                         else:
                             if sec_id in today_list:
                                 update_business_expalin_jys((str(rs[1])).replace('-', ''), sec_id, broker_id, biz_type,

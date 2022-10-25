@@ -198,6 +198,17 @@ if __name__ == '__main__':
     data719 = {'user_id': 1, 'biz_dt': '2022-10-24', 'data_type': '3', 'data_source': '深圳交易所',
                'message': 'sz_exchange_mt_underlying_and_guaranty_security'}
 
+    data720 = {'user_id': 1, 'biz_dt': '2022-10-25', 'data_type': '4', 'data_source': '上海交易所',
+               'message': 'sh_exchange_mt_underlying_and_guaranty_security'}
+    data721 = {'user_id': 1, 'biz_dt': '2022-10-25', 'data_type': '5', 'data_source': '上海交易所',
+               'message': 'sh_exchange_mt_underlying_and_guaranty_security'}
+    data722 = {'user_id': 1, 'biz_dt': '2022-10-25', 'data_type': '2', 'data_source': '上海交易所',
+               'message': 'sh_exchange_mt_underlying_and_guaranty_security'}
+    data723 = {'user_id': 1, 'biz_dt': '2022-10-25', 'data_type': '2', 'data_source': '深圳交易所',
+               'message': 'sz_exchange_mt_underlying_and_guaranty_security'}
+    data724 = {'user_id': 1, 'biz_dt': '2022-10-25', 'data_type': '3', 'data_source': '深圳交易所',
+               'message': 'sz_exchange_mt_underlying_and_guaranty_security'}
+
     data26 = {'user_id': 1, 'biz_dt': '2022-09-26', 'data_type': '99', 'data_source': '中信建投',
               'message': 'zxjt_securities_collect'}
     data27 = {'user_id': 1, 'biz_dt': '2022-09-27', 'data_type': '99', 'data_source': '中信建投',
@@ -850,14 +861,14 @@ if __name__ == '__main__':
     #         data509, data510, data511, data171, data172, data173, data174, data175, data176, data177, data178, data179,
     #         data180, data210, data211, data512, data513, data514, data515, data516, data517, data518, data519]
 
-    list = [data1, data2, data3, data4, data5, data6, data7, data8, data9, data10,
-            data11, data12, data13, data14, data15, data16, data17, data18, data19, data20,
-            data21, data22, data23, data24, data25, data181, data182, data183, data184, data185,
-            data400, data401, data402, data403, data404, data405, data406, data407, data408, data409,
-            data410, data411, data412, data413, data414, data415, data416, data417, data418, data419,
-            data520, data521, data522, data523, data524,data600,data601,data602,data603,data604,data605,
-            data606,data607,data608,data609,data610,data611,data612,data613,data614,data710,data711,data712,
-            data713,data714,data715,data716,data717,data718,data719]
+    # list = [data1, data2, data3, data4, data5, data6, data7, data8, data9, data10,
+    #         data11, data12, data13, data14, data15, data16, data17, data18, data19, data20,
+    #         data21, data22, data23, data24, data25, data181, data182, data183, data184, data185,
+    #         data400, data401, data402, data403, data404, data405, data406, data407, data408, data409,
+    #         data410, data411, data412, data413, data414, data415, data416, data417, data418, data419,
+    #         data520, data521, data522, data523, data524,data600,data601,data602,data603,data604,data605,
+    #         data606,data607,data608,data609,data610,data611,data612,data613,data614,data710,data711,data712,
+    #         data713,data714,data715,data716,data717,data718,data719]
 
     # list = [data101, data102, data103, data104, data105, data106, data471, data472,data525,data526,data527,data528,
     #         data126, data127, data128, data129, data130, data131, data132, data133, data134, data135,
@@ -868,6 +879,10 @@ if __name__ == '__main__':
     # list = [data171, data172, data173, data174, data175, data176, data177, data178, data179,
     #         data180, data210, data211, data512, data513, data514, data515, data516, data517, data518, data519,
     #         data700, data701, data702, data703, data704, data705, data706, data707, data708, data709]
+
+    list = [data3, data4, data8, data9, data13, data14, data18, data19, data23, data24, data183, data184, data402,
+            data403,data407, data408, data412, data413, data417, data418, data522, data523, data602, data603,
+            data607, data608, data612, data613, data712, data713, data717, data718, data722, data723]
 
     logger.info(f'手工补录解析数据开始！')
     try:
