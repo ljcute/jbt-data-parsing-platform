@@ -766,6 +766,35 @@ if __name__ == '__main__':
     data511 = {'user_id': 1, 'biz_dt': '2022-10-14', 'data_type': '3', 'data_source': '中金财富',
                'message': 'zjcf_securities_collect'}
 
+    data800 = {'user_id': 1, 'biz_dt': '2022-10-17', 'data_type': '3', 'data_source': '中金财富',
+               'message': 'zjcf_securities_collect'}
+    data801 = {'user_id': 1, 'biz_dt': '2022-10-18', 'data_type': '3', 'data_source': '中金财富',
+               'message': 'zjcf_securities_collect'}
+    data802 = {'user_id': 1, 'biz_dt': '2022-10-19', 'data_type': '3', 'data_source': '中金财富',
+               'message': 'zjcf_securities_collect'}
+    data803 = {'user_id': 1, 'biz_dt': '2022-10-20', 'data_type': '3', 'data_source': '中金财富',
+               'message': 'zjcf_securities_collect'}
+    data804 = {'user_id': 1, 'biz_dt': '2022-10-21', 'data_type': '3', 'data_source': '中金财富',
+               'message': 'zjcf_securities_collect'}
+
+    data805 = {'user_id': 1, 'biz_dt': '2022-10-24', 'data_type': '3', 'data_source': '中金财富',
+               'message': 'zjcf_securities_collect'}
+    data806 = {'user_id': 1, 'biz_dt': '2022-10-25', 'data_type': '3', 'data_source': '中金财富',
+               'message': 'zjcf_securities_collect'}
+    data807 = {'user_id': 1, 'biz_dt': '2022-10-26', 'data_type': '3', 'data_source': '中金财富',
+               'message': 'zjcf_securities_collect'}
+    data808 = {'user_id': 1, 'biz_dt': '2022-10-27', 'data_type': '3', 'data_source': '中金财富',
+               'message': 'zjcf_securities_collect'}
+    data809 = {'user_id': 1, 'biz_dt': '2022-10-28', 'data_type': '3', 'data_source': '中金财富',
+               'message': 'zjcf_securities_collect'}
+
+    data810 = {'user_id': 1, 'biz_dt': '2022-10-31', 'data_type': '3', 'data_source': '中金财富',
+               'message': 'zjcf_securities_collect'}
+    data811 = {'user_id': 1, 'biz_dt': '2022-11-01', 'data_type': '3', 'data_source': '中金财富',
+               'message': 'zjcf_securities_collect'}
+    data812 = {'user_id': 1, 'biz_dt': '2022-11-02', 'data_type': '3', 'data_source': '中金财富',
+               'message': 'zjcf_securities_collect'}
+
     data171 = {'user_id': 1, 'biz_dt': '2022-09-26', 'data_type': 2, 'data_source': '华泰证券',
                'message': 'ht_securities_collect'}
     data172 = {'user_id': 1, 'biz_dt': '2022-09-26', 'data_type': 3, 'data_source': '华泰证券',
@@ -880,9 +909,12 @@ if __name__ == '__main__':
     #         data180, data210, data211, data512, data513, data514, data515, data516, data517, data518, data519,
     #         data700, data701, data702, data703, data704, data705, data706, data707, data708, data709]
 
-    list = [data3, data4, data8, data9, data13, data14, data18, data19, data23, data24, data183, data184, data402,
-            data403,data407, data408, data412, data413, data417, data418, data522, data523, data602, data603,
-            data607, data608, data612, data613, data712, data713, data717, data718, data722, data723]
+    # list = [data3, data4, data8, data9, data13, data14, data18, data19, data23, data24, data183, data184, data402,
+    #         data403,data407, data408, data412, data413, data417, data418, data522, data523, data602, data603,
+    #         data607, data608, data612, data613, data712, data713, data717, data718, data722, data723]
+
+    list = [data162, data164, data166, data168, data170, data503, data505, data507, data509, data511, data800, data801,
+            data802, data803, data804, data805, data806, data807, data808, data809, data810, data811, data812]
 
     logger.info(f'手工补录解析数据开始！')
     try:
