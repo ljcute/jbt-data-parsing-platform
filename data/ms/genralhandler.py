@@ -1884,14 +1884,16 @@ def securities_rzrq_parsing_data(rs, biz_type, data_):
                                                  1, str(rs[1]), forever_end_dt, None])
 
                                 elif adjust_status == adjust_status_out:
-                                    adjust_status_out_list.append(row[0])
-                                    update_business_security_one((str(rs[1])).replace('-', ''), sec_id, broker_id,
-                                                                 biz_type)
-                                    # 调出 更新记录，rate置为空，新增一条调处记录，更新其他字段,
-                                    insert_data_list_noempty.append(
-                                        [broker_id, sec_id, secu_type, biz_type, adjust_status_out, old_rate, None, 1,
-                                         1,
-                                         str(rs[1]), forever_end_dt, None])
+                                    out_res = query_is_have_secu_id_out((str(rs[1])).replace('-', ''),biz_type,broker_id,sec_id,adjust_status_out)
+                                    if not out_res:
+                                        adjust_status_out_list.append(row[0])
+                                        update_business_security_one((str(rs[1])).replace('-', ''), sec_id, broker_id,
+                                                                     biz_type)
+                                        # 调出 更新记录，rate置为空，新增一条调处记录，更新其他字段,
+                                        insert_data_list_noempty.append(
+                                            [broker_id, sec_id, secu_type, biz_type, adjust_status_out, old_rate, None, 1,
+                                             1,
+                                             str(rs[1]), forever_end_dt, None])
                             else:
                                 pre_temp_vaule = temp_result.values.tolist()[0][7]
                                 if round_rate == pre_temp_vaule:
@@ -2031,12 +2033,15 @@ def securities_rzrq_parsing_data(rs, biz_type, data_):
                                                      1, str(rs[1]), forever_end_dt, None])
 
                                     elif adjust_status == adjust_status_out:
-                                        adjust_status_out_list.append(row[0])
-                                        insert_data_list_noempty.append(
-                                            [broker_id, sec_id, secu_type, biz_type, adjust_status_out, old_rate, None,
-                                             1,
-                                             1,
-                                             str(rs[1]), forever_end_dt, None])
+                                        out_res = query_is_have_secu_id_out((str(rs[1])).replace('-', ''), biz_type,
+                                                                            broker_id, sec_id, adjust_status_out)
+                                        if not out_res:
+                                            adjust_status_out_list.append(row[0])
+                                            insert_data_list_noempty.append(
+                                                [broker_id, sec_id, secu_type, biz_type, adjust_status_out, old_rate, None,
+                                                 1,
+                                                 1,
+                                                 str(rs[1]), forever_end_dt, None])
                         else:
                             if sec_id in today_list:
                                 update_business_expalin((str(rs[1])).replace('-', ''), sec_id, broker_id, biz_type,
