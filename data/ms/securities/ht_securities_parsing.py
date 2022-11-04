@@ -69,11 +69,11 @@ def ht_parsing_data(rs, data_):
             sec_name = data['stockName']
             # rz_rate = round(float(str(data[3])) * 100, 3)
             # rq_rate = round(float(str(data[4])) * 100, 3)
-            if data['finRatio'] == 0:
+            if data['finRatio'] == '0':
                 rz_rate = None
             else:
                 rz_rate = rate_is_normal_one(data['finRatio'])
-            if data['sloRatio'] == 0:
+            if data['sloRatio'] == '0':
                 rq_rate = None
             else:
                 rq_rate = rate_is_normal_one(data['sloRatio'])
