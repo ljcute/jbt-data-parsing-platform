@@ -2052,14 +2052,15 @@ def securities_rzrq_parsing_data(rs, biz_type, data_):
                     db_record = df_exists_index(result, row[0], row[3])
                     if db_record is not None:
                         old_rate = db_record[7]
-                        adjust_status = get_adjust_status_by_two_rate(old_rate, row[2])
-                        if adjust_status != adjust_status_invariant:
-                            result_ = query_is_have_secu_id_out((str(rs[1])).replace('-', ''),biz_type,broker_id,row[3],adjust_status_out)
-                            if not result_:
-                                update_business_security_one((str(rs[1])).replace('-', ''), row[3], broker_id, biz_type)
-                                insert_data_list_noempty.append(
-                                    [broker_id, row[3], row[4], biz_type, adjust_status_out, old_rate, None, 1,
-                                     1, str(rs[1]), forever_end_dt, None])
+                        if old_rate is not None:
+                            adjust_status = get_adjust_status_by_two_rate(old_rate, row[2])
+                            if adjust_status != adjust_status_invariant:
+                                result_ = query_is_have_secu_id_out((str(rs[1])).replace('-', ''),biz_type,broker_id,row[3],adjust_status_out)
+                                if not result_:
+                                    update_business_security_one((str(rs[1])).replace('-', ''), row[3], broker_id, biz_type)
+                                    insert_data_list_noempty.append(
+                                        [broker_id, row[3], row[4], biz_type, adjust_status_out, old_rate, None, 1,
+                                         1, str(rs[1]), forever_end_dt, None])
             else:
                 invalid_data_list.append(row)
         if invalid_data_list:

@@ -857,6 +857,26 @@ if __name__ == '__main__':
                'message': 'ht_securities_collect'}
     data709 = {'user_id': 1, 'biz_dt': '2022-10-21', 'data_type': 3, 'data_source': '华泰证券',
                'message': 'ht_securities_collect'}
+    data820 = {'user_id': 1, 'biz_dt': '2022-10-24', 'data_type': 3, 'data_source': '华泰证券',
+               'message': 'ht_securities_collect'}
+    data821 = {'user_id': 1, 'biz_dt': '2022-10-25', 'data_type': 3, 'data_source': '华泰证券',
+               'message': 'ht_securities_collect'}
+    data822 = {'user_id': 1, 'biz_dt': '2022-10-26', 'data_type': 3, 'data_source': '华泰证券',
+               'message': 'ht_securities_collect'}
+    data823 = {'user_id': 1, 'biz_dt': '2022-10-27', 'data_type': 3, 'data_source': '华泰证券',
+               'message': 'ht_securities_collect'}
+    data824 = {'user_id': 1, 'biz_dt': '2022-10-28', 'data_type': 3, 'data_source': '华泰证券',
+               'message': 'ht_securities_collect'}
+    data825 = {'user_id': 1, 'biz_dt': '2022-10-31', 'data_type': 3, 'data_source': '华泰证券',
+               'message': 'ht_securities_collect'}
+    data826 = {'user_id': 1, 'biz_dt': '2022-11-01', 'data_type': 3, 'data_source': '华泰证券',
+               'message': 'ht_securities_collect'}
+    data827 = {'user_id': 1, 'biz_dt': '2022-11-02', 'data_type': 3, 'data_source': '华泰证券',
+               'message': 'ht_securities_collect'}
+    data828 = {'user_id': 1, 'biz_dt': '2022-11-03', 'data_type': 3, 'data_source': '华泰证券',
+               'message': 'ht_securities_collect'}
+    data829 = {'user_id': 1, 'biz_dt': '2022-11-04', 'data_type': 3, 'data_source': '华泰证券',
+               'message': 'ht_securities_collect'}
 
     # list = [data1, data2, data3, data4, data5, data6, data7, data8, data9, data10,
     #         data11, data12, data13, data14, data15, data16, data17, data18, data19, data20,
@@ -915,12 +935,13 @@ if __name__ == '__main__':
     #         data403,data407, data408, data412, data413, data417, data418, data522, data523, data602, data603,
     #         data607, data608, data612, data613, data712, data713, data717, data718, data722, data723]
 
-    list = [data162, data164, data166, data168, data170, data503, data505, data507, data509, data511, data800, data801,
-            data802, data803, data804, data805, data806, data807, data808, data809, data810, data811, data812, data813]
+    s_list = [data172, data174, data176, data178, data180, data211, data513, data515, data517, data519, data701,
+            data703, data705, data707, data709, data820, data821, data822, data823, data824, data825, data826,
+            data827, data828, data829]
 
     logger.info(f'手工补录解析数据开始！')
     try:
-        for i in list:
+        for i in s_list:
             ds = i['data_source']
             dt = i['data_type']
             dt_ = i['biz_dt']
