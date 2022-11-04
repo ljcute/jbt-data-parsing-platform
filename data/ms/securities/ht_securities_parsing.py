@@ -73,7 +73,10 @@ def ht_parsing_data(rs, data_):
                 rz_rate = None
             else:
                 rz_rate = rate_is_normal_one(data['finRatio'])
-            rq_rate = rate_is_normal_one(data['sloRatio'])
+            if data['sloRatio'] == 0:
+                rq_rate = None
+            else:
+                rq_rate = rate_is_normal_one(data['sloRatio'])
             rzrq_data.append([sec_code, sec_name, rz_rate, rq_rate])
 
         temp_data = securities_normal_parsing_data(rzrq_data)
