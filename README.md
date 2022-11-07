@@ -5,6 +5,11 @@
 # 环境：Python 3.9
 
 # 业务数据解析流程伪代码：
+
+    担保券：折算率比例
+    融资标的券：融资保证金比例
+    融券标的券：融券保证金比例
+
     ===招商证券有修改===
     中泰证券 海通证券 安信证券 中金财富
 
@@ -30,4 +35,11 @@
 
     8.上述所有处理均应在循环中进行，处理所有券商公司的记录。
 
+
+    # args_code = None
+    # temp_market = str(data[0]).replace(' ', '')
+    # if temp_market == '深圳' or temp_market == '深市' or temp_market == '2' or temp_market == '深交所' or temp_market == '深A' or temp_market == '深圳证券交易所':
+    #     args_code = str(data[1]).replace(' ', '') + '.SZ'
+    # elif temp_market == '上海' or temp_market == '沪市' or temp_market == '1' or temp_market == '上交所' or temp_market == '沪A' or temp_market == '上海证券交易所':
+    #     args_code = str(data[1]).replace(' ', '') + '.SH'
       
