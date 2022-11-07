@@ -5,6 +5,7 @@
 @Date        : 2022-9-19
 @Author      : Eagle (liuzh@igoldenbeta.com)
 @Software    : PyCharm
+@ss          :互联网业务数据解析APP
 """
 
 __author__ = 'Eagle (liuzh@igoldenbeta.com)'
@@ -244,36 +245,31 @@ def handle_collected_data(cdata):
             market = 'SH'
         elif data_source[:2] == '北京':
             market = 'BJ'
-    match data_type:
-        case 0:
-            print(0)
-        case 1:
-            print(1)
-        case 2:
-            print(2)
-            biz_dt, dbq, jzd = format_dbq(broker, cdata, market)
-            handle_dbq(broker_id, biz_dt, dbq)
-            handle_dbq_jzd(broker_id, biz_dt, jzd)
-        case 3:
-            print(3)
-            biz_dt, rz_bdq, rq_bdq = format_rz_rq_bdq(broker, cdata, market)
-            handle_rz_bdq(broker_id, biz_dt, rz_bdq)
-            handle_rq_bdq(broker_id, biz_dt, rq_bdq)
-        case 4:
-            print(4)
-            biz_dt, rz_bdq = format_rz_bdq(broker, cdata, market)
-            handle_rz_bdq(broker_id, biz_dt, rz_bdq)
-        case 5:
-            print(5)
-            biz_dt, rq_bdq = format_rq_bdq(broker, cdata, market)
-            handle_rq_bdq(broker_id, biz_dt, rq_bdq)
-        case 99:
-            print(99)
-            biz_dt, dbq, jzd, rz_bdq, rq_bdq = format_db_rz_rq_bdq(broker, cdata, market)
-            handle_dbq(broker_id, biz_dt, dbq)
-            handle_dbq_jzd(broker_id, biz_dt, jzd)
-            handle_rz_bdq(broker_id, biz_dt, rz_bdq)
-            handle_rq_bdq(broker_id, biz_dt, rq_bdq)
+
+    if data_type == 0:
+        print(0)
+    elif data_type == 1:
+        print(1)
+    elif data_type == 2:
+        biz_dt, dbq, jzd = format_dbq(broker, cdata, market)
+        handle_dbq(broker_id, biz_dt, dbq)
+        handle_dbq_jzd(broker_id, biz_dt, jzd)
+    elif data_type == 3:
+        biz_dt, rz_bdq, rq_bdq = format_rz_rq_bdq(broker, cdata, market)
+        handle_rz_bdq(broker_id, biz_dt, rz_bdq)
+        handle_rq_bdq(broker_id, biz_dt, rq_bdq)
+    elif data_type == 4:
+        biz_dt, rz_bdq = format_rz_bdq(broker, cdata, market)
+        handle_rz_bdq(broker_id, biz_dt, rz_bdq)
+    elif data_type == 5:
+        biz_dt, rq_bdq = format_rq_bdq(broker, cdata, market)
+        handle_rq_bdq(broker_id, biz_dt, rq_bdq)
+    elif data_type == 99:
+        biz_dt, dbq, jzd, rz_bdq, rq_bdq = format_db_rz_rq_bdq(broker, cdata, market)
+        handle_dbq(broker_id, biz_dt, dbq)
+        handle_dbq_jzd(broker_id, biz_dt, jzd)
+        handle_rz_bdq(broker_id, biz_dt, rz_bdq)
+        handle_rq_bdq(broker_id, biz_dt, rq_bdq)
 
 
 def format_dbq(broker, cdata, market):
@@ -451,6 +447,6 @@ if __name__ == '__main__':
         # handle_range_collected_data('广发证券', 2, '2022-11-03')
         # handle_range_collected_data('广发证券', 4, '2022-11-03')
         # handle_range_collected_data('广发证券', 5, '2022-11-03')
-        # handle_range_collected_data('国信证券', 2, '2022-11-03')
+        handle_range_collected_data('国信证券', 2, '2022-11-03')
     except Exception as e:
         logger.error(f"互联网数据解析服务启动异常: {e} =》{str(traceback.format_exc())}")
