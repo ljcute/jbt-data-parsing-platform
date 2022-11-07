@@ -43,7 +43,7 @@ from data.ms.securities.hait_securities_parsing import hait_parsing_data
 from data.ms.securities.zjcf_securities_parsing import zjcf_parsing_data
 from data.ms.sh.sh_market_mt_trading_parsing import sh_parsing_data, query_normal_rate
 from data.ms.sz.sz_market_mt_trading_parsing import sz_parsing_data
-from utils.logs_utils import logger
+from util.logs_utils import logger
 
 base_dir = os.path.dirname(os.path.abspath(__file__))
 full_path = os.path.join(base_dir, '../../config/config.ini')

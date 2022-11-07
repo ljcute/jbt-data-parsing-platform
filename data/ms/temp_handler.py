@@ -13,7 +13,7 @@ import traceback
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.append(BASE_DIR)
 from data.ms.basehandler import BaseHandler
-from utils.logs_utils import logger
+from util.logs_utils import logger
 
 
 class TempHandler(BaseHandler):

@@ -10,7 +10,7 @@ import re
 import requests
 
 from data.dao.raw.raw_data_deal import *
-from utils.logs_utils import logger
+from util.logs_utils import logger
 from constants import *
 from decimal import Decimal
 from data.dao.biz.biz_data_deal import *
