@@ -55,7 +55,7 @@ def refresh_sic_df(_df):
 def register_sic_df(_df):
     if _df.empty:
         return get_sic_df()
-    return set_sic_df(register_sec360_security(_df['sec_code'].tolist()))
+    return set_sic_df(register_sec360_security(_df[['sec_type', 'sec_code', 'sec_name']]))
 
 
 def code_ref_id(_df):

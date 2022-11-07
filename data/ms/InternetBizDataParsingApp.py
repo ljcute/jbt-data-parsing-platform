@@ -17,6 +17,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__fil
 sys.path.append(BASE_DIR)
 import time
 import traceback
+import numpy as np
 import pandas as pd
 from kafka import KafkaConsumer
 from datetime import datetime, date, timedelta
@@ -88,7 +89,18 @@ def get_brokers():
     return biz_db().select(sql)
 
 
-def get_broker_biz_data(broker_id, biz_dt, biz_type):
+def market_sql_handle(market, sql):
+    if isinstance(market, str):
+        if market.upper() == 'SZ':
+            sql += f" and data_desc = 1"
+        elif market.upper() == 'SH':
+            sql += f" and data_desc = 2"
+        elif market.upper() == 'BJ':
+            sql += f" and data_desc = 3"
+    return sql
+
+
+def get_broker_biz_data(broker_id, biz_dt, biz_type, market):
     sql = f"""
     select row_id, secu_id, secu_type, adjust_type, pre_value, cur_value, start_dt, end_dt
       from t_broker_mt_business_security
@@ -98,10 +110,10 @@ def get_broker_biz_data(broker_id, biz_dt, biz_type):
        and start_dt <= '{biz_dt} 00:00:00'
        and end_dt > '{biz_dt} 00:00:00'
     """
-    return biz_db().select(sql)
+    return biz_db().select(market_sql_handle(market, sql))
 
 
-def persist_data(broker_id, biz_dt, biz_type, lgc_del, recovery, invalid, ist_df):
+def persist_data(broker_id, biz_dt, biz_type, lgc_del, recovery, invalid, ist_df, market):
     if lgc_del.empty and recovery.empty and invalid.empty and ist_df.empty:
         return
     # T日之后所有日已采有效数据做逻辑删除处理
@@ -173,16 +185,16 @@ def persist_data(broker_id, biz_dt, biz_type, lgc_del, recovery, invalid, ist_df
     if not ist_df.empty:
         ist_sql = f"""
             INSERT INTO t_broker_mt_business_security(broker_id, secu_id, secu_type, biz_type, pre_value,
-                        cur_value, adjust_type, data_status, biz_status, start_dt, end_dt, create_dt, update_dt) 
-            VALUES ({broker_id}, %s, %s, {biz_type}, %s, %s, %s, 1, 1, '{biz_dt} 00:00:00', '2999-12-31 23:59:59', now(), now())
+                        cur_value, adjust_type, data_status, biz_status, start_dt, end_dt, data_desc, create_dt, update_dt) 
+            VALUES ({broker_id}, %s, %s, {biz_type}, %s, %s, %s, 1, 1, '{biz_dt} 00:00:00', '2999-12-31 23:59:59', {1 if market == 'SZ' else 2 if market == 'SH' else 3 if market == 'BJ' else None}, now(), now())
             """
     cnx = None
     try:
         cnx = biz_db().get_cnx()
         # T日之后所有日已采有效数据做逻辑删除处理
-        biz_db().execute_uncommit(cnx, t1_del_sql)
+        biz_db().execute_uncommit(cnx, market_sql_handle(market, t1_del_sql))
         # T日有效数据，失效时间统一处理成'2999-12-31 23:59:59'
-        biz_db().execute_uncommit(cnx, t_valid_sql)
+        biz_db().execute_uncommit(cnx, market_sql_handle(market, t_valid_sql))
         # T日重采处理：逻辑删除错采数据
         if not lgc_del.empty:
             # 逻辑删除错采数据
@@ -196,7 +208,7 @@ def persist_data(broker_id, biz_dt, biz_type, lgc_del, recovery, invalid, ist_df
             biz_db().execute_uncommit(cnx, invalid_sql)
         if not ist_df.empty:
             # 插入调整数据
-            biz_db().execute_uncommit(cnx, ist_sql, ist_df.where(ist_df.notnull(), None).values.tolist())
+            biz_db().execute_uncommit(cnx, ist_sql, np.where(ist_df.isna(), None, ist_df.values).tolist())
         if cnx:
             cnx.commit()
     except Exception as err:
@@ -257,24 +269,24 @@ def handle_collected_data(cdata):
         print(1)
     elif data_type == 2:
         biz_dt, dbq, jzd = format_dbq(broker, cdata, market)
-        handle_dbq(broker_id, biz_dt, dbq)
-        handle_dbq_jzd(broker_id, biz_dt, jzd)
+        handle_dbq(broker_id, biz_dt, dbq, market)
+        handle_dbq_jzd(broker_id, biz_dt, jzd, market)
     elif data_type == 3:
         biz_dt, rz_bdq, rq_bdq = format_rz_rq_bdq(broker, cdata, market)
-        handle_rz_bdq(broker_id, biz_dt, rz_bdq)
-        handle_rq_bdq(broker_id, biz_dt, rq_bdq)
+        handle_rz_bdq(broker_id, biz_dt, rz_bdq, market)
+        handle_rq_bdq(broker_id, biz_dt, rq_bdq, market)
     elif data_type == 4:
         biz_dt, rz_bdq = format_rz_bdq(broker, cdata, market)
-        handle_rz_bdq(broker_id, biz_dt, rz_bdq)
+        handle_rz_bdq(broker_id, biz_dt, rz_bdq, market)
     elif data_type == 5:
         biz_dt, rq_bdq = format_rq_bdq(broker, cdata, market)
-        handle_rq_bdq(broker_id, biz_dt, rq_bdq)
+        handle_rq_bdq(broker_id, biz_dt, rq_bdq, market)
     elif data_type == 99:
         biz_dt, dbq, jzd, rz_bdq, rq_bdq = format_db_rz_rq_bdq(broker, cdata, market)
-        handle_dbq(broker_id, biz_dt, dbq)
-        handle_dbq_jzd(broker_id, biz_dt, jzd)
-        handle_rz_bdq(broker_id, biz_dt, rz_bdq)
-        handle_rq_bdq(broker_id, biz_dt, rq_bdq)
+        handle_dbq(broker_id, biz_dt, dbq, market)
+        handle_dbq_jzd(broker_id, biz_dt, jzd, market)
+        handle_rz_bdq(broker_id, biz_dt, rz_bdq, market)
+        handle_rq_bdq(broker_id, biz_dt, rq_bdq, market)
 
 
 def format_dbq(broker, cdata, market):
@@ -302,34 +314,34 @@ def format_db_rz_rq_bdq(broker, cdata, market):
     return eval(f"_format_db_rz_rq_bdq(cdata, market)")
 
 
-def handle_dbq(_broker_id, _biz_dt, _dbq):
+def handle_dbq(_broker_id, _biz_dt, _dbq, market):
     biz_type = 3
-    handle_data(_broker_id, _biz_dt, biz_type, _dbq)
+    handle_data(_broker_id, _biz_dt, biz_type, _dbq, market)
 
 
-def handle_rz_bdq(_broker_id, _biz_dt, _rz_bdq):
+def handle_rz_bdq(_broker_id, _biz_dt, _rz_bdq, market):
     biz_type = 1
-    handle_data(_broker_id, _biz_dt, biz_type, _rz_bdq)
+    handle_data(_broker_id, _biz_dt, biz_type, _rz_bdq, market)
 
 
-def handle_rq_bdq(_broker_id, _biz_dt, _rq_bdq):
+def handle_rq_bdq(_broker_id, _biz_dt, _rq_bdq, market):
     biz_type = 2
-    handle_data(_broker_id, _biz_dt, biz_type, _rq_bdq)
+    handle_data(_broker_id, _biz_dt, biz_type, _rq_bdq, market)
 
 
-def handle_dbq_jzd(_broker_id, _biz_dt, _rq_bdq):
+def handle_dbq_jzd(_broker_id, _biz_dt, _rq_bdq, market):
     biz_type = 4
-    handle_data(_broker_id, _biz_dt, biz_type, _rq_bdq)
+    handle_data(_broker_id, _biz_dt, biz_type, _rq_bdq, market)
 
 
-def handle_data(_broker_id, _biz_dt, _biz_type, _data):
+def handle_data(_broker_id, _biz_dt, _biz_type, _data, market):
     """
     数据持久化逻辑
     """
     if _data.empty:
         return
     # 查数据库当前数据
-    cur_data = get_broker_biz_data(_broker_id, _biz_dt, _biz_type)
+    cur_data = get_broker_biz_data(_broker_id, _biz_dt, _biz_type, market)
     # 对比数据 adjust_type: 调入1, 调出2, 调高3, 调低4
     if cur_data.empty:
         lgc_del = pd.DataFrame()
@@ -386,7 +398,7 @@ def handle_data(_broker_id, _biz_dt, _biz_type, _data):
         ist_down = ud_df.loc[ud_df['cur_value'] > ud_df['rate']][['secu_id', 'secu_type', 'cur_value', 'rate']]
         ist_down['adjust_type'] = 4
         ist_df = pd.concat([ist_out, ist_in, ist_up, ist_down])
-    persist_data(_broker_id, _biz_dt, _biz_type, lgc_del, recovery, invalid, ist_df)
+    persist_data(_broker_id, _biz_dt, _biz_type, lgc_del, recovery, invalid, ist_df, market)
 
 
 def kafka_mq_consumer():
