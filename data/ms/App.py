@@ -393,7 +393,7 @@ def kafka_mq_consumer():
     从mq接收消息
     """
     consumer = KafkaConsumer(
-        cfg.get_content("kafka").get("topic"), bootstrap_servers=cfg.get_content("kafka").get("kafkaList"),
+        cfg.get_content("kafka").get("topic"), bootstrap_servers=cfg.get_content("kafka")['kafkalist'],
         auto_offset_reset='earliest', group_id=cfg.get_content("kafka").get("group"),
         consumer_timeout_ms=1000, enable_auto_commit=False, max_poll_interval_ms=86400000
     )

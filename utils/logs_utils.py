@@ -33,4 +33,4 @@ def get_log_info():
     return logger
 
 
-logger = get_log_info()
+# logger = get_log_info()
