@@ -437,8 +437,8 @@ if __name__ == '__main__':
         _raw_db = MysqlClient(**cfg.get_content(f'{env}_db_raw'))
         _biz_db = MysqlClient(**cfg.get_content(f'{env}_db_biz'))
         brokers = get_brokers()
-        kafka_mq_consumer()
-        # handle_range_collected_data('深圳交易所', 2, '2022-11-03')
+        # kafka_mq_consumer()
+        handle_range_collected_data('深圳交易所', 2, '2022-11-04')
         # handle_range_collected_data('深圳交易所', 3, '2022-11-03')
         # handle_range_collected_data('深圳交易所', 3, '2022-11-04')
         # handle_range_collected_data('深圳交易所', 3, '')
@@ -452,6 +452,6 @@ if __name__ == '__main__':
         # handle_range_collected_data('广发证券', 2, '2022-11-03')
         # handle_range_collected_data('广发证券', 4, '2022-11-03')
         # handle_range_collected_data('广发证券', 5, '2022-11-03')
-        handle_range_collected_data('国信证券', 2, '2022-11-03')
+        # handle_range_collected_data('国信证券', 2, '2022-11-03')
     except Exception as e:
         logger.error(f"互联网数据解析服务启动异常: {e} =》{str(traceback.format_exc())}")

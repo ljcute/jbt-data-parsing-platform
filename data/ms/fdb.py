@@ -21,7 +21,7 @@ def get_ex_discount_limit_rate(biz_dt, sec_type, sec_ids):
     :return :<dict> 响应一个字典对象
     """
     if len(sec_ids) == 0:
-        return pd.DataFrame(columns=['sec_type', 'sec_id', 'sec_code'])
+        return pd.DataFrame(columns=['sec_id', 'rate'])
     query_data = {
         "module": "server.fdb.factor.api.factor_api",
         "method": "get_factor_data_cube",
@@ -39,12 +39,16 @@ def get_ex_discount_limit_rate(biz_dt, sec_type, sec_ids):
         raise Exception(res.text)
     if res.text:
         try:
-            return res.json()
+            dct = res.json()['data']
+            df = pd.DataFrame(columns=dct['columns'], data=dct['data'])
+            df.rename(columns={"object_id": "sec_id", f"{sec_type[:1]}_ex_discount_rate": "rate"}, inplace=True)
+            df.sec_id = df.sec_id.astype('int64')
+            return df
         except Exception as ex:
             logger.error(f'请求服务异常，uri={url}，json={query_data}，response={res.text}，error={ex}', exc_info=True)
             raise ex
     else:
-        return None
+        return pd.DataFrame(columns=['sec_id', 'rate'])
 
 
 
