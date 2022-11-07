@@ -10,6 +10,11 @@
 
 __author__ = 'Eagle (liuzh@igoldenbeta.com)'
 
+import os
+import sys
+
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.append(BASE_DIR)
 import time
 import traceback
 import pandas as pd
