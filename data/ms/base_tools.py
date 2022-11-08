@@ -10,8 +10,8 @@ import threading
 import pandas as pd
 from io import StringIO
 from util.logs_utils import logger
-from data.ms.sec360 import get_sec360_sec_id_code, register_sec360_security
 from data.ms.fdb import get_ex_discount_limit_rate
+from data.ms.sec360 import get_sec360_sec_id_code, register_sec360_security
 
 
 def get_df_from_cdata(cdata):
@@ -55,7 +55,7 @@ def refresh_sic_df(_df):
 def register_sic_df(_df):
     if _df.empty:
         return get_sic_df()
-    return set_sic_df(register_sec360_security(_df['sec_code'].tolist()))
+    return set_sic_df(register_sec360_security(_df[['sec_type', 'sec_code', 'sec_name']]))
 
 
 def code_ref_id(_df):
@@ -66,18 +66,29 @@ def code_ref_id(_df):
         # df有sec_code但是sic_df无，则注册对象
         zc_sec_df = df1.loc[df1['sec_id'].isna()]
         if not zc_sec_df.empty:
-            logger.warning(f"本次注册对象有{zc_sec_df}")
+            # TODO Email
+            logger.warn(f"本次注册对象有{zc_sec_df}")
             # 注册后用inner，目的是如果存在注册失败，这边照常解析入库，仅注册失败券受影响
             df1 = _df.merge(register_sic_df(zc_sec_df), on='sec_code')
     return df1
 
 
 def get_exchange_discount_limit_rate(biz_dt, df):
+    if df.empty:
+        return
     s_df = df.loc[df['sec_type'] == 'stock']
     s_rate = get_ex_discount_limit_rate(biz_dt, 'stock', s_df['sec_id'].tolist())
     b_df = df.loc[df['sec_type'] == 'bond']
     b_rate = get_ex_discount_limit_rate(biz_dt, 'bond', b_df['sec_id'].tolist())
     f_df = df.loc[df['sec_type'] == 'fund']
     f_rate = get_ex_discount_limit_rate(biz_dt, 'fund', f_df['sec_id'].tolist())
-    # TODO 根据返回内容组装结果返回
-    return None
+    # 根据返回内容组装结果返回
+    sbf_rate = pd.concat([s_rate, b_rate, f_rate])
+    _df = pd.merge(df, sbf_rate, how="left", on="sec_id")
+    no_rate_df = _df.loc[_df['rate'].isna()][['sec_type', 'sec_id', 'sec_code', 'sec_name']]
+    if not no_rate_df.empty:
+        # TODO Email
+        pd.set_option('display.max_columns', None)
+        pd.set_option('display.max_rows', None)
+        logger.warn(f"如下证券缺少交易所折算率上限({no_rate_df.index.size}只)：\n{no_rate_df.reset_index(drop=True)}")
+    return _df

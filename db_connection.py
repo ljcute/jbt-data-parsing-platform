@@ -5,7 +5,7 @@
 import pandas as pd
 import pymysql
 from sqlalchemy import create_engine
-from utils.logs_utils import logger
+from util.logs_utils import logger
 
 
 class Mysqldb(object):
