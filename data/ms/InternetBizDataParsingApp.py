@@ -12,15 +12,15 @@ __author__ = 'Eagle (liuzh@igoldenbeta.com)'
 
 import os
 import sys
-
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-sys.path.append(BASE_DIR)
 import time
 import traceback
 import numpy as np
 import pandas as pd
 from kafka import KafkaConsumer
 from datetime import datetime, date, timedelta
+
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.append(BASE_DIR)
 from config import Config
 from database import MysqlClient
 from util.logs_utils import logger
@@ -186,7 +186,7 @@ def persist_data(broker_id, biz_dt, biz_type, lgc_del, recovery, invalid, ist_df
         ist_sql = f"""
             INSERT INTO t_broker_mt_business_security(broker_id, secu_id, secu_type, biz_type, pre_value,
                         cur_value, adjust_type, data_status, biz_status, start_dt, end_dt, data_desc, create_dt, update_dt) 
-            VALUES ({broker_id}, %s, %s, {biz_type}, %s, %s, %s, 1, 1, '{biz_dt} 00:00:00', '2999-12-31 23:59:59', {1 if market == 'SZ' else 2 if market == 'SH' else 3 if market == 'BJ' else None}, now(), now())
+            VALUES ({broker_id}, %s, %s, {biz_type}, %s, %s, %s, 1, 1, '{biz_dt} 00:00:00', '2999-12-31 23:59:59', {1 if market == 'SZ' else 2 if market == 'SH' else 3 if market == 'BJ' else 'NULL'}, now(), now())
             """
     cnx = None
     try:
@@ -208,7 +208,8 @@ def persist_data(broker_id, biz_dt, biz_type, lgc_del, recovery, invalid, ist_df
             biz_db().execute_uncommit(cnx, invalid_sql)
         if not ist_df.empty:
             # 插入调整数据
-            biz_db().execute_uncommit(cnx, ist_sql, np.where(ist_df.isna(), None, ist_df.values).tolist())
+            data = np.where(ist_df.isna(), None, ist_df.values).tolist()
+            biz_db().execute_uncommit(cnx, ist_sql, data)
         if cnx:
             cnx.commit()
     except Exception as err:
@@ -252,6 +253,7 @@ def handle_range_collected_data(data_source, data_type, start_dt=None, end_dt=No
 def handle_collected_data(cdata):
     data_source = cdata['data_source'][0]
     data_type = int(cdata['data_type'][0])
+    global brokers
     broker = brokers.loc[(brokers['broker_name'] == data_source) | (brokers['broker_name'] == data_source[2:])]
     broker_id = broker['broker_id'].values[0]
     market = None
@@ -388,14 +390,14 @@ def handle_data(_broker_id, _biz_dt, _biz_type, _data, market):
         invalid2 = diff_df.loc[diff_df['start_dt'] != f'{_biz_dt} 00:00:00'][['row_id']]
         invalid = pd.concat([invalid1, invalid2])
         # 新插入新的：调入调出调高调低
-        ist_out = out_df[['secu_id', 'secu_type', 'cur_value', 'rate']]
+        ist_out = out_df[['secu_id', 'secu_type', 'cur_value', 'rate']].copy()
         ist_out['adjust_type'] = 2
         ist_in = in_df[['sec_id', 'sec_type', 'cur_value', 'rate']].copy()
         ist_in.rename(columns={'sec_id': 'secu_id', 'sec_type': 'secu_type'}, inplace=True)
         ist_in['adjust_type'] = 1
-        ist_up = ud_df.loc[ud_df['cur_value'] < ud_df['rate']][['secu_id', 'secu_type', 'cur_value', 'rate']]
+        ist_up = ud_df.loc[ud_df['cur_value'] < ud_df['rate']][['secu_id', 'secu_type', 'cur_value', 'rate']].copy()
         ist_up['adjust_type'] = 3
-        ist_down = ud_df.loc[ud_df['cur_value'] > ud_df['rate']][['secu_id', 'secu_type', 'cur_value', 'rate']]
+        ist_down = ud_df.loc[ud_df['cur_value'] > ud_df['rate']][['secu_id', 'secu_type', 'cur_value', 'rate']].copy()
         ist_down['adjust_type'] = 4
         ist_df = pd.concat([ist_out, ist_in, ist_up, ist_down])
     persist_data(_broker_id, _biz_dt, _biz_type, lgc_del, recovery, invalid, ist_df, market)
@@ -449,8 +451,8 @@ if __name__ == '__main__':
         _raw_db = MysqlClient(**cfg.get_content(f'{env}_db_raw'))
         _biz_db = MysqlClient(**cfg.get_content(f'{env}_db_biz'))
         brokers = get_brokers()
-        # kafka_mq_consumer()
-        handle_range_collected_data('深圳交易所', 2, '2022-11-04')
+        kafka_mq_consumer()
+        # handle_range_collected_data('深圳交易所', 2, '2022-11-04')
         # handle_range_collected_data('深圳交易所', 3, '2022-11-03')
         # handle_range_collected_data('深圳交易所', 3, '2022-11-04')
         # handle_range_collected_data('深圳交易所', 3, '')
