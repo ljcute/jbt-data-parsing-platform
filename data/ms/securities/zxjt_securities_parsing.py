@@ -23,16 +23,16 @@ def zxjt_parsing_data(rs, data_):
                 market = '北京'
             sec_code = data['stkcode']
             sec_name = data['stkname']
-            bzj_rate = None if data['pledgerate'] == '-' else rate_is_normal_one(data['pledgerate'])
+            bzj_rate = None if data['pledgerate'] == '-' else data['pledgerate']
             if data['marginratefund'] == '-' or data['fundctrlflag'] == '1':
                 rz_rate = None
             else:
-                rz_rate = rate_is_normal_one(data['marginratefund'])
+                rz_rate = data['marginratefund']
 
             if data['marginratestk'] == '-' or data['stkctrlflag'] == '1':
                 rq_rate = None
             else:
-                rq_rate = rate_is_normal_one(data['marginratestk'])
+                rq_rate = data['marginratestk']
 
             bzj_data.append([market, sec_code, sec_name, bzj_rate])
             rz_data.append([sec_code, sec_name, rz_rate])
