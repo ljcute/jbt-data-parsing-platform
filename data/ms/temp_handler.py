@@ -934,10 +934,13 @@ if __name__ == '__main__':
     # list = [data3, data4, data8, data9, data13, data14, data18, data19, data23, data24, data183, data184, data402,
     #         data403,data407, data408, data412, data413, data417, data418, data522, data523, data602, data603,
     #         data607, data608, data612, data613, data712, data713, data717, data718, data722, data723]
+    data851 = {'user_id': 1, 'biz_dt': '2022-11-08', 'data_type': '99', 'data_source': '中信建投',
+               'message': 'zxjt_securities_collect'}
+    # s_list = [data172, data174, data176, data178, data180, data211, data513, data515, data517, data519, data701,
+    #         data703, data705, data707, data709, data820, data821, data822, data823, data824, data825, data826,
+    #         data827, data828, data829]
 
-    s_list = [data172, data174, data176, data178, data180, data211, data513, data515, data517, data519, data701,
-            data703, data705, data707, data709, data820, data821, data822, data823, data824, data825, data826,
-            data827, data828, data829]
+    s_list = [data851]
 
     logger.info(f'手工补录解析数据开始！')
     try:
