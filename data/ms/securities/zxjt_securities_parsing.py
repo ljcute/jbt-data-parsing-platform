@@ -21,8 +21,8 @@ def zxjt_parsing_data(rs, data_):
                 market = '上海'
             else:
                 market = '北京'
-            sec_code = data['stkCode']
-            sec_name = data['stkName']
+            sec_code = data['stkcode']
+            sec_name = data['stkname']
             bzj_rate = None if data['pledgerate'] == '-' else rate_is_normal_one(data['pledgerate'])
             if data['marginratefund'] == '-' or data['fundctrlflag'] == '1':
                 rz_rate = None
