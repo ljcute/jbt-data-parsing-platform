@@ -60,7 +60,7 @@ def update_business_security_one_jys(biz_date, secu_id, broker_id, biz_type,data
 
 def update_business_expalin(biz_date, secu_id, broker_id, biz_type, forever_end_dt):
     sql = f'update t_broker_mt_business_security set end_dt = "{forever_end_dt}",update_dt = now() ' \
-          f'where secu_id = {secu_id} and broker_id = {broker_id} and biz_type = {biz_type} and start_dt != {biz_date} and data_status=1 and biz_status=1'
+          f'where secu_id = {secu_id} and broker_id = {broker_id} and biz_type = {biz_type} and start_dt != {biz_date} and end_dt = {biz_date} and data_status=1 and biz_status=1'
     print(f'sql:{sql}')
     db.commit_data(sql)
 
