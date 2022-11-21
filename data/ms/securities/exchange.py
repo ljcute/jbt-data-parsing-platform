@@ -21,7 +21,7 @@ def _get_format_df(cdata, market):
         biz_dt = df['日期'].values[0]
     else:
         biz_dt = cdata['biz_dt'].values[0]
-    return biz_dt, code_ref_id(df)
+    return biz_dt, code_ref_id(df, exchange=True)
 
 
 def _format_dbq(cdata, market):

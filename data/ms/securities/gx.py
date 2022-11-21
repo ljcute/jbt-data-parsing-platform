@@ -7,22 +7,24 @@
 @Software    : PyCharm
 """
 import pandas as pd
-from data.ms.base_tools import code_ref_id, get_df_from_cdata
+from data.ms.base_tools import code_ref_id, get_df_from_cdata, match_sid_by_code_and_name
 
 
 def _get_format_df(cdata, biz_type):
     df = get_df_from_cdata(cdata)
+    df['sec_code'] = df['zqdm'].apply(lambda x: ('000000' + str(x))[-6:])
+    df['sec_name'] = df['zqmc']
+    biz_dt = df['rq'].values[0]
     if biz_type == 'dbq':
-        pass
-        # TODO 无市场、无后缀
+        _df = match_sid_by_code_and_name(df[['sec_code', 'sec_name']].copy())
+        df = df.merge(_df, on=['sec_code', 'sec_name'])
+        df['sec_code'] = df['scd']
     elif biz_type in ('rz_bdq', 'rq_bdq'):
         df['market'] = df['sc'].map(lambda x: 'SZ' if str(x) == '1' else 'SH' if str(x) == '0' else 'BJ' if str(x) == '2' else str(x))
-    df['sec_code'] = df['zqdm'].apply(lambda x: ('000000'+str(x))[-6:])
-    df['sec_code'] = df['sec_code'] + '.' + df['market']
-    df['sec_name'] = df['zqmc']
+        df['sec_code'] = df['sec_code'] + '.' + df['market']
+        df = code_ref_id(df)
     df['start_dt'] = None
-    biz_dt = df['rq'].values[0]
-    return biz_dt, code_ref_id(df)
+    return biz_dt, df
 
 
 def _format_dbq(cdata, market):

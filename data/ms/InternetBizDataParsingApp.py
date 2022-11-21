@@ -65,6 +65,21 @@ def get_dt(dt):
         msg = f'时间格式错误: {dt}'
         logger.error(msg)
         raise Exception(msg)
+    return dt
+
+
+def get_last_exchange_collect_date(days):
+    sql = f"""
+    select data_source, data_type, biz_dt
+      from t_ndc_data_collect_log 
+     where data_source in ('上海交易所', '深圳交易所')
+       and data_type = 2
+       and data_status = 1
+  group by data_source, data_type, biz_dt
+  order by biz_dt desc
+  limit {2*days}
+    """
+    return raw_db().select(sql)
 
 
 def get_collect_data(data_source, data_type, biz_dt):
@@ -221,7 +236,7 @@ def persist_data(broker_id, biz_dt, biz_type, lgc_del, recovery, invalid, ist_df
             cnx.close()
 
 
-def handle_range_collected_data(data_source, data_type, start_dt=None, end_dt=None):
+def handle_range_collected_data(data_source, data_type, start_dt=None, end_dt=None, persist_flag=True):
     try:
         _start_dt = get_dt(start_dt)
         if isinstance(_start_dt, datetime):
@@ -244,13 +259,13 @@ def handle_range_collected_data(data_source, data_type, start_dt=None, end_dt=No
                 continue
             # 如果有则解析
             else:
-                handle_collected_data(cdata)
+                handle_collected_data(cdata, persist_flag)
             logger.info(f"结束计算data_source={data_source} data_type={data_type} {dt}")
     except Exception as e:
         logger.error(f"互联网数据解析服务解析异常data_source={data_source} data_type={data_type} {dt}: {e} =》{str(traceback.format_exc())}")
 
 
-def handle_collected_data(cdata):
+def handle_collected_data(cdata, persist_flag=True):
     data_source = cdata['data_source'][0]
     data_type = int(cdata['data_type'][0])
     global brokers
@@ -271,24 +286,24 @@ def handle_collected_data(cdata):
         print(1)
     elif data_type == 2:
         biz_dt, dbq, jzd = format_dbq(broker, cdata, market)
-        handle_dbq(broker_id, biz_dt, dbq, market)
-        handle_dbq_jzd(broker_id, biz_dt, jzd, market)
+        handle_dbq(broker_id, biz_dt, dbq, market, persist_flag)
+        handle_dbq_jzd(broker_id, biz_dt, jzd, market, persist_flag)
     elif data_type == 3:
         biz_dt, rz_bdq, rq_bdq = format_rz_rq_bdq(broker, cdata, market)
-        handle_rz_bdq(broker_id, biz_dt, rz_bdq, market)
-        handle_rq_bdq(broker_id, biz_dt, rq_bdq, market)
+        handle_rz_bdq(broker_id, biz_dt, rz_bdq, market, persist_flag)
+        handle_rq_bdq(broker_id, biz_dt, rq_bdq, market, persist_flag)
     elif data_type == 4:
         biz_dt, rz_bdq = format_rz_bdq(broker, cdata, market)
-        handle_rz_bdq(broker_id, biz_dt, rz_bdq, market)
+        handle_rz_bdq(broker_id, biz_dt, rz_bdq, market, persist_flag)
     elif data_type == 5:
         biz_dt, rq_bdq = format_rq_bdq(broker, cdata, market)
-        handle_rq_bdq(broker_id, biz_dt, rq_bdq, market)
+        handle_rq_bdq(broker_id, biz_dt, rq_bdq, market, persist_flag)
     elif data_type == 99:
         biz_dt, dbq, jzd, rz_bdq, rq_bdq = format_db_rz_rq_bdq(broker, cdata, market)
-        handle_dbq(broker_id, biz_dt, dbq, market)
-        handle_dbq_jzd(broker_id, biz_dt, jzd, market)
-        handle_rz_bdq(broker_id, biz_dt, rz_bdq, market)
-        handle_rq_bdq(broker_id, biz_dt, rq_bdq, market)
+        handle_dbq(broker_id, biz_dt, dbq, market, persist_flag)
+        handle_dbq_jzd(broker_id, biz_dt, jzd, market, persist_flag)
+        handle_rz_bdq(broker_id, biz_dt, rz_bdq, market, persist_flag)
+        handle_rq_bdq(broker_id, biz_dt, rq_bdq, market, persist_flag)
 
 
 def format_dbq(broker, cdata, market):
@@ -316,31 +331,31 @@ def format_db_rz_rq_bdq(broker, cdata, market):
     return eval(f"_format_db_rz_rq_bdq(cdata, market)")
 
 
-def handle_dbq(_broker_id, _biz_dt, _dbq, market):
+def handle_dbq(_broker_id, _biz_dt, _dbq, market, persist_flag=True):
     biz_type = 3
-    handle_data(_broker_id, _biz_dt, biz_type, _dbq, market)
+    handle_data(_broker_id, _biz_dt, biz_type, _dbq, market, persist_flag)
 
 
-def handle_rz_bdq(_broker_id, _biz_dt, _rz_bdq, market):
+def handle_rz_bdq(_broker_id, _biz_dt, _rz_bdq, market, persist_flag=True):
     biz_type = 1
-    handle_data(_broker_id, _biz_dt, biz_type, _rz_bdq, market)
+    handle_data(_broker_id, _biz_dt, biz_type, _rz_bdq, market, persist_flag)
 
 
-def handle_rq_bdq(_broker_id, _biz_dt, _rq_bdq, market):
+def handle_rq_bdq(_broker_id, _biz_dt, _rq_bdq, market, persist_flag=True):
     biz_type = 2
-    handle_data(_broker_id, _biz_dt, biz_type, _rq_bdq, market)
+    handle_data(_broker_id, _biz_dt, biz_type, _rq_bdq, market, persist_flag)
 
 
-def handle_dbq_jzd(_broker_id, _biz_dt, _rq_bdq, market):
+def handle_dbq_jzd(_broker_id, _biz_dt, _rq_bdq, market, persist_flag=True):
     biz_type = 4
-    handle_data(_broker_id, _biz_dt, biz_type, _rq_bdq, market)
+    handle_data(_broker_id, _biz_dt, biz_type, _rq_bdq, market, persist_flag)
 
 
-def handle_data(_broker_id, _biz_dt, _biz_type, _data, market):
+def handle_data(_broker_id, _biz_dt, _biz_type, _data, market, persist_flag=True):
     """
     数据持久化逻辑
     """
-    if _data.empty:
+    if not persist_flag or _data.empty:
         return
     # 查数据库当前数据
     cur_data = get_broker_biz_data(_broker_id, _biz_dt, _biz_type, market)
@@ -451,21 +466,15 @@ if __name__ == '__main__':
         _raw_db = MysqlClient(**cfg.get_content(f'{env}_db_raw'))
         _biz_db = MysqlClient(**cfg.get_content(f'{env}_db_biz'))
         brokers = get_brokers()
+        # 启动应用跑交易所数据，填充共享内存证券代码与对象ID内容
+        exchange_df = get_last_exchange_collect_date(2).sort_values(by='biz_dt', axis=0, ascending=True)
+        for index, row in exchange_df.iterrows():
+            handle_range_collected_data(row['data_source'], row['data_type'], row['biz_dt'], persist_flag=False)
         kafka_mq_consumer()
-        # handle_range_collected_data('深圳交易所', 2, '2022-11-04')
-        # handle_range_collected_data('深圳交易所', 3, '2022-11-03')
-        # handle_range_collected_data('深圳交易所', 3, '2022-11-04')
-        # handle_range_collected_data('深圳交易所', 3, '')
-        # handle_range_collected_data('上海交易所', 2, '2022-11-03')
-        # handle_range_collected_data('上海交易所', 4, '2022-11-03')
-        # handle_range_collected_data('上海交易所', 5, '2022-11-03')
-        # handle_range_collected_data('上海交易所', 4, '2022-11-04')
-        # handle_range_collected_data('上海交易所', 4, '')
-        # handle_range_collected_data('上海交易所', 5, '')
         # handle_range_collected_data('中国银河', 99, '2022-11-03')
         # handle_range_collected_data('广发证券', 2, '2022-11-03')
         # handle_range_collected_data('广发证券', 4, '2022-11-03')
         # handle_range_collected_data('广发证券', 5, '2022-11-03')
-        # handle_range_collected_data('国信证券', 2, '2022-11-03')
+        # handle_range_collected_data('国信证券', 2, '2022-11-17')
     except Exception as e:
         logger.error(f"互联网数据解析服务启动异常: {e} =》{str(traceback.format_exc())}")

@@ -7,18 +7,19 @@
 @Software    : PyCharm
 """
 import pandas as pd
-from data.ms.base_tools import code_ref_id, get_df_from_cdata
+from data.ms.base_tools import code_ref_id, get_df_from_cdata, match_sid_by_code_and_name
 
 
 def _get_format_df(cdata, biz_type):
     df = get_df_from_cdata(cdata)
     df['sec_code'] = df['0'].apply(lambda x: (str(x))[-6:])
-    # TODO 无市场、无后缀
-    # df['sec_code'] = df['sec_code'] + '.' + df['market']
     df['sec_name'] = df['0'].apply(lambda x: (str(x))[:-6])
+    _df = match_sid_by_code_and_name(df[['sec_code', 'sec_name']].copy())
+    df = df.merge(_df, on=['sec_code', 'sec_name'])
+    df['sec_code'] = df['scd']
     df['start_dt'] = None
     biz_dt = df['2'].values[0]
-    return biz_dt, code_ref_id(df)
+    return biz_dt, df
 
 
 def _format_dbq(cdata, market):
