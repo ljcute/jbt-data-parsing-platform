@@ -22,6 +22,7 @@ def get_sec360_sec_id_code(sec_codes):
     # 适配证券360分页取数
     for i in range(pages):
         _df = pd.concat([_df, _get_sec360_sec_id_code(sec_codes[i*5000: (i+1)*5000])])
+    return _df
 
 
 def _get_sec360_sec_id_code(sec_codes):
