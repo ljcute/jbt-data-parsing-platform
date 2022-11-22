@@ -6,6 +6,8 @@
 @Author      : Eagle (liuzh@igoldenbeta.com)
 @Software    : PyCharm
 """
+import math
+
 import requests
 import pandas as pd
 from config import Config
@@ -13,34 +15,47 @@ from util.logs_utils import logger
 
 
 def get_sec360_sec_id_code(sec_codes):
+    _df = pd.DataFrame(columns=['sec_type', 'sec_id', 'sec_code', 'sec360_name'])
+    if len(sec_codes) == 0:
+        return _df
+    pages = math.ceil(len(sec_codes)/5000)
+    # 适配证券360分页取数
+    for i in range(pages):
+        _df = pd.concat([_df, _get_sec360_sec_id_code(sec_codes[i*5000: (i+1)*5000])])
+    return _df
+
+
+def _get_sec360_sec_id_code(sec_codes):
     """
     POST JSON请求指定服务
     :param sec_codes> 证券代码
     :return :<dict> 响应一个字典对象
     """
+    _df = pd.DataFrame(columns=['sec_type', 'sec_id', 'sec_code', 'sec360_name'])
     if len(sec_codes) == 0:
-        return pd.DataFrame(columns=['sec_type', 'sec_id', 'sec_code', 'sec360_name'])
+        return _df
     parm = {
-        "module": "pysec.etl.sec360.api.sec_api",
-        "method": "query_sec",
-        "args": sec_codes
+        "fields": ["secCategory", "secId", "secCodeMarket", "secName"],
+        "secCodeMarkets": sec_codes
     }
-    url = Config.get_cfg().get_content("sec360").get("api_url") + '/api/gateway'
+    url = Config.get_cfg().get_content("sec360").get("api_url") + '/sec360/ms/sec/info/query_by_code'
     res = requests.post(url=url, json=parm)
     if res.status_code != 200:
         logger.error(f'请求服务异常，uri={url}，json={parm}，response={res.text}', exc_info=True)
         raise Exception(res.text)
     if res.text:
         try:
-            df = pd.DataFrame(res.json()['data'])
-            df['sec_type'] = df['sec_category'].apply(lambda x: str(x)[4:])
-            df.rename(columns={'sec_code_market': 'sec_code', 'sec_name': 'sec360_name'}, inplace=True)
+            df = pd.DataFrame(columns=res.json()['columns'], data=res.json()['data'])
+            if df.empty:
+                return _df
+            df['sec_type'] = df['secCategory'].apply(lambda x: str(x)[4:])
+            df.rename(columns={'secType': 'sec_type', 'secId': 'sec_id', 'secCodeMarket': 'sec_code', 'secName': 'sec360_name'}, inplace=True)
             return df[['sec_type', 'sec_id', 'sec_code', 'sec360_name']]
         except Exception as ex:
             logger.error(f'请求服务异常，uri={url}，json={parm}，response={res.text}，error={ex}', exc_info=True)
             raise ex
     else:
-        return pd.DataFrame(columns=['sec_type', 'sec_id', 'sec_code', 'sec360_name'])
+        return _df
 
 
 def name_format(name):
@@ -84,13 +99,15 @@ def register_sec360_security(df):
     else:
         return None
     data_rs = zc_result['data']
-    if data_rs:
-        secu_id = data_rs[0]['sec_id']
-        secu_type = get_secu_type(data_rs[0]['sec_category'])
-        ax_.append(secu_id)
-        ax_.append(secu_type)
-        logger.info(f'该条已注册到360{ax_}')
-    else:
-        logger.error(f'匹配到现有规则的证券代码{ax_}注册到360失败！请检查')
+    # if data_rs:
+    #     secu_id = data_rs[0]['sec_id']
+    #     secu_type = get_secu_type(data_rs[0]['sec_category'])
+    #     ax_.append(secu_id)
+    #     ax_.append(secu_type)
+    #     logger.info(f'该条已注册到360{ax_}')
+    # else:
+    #     logger.error(f'匹配到现有规则的证券代码{ax_}注册到360失败！请检查')
 
 
+if __name__ == '__main__':
+    get_sec360_sec_id_code(['561330.SH', '561330.SZ'])
