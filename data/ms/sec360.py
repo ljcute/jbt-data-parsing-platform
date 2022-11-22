@@ -18,8 +18,9 @@ def get_sec360_sec_id_code(sec_codes):
     :param sec_codes> 证券代码
     :return :<dict> 响应一个字典对象
     """
+    _df = pd.DataFrame(columns=['sec_type', 'sec_id', 'sec_code', 'sec360_name'])
     if len(sec_codes) == 0:
-        return pd.DataFrame(columns=['sec_type', 'sec_id', 'sec_code', 'sec360_name'])
+        return _df
     parm = {
         "module": "pysec.etl.sec360.api.sec_api",
         "method": "query_sec",
@@ -33,6 +34,8 @@ def get_sec360_sec_id_code(sec_codes):
     if res.text:
         try:
             df = pd.DataFrame(res.json()['data'])
+            if df.empty:
+                return _df
             df['sec_type'] = df['sec_category'].apply(lambda x: str(x)[4:])
             df.rename(columns={'sec_code_market': 'sec_code', 'sec_name': 'sec360_name'}, inplace=True)
             return df[['sec_type', 'sec_id', 'sec_code', 'sec360_name']]
@@ -40,7 +43,7 @@ def get_sec360_sec_id_code(sec_codes):
             logger.error(f'请求服务异常，uri={url}，json={parm}，response={res.text}，error={ex}', exc_info=True)
             raise ex
     else:
-        return pd.DataFrame(columns=['sec_type', 'sec_id', 'sec_code', 'sec360_name'])
+        return _df
 
 
 def name_format(name):
@@ -84,13 +87,15 @@ def register_sec360_security(df):
     else:
         return None
     data_rs = zc_result['data']
-    if data_rs:
-        secu_id = data_rs[0]['sec_id']
-        secu_type = get_secu_type(data_rs[0]['sec_category'])
-        ax_.append(secu_id)
-        ax_.append(secu_type)
-        logger.info(f'该条已注册到360{ax_}')
-    else:
-        logger.error(f'匹配到现有规则的证券代码{ax_}注册到360失败！请检查')
+    # if data_rs:
+    #     secu_id = data_rs[0]['sec_id']
+    #     secu_type = get_secu_type(data_rs[0]['sec_category'])
+    #     ax_.append(secu_id)
+    #     ax_.append(secu_type)
+    #     logger.info(f'该条已注册到360{ax_}')
+    # else:
+    #     logger.error(f'匹配到现有规则的证券代码{ax_}注册到360失败！请检查')
 
 
+if __name__ == '__main__':
+    get_sec360_sec_id_code(['561330.SZ'])
