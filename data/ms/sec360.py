@@ -6,6 +6,8 @@
 @Author      : Eagle (liuzh@igoldenbeta.com)
 @Software    : PyCharm
 """
+import math
+
 import requests
 import pandas as pd
 from config import Config
@@ -13,6 +15,16 @@ from util.logs_utils import logger
 
 
 def get_sec360_sec_id_code(sec_codes):
+    _df = pd.DataFrame(columns=['sec_type', 'sec_id', 'sec_code', 'sec360_name'])
+    if len(sec_codes) == 0:
+        return _df
+    pages = math.ceil(len(sec_codes)/5000)
+    # 适配证券360分页取数
+    for i in range(pages):
+        _df = pd.concat([_df, _get_sec360_sec_id_code(sec_codes[i*5000: (i+1)*5000])])
+
+
+def _get_sec360_sec_id_code(sec_codes):
     """
     POST JSON请求指定服务
     :param sec_codes> 证券代码
