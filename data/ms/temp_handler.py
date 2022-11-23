@@ -885,6 +885,11 @@ if __name__ == '__main__':
     data833 = {'user_id': 1, 'biz_dt': '2022-11-10', 'data_type': 2, 'data_source': '华泰证券',
                'message': 'ht_securities_collect'}
 
+    data901 = {'user_id': 1, 'biz_dt': '2022-11-22', 'data_type': 2, 'data_source': '华泰证券',
+               'message': 'ht_securities_collect'}
+    data902 = {'user_id': 1, 'biz_dt': '2022-11-22', 'data_type': 3, 'data_source': '华泰证券',
+               'message': 'ht_securities_collect'}
+
     # list = [data1, data2, data3, data4, data5, data6, data7, data8, data9, data10,
     #         data11, data12, data13, data14, data15, data16, data17, data18, data19, data20,
     #         data21, data22, data23, data24, data25, data181, data182, data183, data184, data185,
@@ -934,9 +939,7 @@ if __name__ == '__main__':
     #         data483, data484, data485, data486, data487, data489, data490, data491,data529,data530,data531,
     #         data532,data533,data534]
 
-    s_list = [data171, data173, data175, data177, data179, data210, data512, data514, data516, data518,
-            data700, data702, data704, data706, data708, data820, data821, data822, data823, data824,
-            data825, data826, data827, data828, data829, data830, data831, data832, data833]
+    s_list = [data901, data902]
 
     # list = [data3, data4, data8, data9, data13, data14, data18, data19, data23, data24, data183, data184, data402,
     #         data403,data407, data408, data412, data413, data417, data418, data522, data523, data602, data603,
