@@ -60,13 +60,16 @@ def refresh_sic_df(_df, exchange=False):
     # 证券360刷证券ID
     sec = get_sec360_sec_id_code(_df['sec_code'].tolist())
     # 注册中心刷证券ID
-    no_sec360 = _df.loc[~_df['sec_code'].isin(sec['sec_code'].tolist())]
+    no_sec360 = _df.loc[~_df['sec_code'].isin(sec['sec_code'].tolist())][sec.columns.tolist()]
     if not no_sec360.empty:
         # 注册中心找对象
         for index, row in no_sec360.iterrows():
             bo = search_bo_info(row['sec_code'])
             if not bo.empty:
-                sec = pd.concat([sec, bo])
+                row['sec_type'] = bo['sec_type'].tolist()[0]
+                row['sec_id'] = bo['sec_id'].tolist()[0]
+                row['sec360_name'] = min(bo['sec_name'].tolist(), key=len)
+                sec = pd.concat([sec, row.to_frame().T])
     return set_sic_df(sec, _df, exchange)
 
 
