@@ -16,7 +16,7 @@ def _get_format_df(cdata, biz_type):
     df['sec_name'] = df['zqmc']
     biz_dt = df['rq'].values[0]
     if biz_type == 'dbq':
-        _df = match_sid_by_code_and_name(df[['sec_code', 'sec_name']].copy())
+        _df = match_sid_by_code_and_name(df)
         df = df.merge(_df, on=['sec_code', 'sec_name'])
         df['sec_code'] = df['scd']
     elif biz_type in ('rz_bdq', 'rq_bdq'):

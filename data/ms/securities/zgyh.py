@@ -7,14 +7,14 @@
 @Software    : PyCharm
 """
 import pandas as pd
-from data.ms.base_tools import code_ref_id, get_df_from_cdata, match_sid_by_code_and_name
+from data.ms.base_tools import get_df_from_cdata, match_sid_by_code_and_name
 
 
 def _get_format_df(cdata):
     df = get_df_from_cdata(cdata)
     df['sec_code'] = df['证券代码'].apply(lambda x: ('000000'+str(x))[-6:])
     df['sec_name'] = df['证券简称']
-    _df = match_sid_by_code_and_name(df[['sec_code', 'sec_name']].copy())
+    _df = match_sid_by_code_and_name(df)
     df = df.merge(_df, on=['sec_code', 'sec_name'])
     df['sec_code'] = df['scd']
     df['start_dt'] = None

@@ -72,7 +72,8 @@ def code_ref_id(_df, exchange=False):
     if not no_sec_id_df.empty:
         df1 = _df.merge(refresh_sic_df(no_sec_id_df, exchange), how='left', on='sec_code')
         # df有sec_code但是sic_df无，则注册对象
-        zc_sec_df = _df.loc[~_df['sec_code'].isin(df1['sec_code'].tolist())][['market', 'sec_code', 'sec_name']]
+        # zc_sec_df = _df.loc[~_df['sec_code'].isin(df1['sec_code'].tolist())][['market', 'sec_code', 'sec_name']]
+        zc_sec_df = df1.loc[df1['sec_id'].isna()][['market', 'sec_code', 'sec_name']]
         if not zc_sec_df.empty:
             # 监控并Email关键词：本次需注册证券对象有
             logger.warn(f"本次需注册证券对象有({zc_sec_df.index.size}只)：\n{zc_sec_df.reset_index(drop=True)}")
@@ -191,12 +192,13 @@ def match_sid_by_code_and_name(df):
     """
     if df.empty:
         return df
+    df1 = df[['sec_code', 'sec_name']].drop_duplicates()
     _sid_df = get_sic_df().rename(columns={'sec_type': 'stp', 'sec_id': 'sid', 'sec_code': 'scd'})
     _sid_df[['cd6', 'market']] = _sid_df['scd'].str.split('.', n=1, expand=True)
     _sid_df['cd5'] = _sid_df['cd6'].str[:-1]
-    df['code5'] = df['sec_code'].str[:-1]
+    df1['code5'] = df1['sec_code'].str[:-1]
     # 6位代码唯一匹配
-    match6 = _sid_df.merge(df, how='inner', left_on='cd6', right_on='sec_code')
+    match6 = _sid_df.merge(df1, how='inner', left_on='cd6', right_on='sec_code')
     ok_match6 = match6.drop_duplicates(['cd6'], keep=False)
     # 6位代码 + 名称完全匹配
     match6_nm = match6.loc[~match6['cd6'].isin(ok_match6['cd6'].tolist())]
@@ -223,15 +225,15 @@ def match_sid_by_code_and_name(df):
             _like_name = pd.concat([_like_name, row.to_frame().T])
     match = pd.concat([match, _like_name])
     # 剩余5位代码匹配
-    _df = df.loc[~df['sec_code'].isin(match['cd6'].tolist())]
+    _df = df1.loc[~df1['sec_code'].isin(match['cd6'].tolist())]
     match5 = _sid_df.merge(_df, how='inner', left_on='cd5', right_on='code5')
     # 相同5位代码，只有1个市场和1个证券类型，则该5位，也为该市场和该证券类型
     _ok_match5 = match5.drop_duplicates(['cd5', 'stp', 'market'])
     ok_match5 = _ok_match5.drop_duplicates(['cd5'], keep=False)
     # 匹配证券
     match = pd.concat([match, ok_match5])[['sec_code', 'sec_name', 'sid', 'stp', 'market', 'scd']]
-    # 未匹配证券 208
-    no_match = df.loc[~df['sec_code'].isin(match['sec_code'].tolist())][['sec_code', 'sec_name']].copy()
+    # 未匹配证券s
+    no_match = df1.loc[~df1['sec_code'].isin(match['sec_code'].tolist())][['sec_code', 'sec_name']].copy()
     # 未匹配证券，通过注册中心寻找历史名称再识别
     no_match['stp'] = None
     no_match['sid'] = None
@@ -256,6 +258,7 @@ def match_sid_by_code_and_name(df):
                 row['market'] = rw['sec_code'][-2:]
                 break
     match = pd.concat([match, no_match.loc[~no_match['sid'].isna()]])
+    no_match = df1.merge(match, how='left', on=['sec_code', 'sec_name'])
     no_match = no_match.loc[no_match['sid'].isna()]
     if not no_match.empty:
         # 监控并Email关键词：如下证券对象无法识别
