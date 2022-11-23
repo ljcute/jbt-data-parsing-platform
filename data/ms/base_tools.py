@@ -57,7 +57,17 @@ def set_sic_df(_df360, _df_exchange, exchange=False):
 def refresh_sic_df(_df, exchange=False):
     if _df.empty:
         return get_sic_df()
-    return set_sic_df(get_sec360_sec_id_code(_df['sec_code'].tolist()), _df, exchange)
+    # 证券360刷证券ID
+    sec = get_sec360_sec_id_code(_df['sec_code'].tolist())
+    # 注册中心刷证券ID
+    no_sec360 = _df.loc[~_df['sec_code'].isin(sec['sec_code'].tolist())]
+    if not no_sec360.empty:
+        # 注册中心找对象
+        for index, row in no_sec360.iterrows():
+            bo = search_bo_info(row['sec_code'])
+            if not bo.empty:
+                sec = pd.concat([sec, bo])
+    return set_sic_df(sec, _df, exchange)
 
 
 def register_sic_df(_df, exchange=False):
@@ -70,9 +80,8 @@ def code_ref_id(_df, exchange=False):
     df1 = _df.merge(get_sic_df(), how='left', on='sec_code')
     no_sec_id_df = df1.loc[df1['sec_id'].isna()]
     if not no_sec_id_df.empty:
+        # 刷证券ID
         df1 = _df.merge(refresh_sic_df(no_sec_id_df, exchange), how='left', on='sec_code')
-        # df有sec_code但是sic_df无，则注册对象
-        # zc_sec_df = _df.loc[~_df['sec_code'].isin(df1['sec_code'].tolist())][['market', 'sec_code', 'sec_name']]
         zc_sec_df = df1.loc[df1['sec_id'].isna()][['market', 'sec_code', 'sec_name']]
         if not zc_sec_df.empty:
             # 监控并Email关键词：本次需注册证券对象有

@@ -14,7 +14,7 @@ def _get_format_df(cdata, biz_type):
     df = get_df_from_cdata(cdata)
     if biz_type == 'dbq':
         df['market'] = df['exchange'].str.upper()
-        df['sec_code'] = df['证券代码'].apply(lambda x: ('000000'+str(x))[-6:])
+        df['sec_code'] = df['证券代码'].apply(lambda x: ('000000'+str(x))[-max(6, len(str(x))):])
         df['sec_code'] = df['sec_code'] + '.' + df['market']
     elif biz_type == 'bdq':
         df['sec_code'] = df['证券代码'].str.upper()

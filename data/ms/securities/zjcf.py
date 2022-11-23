@@ -14,7 +14,7 @@ def _get_format_df(cdata):
     df = get_df_from_cdata(cdata)
     df = df.loc[df['state'] == 1].copy()
     df['market'] = df['exchange']
-    df['sec_code'] = df['stockId'].apply(lambda x: ('000000'+str(x))[-6:])
+    df['sec_code'] = df['stockId'].apply(lambda x: ('000000'+str(x))[-max(6, len(str(x))):])
     df['sec_code'] = df['sec_code'] + '.' + df['market']
     df['sec_name'] = df['stockName']
     df['start_dt'] = None

@@ -15,7 +15,7 @@ def _get_format_df(cdata, biz_type):
     if biz_type == 'dbq':
         df = df.loc[(df['isValid'] == 1) & (df['status'] == '正常')].copy()
     df['market'] = df['exchangeCode'].map(lambda x: 'SZ' if str(x) == '深圳' else 'SH' if str(x) == '上海' else 'BJ' if str(x) == '北京' else str(x))
-    df['sec_code'] = df['stockCode'].apply(lambda x: ('000000'+str(x))[-6:])
+    df['sec_code'] = df['stockCode'].apply(lambda x: ('000000'+str(x))[-max(6, len(str(x))):])
     df['sec_code'] = df['sec_code'] + '.' + df['market']
     df['sec_name'] = df['stockName']
     df['start_dt'] = None

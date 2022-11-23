@@ -13,7 +13,7 @@ from data.ms.base_tools import code_ref_id, get_df_from_cdata, get_exchange_disc
 def _get_format_df(cdata, market):
     df = get_df_from_cdata(cdata)
     df['market'] = market
-    df['sec_code'] = df['证券代码'].apply(lambda x: ('000000'+str(x))[-6:])
+    df['sec_code'] = df['证券代码'].apply(lambda x: ('000000'+str(x))[-max(6, len(str(x))):])
     df['sec_code'] = df['sec_code'] + '.' + df['market']
     df['sec_name'] = df['证券简称']
     df['start_dt'] = None

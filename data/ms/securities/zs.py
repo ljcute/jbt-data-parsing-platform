@@ -16,7 +16,7 @@ def _get_format_df(cdata, biz_type):
         df['market'] = df['market'].map(lambda x: 'SZ' if str(x) == '2' else 'SH' if str(x) == '1' else 'BJ' if str(x) == '3' else str(x))
     elif biz_type in ('rz_bdq', 'rq_bdq'):
         df['market'] = df['market'].map(lambda x: 'SZ' if str(x) == '0' else 'SH' if str(x) == '1' else 'BJ' if str(x) == '2' else str(x))
-    df['sec_code'] = df['stkcode'].apply(lambda x: ('000000'+str(x))[-6:])
+    df['sec_code'] = df['stkcode'].apply(lambda x: ('000000'+str(x))[-max(6, len(str(x))):])
     df['sec_code'] = df['sec_code'] + '.' + df['market']
     df['sec_name'] = df['stkname']
     df['start_dt'] = None

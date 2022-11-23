@@ -13,7 +13,7 @@ from data.ms.base_tools import code_ref_id, get_df_from_cdata
 def _get_format_df(cdata):
     df = get_df_from_cdata(cdata)
     df['market'] = df['exchangeType'].map(lambda x: 'SZ' if int(x) == 2 else 'SH' if int(x) == 1 else 'BJ' if int(x) == 3 else str(x))
-    df['sec_code'] = df['stockCode'].apply(lambda x: ('000000'+str(x))[-6:])
+    df['sec_code'] = df['stockCode'].apply(lambda x: ('000000'+str(x))[-max(6, len(str(x))):])
     df['sec_code'] = df['sec_code'] + '.' + df['market']
     df['sec_name'] = df['stockName']
     df['start_dt'] = df['initDate'].apply(lambda x: str(x)[:4]+'-'+str(x)[4:6]+'-'+str(x)[-2:])
