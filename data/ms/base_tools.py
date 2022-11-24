@@ -73,7 +73,7 @@ def refresh_sic_df(_df, exchange=False):
             if bo.empty:
                 continue
             # 代码全匹配
-            _bo = bo.loc[bo['sec_code'] == row['sec360_name']]
+            _bo = bo.loc[bo['sec_code'] == row['sec_code']]
             if not _bo.empty:
                 row['sec_type'] = _bo['sec_type'].tolist()[0]
                 row['sec_id'] = _bo['sec_id'].tolist()[0]
