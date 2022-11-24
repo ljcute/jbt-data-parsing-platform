@@ -128,8 +128,8 @@ def get_broker_biz_data(broker_id, biz_dt, biz_type, market):
     return biz_db().select(market_sql_handle(market, sql))
 
 
-def persist_data(broker_id, biz_dt, biz_type, lgc_del, recovery, invalid, ist_df, market):
-    if lgc_del.empty and recovery.empty and invalid.empty and ist_df.empty:
+def persist_data(broker_id, biz_dt, biz_type, duplicate, lgc_del, recovery, invalid, ist_df, market):
+    if duplicate.empty and lgc_del.empty and recovery.empty and invalid.empty and ist_df.empty:
         return
     # T日之后所有日已采有效数据做逻辑删除处理
     t1_del_sql = f"""
@@ -153,6 +153,22 @@ def persist_data(broker_id, biz_dt, biz_type, lgc_del, recovery, invalid, ist_df
                and end_dt > '{biz_dt} 00:00:00'
                and end_dt != '2999-12-31 23:59:59'
     """
+    # 重复数据处理
+    if not duplicate.empty:
+        duplicate['row_id'] = duplicate['row_id'].astype('int64')
+        if duplicate.index.size == 1:
+            duplicate_sub_sql = f" = {duplicate['row_id'].values[0]}"
+        else:
+            duplicate_sub_sql = f" in {tuple(duplicate['row_id'].tolist())}"
+        duplicate_sql = f"""
+            update t_broker_mt_business_security
+               set data_status = 0,
+                   update_dt = NOW()
+             where row_id {duplicate_sub_sql} 
+               and broker_id = {broker_id}
+               and biz_type = {biz_type}
+            """
+
     # T日重采处理：逻辑删除错采数据
     if not lgc_del.empty:
         lgc_del['row_id'] = lgc_del['row_id'].astype('int64')
@@ -214,6 +230,10 @@ def persist_data(broker_id, biz_dt, biz_type, lgc_del, recovery, invalid, ist_df
         biz_db().execute_uncommit(cnx, market_sql_handle(market, t1_del_sql))
         # T日有效数据，失效时间统一处理成'2999-12-31 23:59:59'
         biz_db().execute_uncommit(cnx, market_sql_handle(market, t_valid_sql))
+        # 重复数据处理
+        if not duplicate.empty:
+            # 逻辑删除重复数据
+            biz_db().execute_uncommit(cnx, duplicate_sql)
         # T日重采处理：逻辑删除错采数据
         if not lgc_del.empty:
             # 逻辑删除错采数据
@@ -382,8 +402,12 @@ def handle_data(_broker_id, _biz_dt, _biz_type, _data, market, persist_flag=True
         ist_df = ist_df.rename(columns={'sec_id': 'secu_id'})
         ist_df['adjust_type'] = 1
     else:
+        # 处理数据库中可能存在的重复数据(问题数据)：重复，保留start_dt最早记录
+        cur_data.sort_values(by=['secu_id', 'adjust_type', 'start_dt', 'cur_value'], inplace=True, ascending=True)
+        duplicate = cur_data[cur_data.duplicated(subset=['secu_id', 'adjust_type'])]
+        _cur_data = cur_data[~cur_data.duplicated(subset=['secu_id', 'adjust_type'])]
         # 数据对比
-        _df = cur_data.merge(data, how='outer', left_on='secu_id', right_on='sec_id')
+        _df = _cur_data.merge(data, how='outer', left_on='secu_id', right_on='sec_id')
         # 过滤掉相同调出
         _df = _df.loc[~((_df['adjust_type'] == 2) & (_df['sec_id'].isna()))]
         # 过滤掉相同值
@@ -429,7 +453,7 @@ def handle_data(_broker_id, _biz_dt, _biz_type, _data, market, persist_flag=True
         ist_down = ud_df.loc[ud_df['cur_value'] > ud_df['rate']][['secu_id', 'secu_type', 'cur_value', 'rate']].copy()
         ist_down['adjust_type'] = 4
         ist_df = pd.concat([ist_out, ist_in, ist_up, ist_down])
-    persist_data(_broker_id, _biz_dt, _biz_type, lgc_del, recovery, invalid, ist_df, market)
+    persist_data(_broker_id, _biz_dt, _biz_type, duplicate, lgc_del, recovery, invalid, ist_df, market)
 
 
 def kafka_mq_consumer():
