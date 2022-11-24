@@ -201,7 +201,7 @@ def persist_data(broker_id, biz_dt, biz_type, lgc_del, recovery, invalid, ist_df
                and biz_type = {biz_type}
             """
     if not ist_df.empty:
-        ist_df['sec_id'] = ist_df['sec_id'].astype('int64')
+        ist_df['secu_id'] = ist_df['secu_id'].astype('int64')
         ist_sql = f"""
             INSERT INTO t_broker_mt_business_security(broker_id, secu_id, secu_type, biz_type, pre_value,
                         cur_value, adjust_type, data_status, biz_status, start_dt, end_dt, data_desc, create_dt, update_dt) 
@@ -483,7 +483,7 @@ if __name__ == '__main__':
         exchange_df = get_last_exchange_collect_date(2).sort_values(by='biz_dt', axis=0, ascending=True)
         for index, row in exchange_df.iterrows():
             handle_range_collected_data(row['data_source'], row['data_type'], row['biz_dt'], persist_flag=False)
-        # handle_range_collected_data('上海交易所', 2, '2022-11-24')
+        # handle_range_collected_data('国泰君安', 99, '2022-11-24')
         kafka_mq_consumer()
         # handle_range_collected_data('深圳交易所', 2, '2022-11-14', persist_flag=False)
         # handle_range_collected_data('深圳交易所', 2, '2022-11-15', persist_flag=False)
@@ -494,14 +494,14 @@ if __name__ == '__main__':
         # handle_range_collected_data('深圳交易所', 2, '2022-11-22', persist_flag=False)
         # handle_range_collected_data('深圳交易所', 2, '2022-11-23', persist_flag=False)
         #
-        # handle_range_collected_data('上海交易所', 2, '2022-11-14', persist_flag=False)
-        # handle_range_collected_data('上海交易所', 2, '2022-11-15', persist_flag=False)
-        # handle_range_collected_data('上海交易所', 2, '2022-11-16', persist_flag=False)
-        # handle_range_collected_data('上海交易所', 2, '2022-11-17', persist_flag=False)
-        # handle_range_collected_data('上海交易所', 2, '2022-11-18', persist_flag=False)
-        # handle_range_collected_data('上海交易所', 2, '2022-11-21', persist_flag=False)
-        # handle_range_collected_data('上海交易所', 2, '2022-11-22', persist_flag=False)
-        # handle_range_collected_data('上海交易所', 2, '2022-11-23', persist_flag=False)
+        # handle_range_collected_data('上海交易所', 2, '2022-11-14')
+        # handle_range_collected_data('上海交易所', 2, '2022-11-15')
+        # handle_range_collected_data('上海交易所', 2, '2022-11-16')
+        # handle_range_collected_data('上海交易所', 2, '2022-11-17')
+        # handle_range_collected_data('上海交易所', 2, '2022-11-18')
+        # handle_range_collected_data('上海交易所', 2, '2022-11-21')
+        # handle_range_collected_data('上海交易所', 2, '2022-11-22')
+        # handle_range_collected_data('上海交易所', 2, '2022-11-23')
 
         # handle_range_collected_data('国元证券', 2, '2022-11-22')
         # handle_range_collected_data('中国银河', 99, '2022-11-22')
