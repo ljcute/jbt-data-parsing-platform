@@ -411,7 +411,7 @@ def handle_data(_broker_id, _biz_dt, _biz_type, _data, market, persist_flag=True
         # 过滤掉相同调出
         _df = _df.loc[~((_df['adjust_type'] == 2) & (_df['sec_id'].isna()))]
         # 过滤掉相同值
-        diff_df = _df.loc[~((_df['adjust_type'].isin([1, 3, 4])) & (_df['rate'] == _df['cur_value']))]
+        diff_df = _df.loc[~((_df['adjust_type'].isin([1, 3, 4])) & ((_df['rate'] == _df['cur_value']) | (_df['rate'].isna() & _df['cur_value'].isna())))]
         # 新增调入
         in_df = diff_df.loc[((diff_df['adjust_type'] == 2) & (~diff_df['sec_id'].isna())) | diff_df['row_id'].isna()]
         # 过滤掉新增券
@@ -433,9 +433,9 @@ def handle_data(_broker_id, _biz_dt, _biz_type, _data, market, persist_flag=True
         # 需逻辑删除的
         lgc_del = pd.concat([lgc_del1, lgc_del2])
         # 逻辑删除中调高调低的，比较调整前值，如果与当前新值一致，则把先前的延长结束时间到永久
-        recovery2 = diff_df.loc[(diff_df['start_dt'] == f'{_biz_dt} 00:00:00') & (diff_df['pre_value'] == diff_df['rate'])][['secu_id']]
+        recovery2 = diff_df.loc[(diff_df['start_dt'] == f'{_biz_dt} 00:00:00') & ((diff_df['pre_value'] == diff_df['rate']) | (diff_df['pre_value'].isna() & diff_df['rate'].isna()))][['secu_id']]
         # 真实新增调高调低(排除逻辑删除恢复先前已是有效状态的)
-        diff_df = diff_df.loc[~((diff_df['start_dt'] == f'{_biz_dt} 00:00:00') & (diff_df['pre_value'] == diff_df['rate']))]
+        diff_df = diff_df.loc[~((diff_df['start_dt'] == f'{_biz_dt} 00:00:00') & ((diff_df['pre_value'] == diff_df['rate']) | (diff_df['pre_value'].isna() & diff_df['rate'].isna())))]
         # 需恢复拉链的
         recovery = pd.concat([recovery1, recovery2])
         # 需切断拉链失效的
@@ -448,9 +448,9 @@ def handle_data(_broker_id, _biz_dt, _biz_type, _data, market, persist_flag=True
         ist_in = in_df[['sec_id', 'sec_type', 'cur_value', 'rate']].copy()
         ist_in.rename(columns={'sec_id': 'secu_id', 'sec_type': 'secu_type'}, inplace=True)
         ist_in['adjust_type'] = 1
-        ist_up = ud_df.loc[ud_df['cur_value'] < ud_df['rate']][['secu_id', 'secu_type', 'cur_value', 'rate']].copy()
+        ist_up = ud_df.loc[((ud_df['cur_value'] < ud_df['rate']) | (ud_df['cur_value'].isna() & ~ud_df['rate'].isna()))][['secu_id', 'secu_type', 'cur_value', 'rate']].copy()
         ist_up['adjust_type'] = 3
-        ist_down = ud_df.loc[ud_df['cur_value'] > ud_df['rate']][['secu_id', 'secu_type', 'cur_value', 'rate']].copy()
+        ist_down = ud_df.loc[((ud_df['cur_value'] > ud_df['rate']) | (~ud_df['cur_value'].isna() & ud_df['rate'].isna()))][['secu_id', 'secu_type', 'cur_value', 'rate']].copy()
         ist_down['adjust_type'] = 4
         ist_df = pd.concat([ist_out, ist_in, ist_up, ist_down])
     persist_data(_broker_id, _biz_dt, _biz_type, duplicate, lgc_del, recovery, invalid, ist_df, market)
