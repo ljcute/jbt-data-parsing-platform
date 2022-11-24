@@ -201,7 +201,7 @@ def persist_data(broker_id, biz_dt, biz_type, lgc_del, recovery, invalid, ist_df
                and biz_type = {biz_type}
             """
     if not ist_df.empty:
-        ist_df['secu_id'] = ist_df['secu_id'].astype('int64')
+        ist_df['sec_id'] = ist_df['sec_id'].astype('int64')
         ist_sql = f"""
             INSERT INTO t_broker_mt_business_security(broker_id, secu_id, secu_type, biz_type, pre_value,
                         cur_value, adjust_type, data_status, biz_status, start_dt, end_dt, data_desc, create_dt, update_dt) 
