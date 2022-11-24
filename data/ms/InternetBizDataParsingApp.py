@@ -200,7 +200,6 @@ def persist_data(broker_id, biz_dt, biz_type, lgc_del, recovery, invalid, ist_df
                and broker_id = {broker_id}
                and biz_type = {biz_type}
             """
-        logger.info(f"invalid_sql={invalid_sql}")
     if not ist_df.empty:
         ist_df['secu_id'] = ist_df['secu_id'].astype('int64')
         ist_sql = f"""
