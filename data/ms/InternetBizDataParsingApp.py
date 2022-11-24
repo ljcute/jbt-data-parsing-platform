@@ -155,6 +155,7 @@ def persist_data(broker_id, biz_dt, biz_type, lgc_del, recovery, invalid, ist_df
     """
     # T日重采处理：逻辑删除错采数据
     if not lgc_del.empty:
+        lgc_del['row_id'] = lgc_del['row_id'].astype('int64')
         if lgc_del.index.size == 1:
             lgc_del_sub_sql = f" = {lgc_del['row_id'].values[0]}"
         else:
@@ -169,6 +170,7 @@ def persist_data(broker_id, biz_dt, biz_type, lgc_del, recovery, invalid, ist_df
             """
     # T日重采处理：恢复错采时失效的当前数据
     if not recovery.empty:
+        recovery['secu_id'] = recovery['secu_id'].astype('int64')
         if recovery.index.size == 1:
             recovery_sub_sql = f" = {recovery['secu_id'].values[0]}"
         else:
@@ -185,6 +187,7 @@ def persist_data(broker_id, biz_dt, biz_type, lgc_del, recovery, invalid, ist_df
                and data_status = 1
             """
     if not invalid.empty:
+        invalid['row_id'] = invalid['row_id'].astype('int64')
         if invalid.index.size == 1:
             invalid_sub_sql = f" = {invalid['row_id'].values[0]}"
         else:
@@ -197,7 +200,9 @@ def persist_data(broker_id, biz_dt, biz_type, lgc_del, recovery, invalid, ist_df
                and broker_id = {broker_id}
                and biz_type = {biz_type}
             """
+        logger.info(f"invalid_sql={invalid_sql}")
     if not ist_df.empty:
+        ist_df['secu_id'] = ist_df['secu_id'].astype('int64')
         ist_sql = f"""
             INSERT INTO t_broker_mt_business_security(broker_id, secu_id, secu_type, biz_type, pre_value,
                         cur_value, adjust_type, data_status, biz_status, start_dt, end_dt, data_desc, create_dt, update_dt) 
@@ -357,6 +362,15 @@ def handle_data(_broker_id, _biz_dt, _biz_type, _data, market, persist_flag=True
     """
     if not persist_flag or _data.empty:
         return
+    data = _data.copy()
+    # 去重, 取控制严格数据
+    if _biz_type in (1, 2, 4):
+        # 去重,取最大，即倒序
+        data.sort_values(by=['sec_id', 'rate'], inplace=True, ascending=False)
+    else:
+        # 去重, 取最小，即升序
+        data.sort_values(by=['sec_id', 'rate'], inplace=True, ascending=True)
+    data.drop_duplicates(['sec_id'], inplace=True)
     # 查数据库当前数据
     cur_data = get_broker_biz_data(_broker_id, _biz_dt, _biz_type, market)
     # 对比数据 adjust_type: 调入1, 调出2, 调高3, 调低4
@@ -364,12 +378,12 @@ def handle_data(_broker_id, _biz_dt, _biz_type, _data, market, persist_flag=True
         lgc_del = pd.DataFrame()
         recovery = lgc_del
         invalid = lgc_del
-        _data['cur_value'] = None
-        ist_df = _data[['sec_id', 'sec_type', 'cur_value', 'rate']]
+        data['cur_value'] = None
+        ist_df = data[['sec_id', 'sec_type', 'cur_value', 'rate']]
         ist_df['adjust_type'] = 1
     else:
         # 数据对比
-        _df = cur_data.merge(_data, how='outer', left_on='secu_id', right_on='sec_id')
+        _df = cur_data.merge(data, how='outer', left_on='secu_id', right_on='sec_id')
         # 过滤掉相同调出
         _df = _df.loc[~((_df['adjust_type'] == 2) & (_df['sec_id'].isna()))]
         # 过滤掉相同值
@@ -470,9 +484,29 @@ if __name__ == '__main__':
         exchange_df = get_last_exchange_collect_date(2).sort_values(by='biz_dt', axis=0, ascending=True)
         for index, row in exchange_df.iterrows():
             handle_range_collected_data(row['data_source'], row['data_type'], row['biz_dt'], persist_flag=False)
+        # handle_range_collected_data('上海交易所', 2, '2022-11-24')
         kafka_mq_consumer()
-        # handle_range_collected_data('中国银河', 99, '2022-11-03')
-        # handle_range_collected_data('广发证券', 2, '2022-11-03')
+        # handle_range_collected_data('深圳交易所', 2, '2022-11-14', persist_flag=False)
+        # handle_range_collected_data('深圳交易所', 2, '2022-11-15', persist_flag=False)
+        # handle_range_collected_data('深圳交易所', 2, '2022-11-16', persist_flag=False)
+        # handle_range_collected_data('深圳交易所', 2, '2022-11-17', persist_flag=False)
+        # handle_range_collected_data('深圳交易所', 2, '2022-11-18', persist_flag=False)
+        # handle_range_collected_data('深圳交易所', 2, '2022-11-21', persist_flag=False)
+        # handle_range_collected_data('深圳交易所', 2, '2022-11-22', persist_flag=False)
+        # handle_range_collected_data('深圳交易所', 2, '2022-11-23', persist_flag=False)
+        #
+        # handle_range_collected_data('上海交易所', 2, '2022-11-14', persist_flag=False)
+        # handle_range_collected_data('上海交易所', 2, '2022-11-15', persist_flag=False)
+        # handle_range_collected_data('上海交易所', 2, '2022-11-16', persist_flag=False)
+        # handle_range_collected_data('上海交易所', 2, '2022-11-17', persist_flag=False)
+        # handle_range_collected_data('上海交易所', 2, '2022-11-18', persist_flag=False)
+        # handle_range_collected_data('上海交易所', 2, '2022-11-21', persist_flag=False)
+        # handle_range_collected_data('上海交易所', 2, '2022-11-22', persist_flag=False)
+        # handle_range_collected_data('上海交易所', 2, '2022-11-23', persist_flag=False)
+
+        # handle_range_collected_data('国元证券', 2, '2022-11-22')
+        # handle_range_collected_data('中国银河', 99, '2022-11-22')
+        # handle_range_collected_data('广发证券', 2, '2022-11-23')
         # handle_range_collected_data('广发证券', 4, '2022-11-03')
         # handle_range_collected_data('广发证券', 5, '2022-11-03')
         # handle_range_collected_data('国信证券', 2, '2022-11-17')
