@@ -14,6 +14,9 @@ from util.logs_utils import logger
 from data.ms.fdb import get_ex_discount_limit_rate
 from data.ms.register_center import search_bo_info
 from data.ms.sec360 import get_sec360_sec_id_code, register_sec360_security
+sz = r'(\d+)'
+zm = r'[\u0041-\u005a|\u0061-\u007a]+'
+zw = r'[\u4e00-\u9fa5]+'
 
 
 def get_df_from_cdata(cdata):
@@ -60,16 +63,49 @@ def refresh_sic_df(_df, exchange=False):
     # 证券360刷证券ID
     sec = get_sec360_sec_id_code(_df['sec_code'].tolist())
     # 注册中心刷证券ID
-    no_sec360 = _df.loc[~_df['sec_code'].isin(sec['sec_code'].tolist())][sec.columns.tolist()]
+    no_sec360 = _df.loc[~_df['sec_code'].isin(sec['sec_code'].tolist())][sec.columns.tolist() + ['sec_name']]
+    no_sec360['sec360_name'] = no_sec360['sec_name']
+    no_sec360 = no_sec360[sec.columns.tolist()]
     if not no_sec360.empty:
         # 注册中心找对象
         for index, row in no_sec360.iterrows():
-            bo = search_bo_info(row['sec_code'])
-            if not bo.empty:
-                row['sec_type'] = bo['sec_type'].tolist()[0]
-                row['sec_id'] = bo['sec_id'].tolist()[0]
-                row['sec360_name'] = min(bo['sec_name'].tolist(), key=len)
+            bo = search_bo_info(row['sec_code'][:-3])
+            if bo.empty:
+                continue
+            # 代码全匹配
+            _bo = bo.loc[bo['sec_code'] == row['sec360_name']]
+            if not _bo.empty:
+                row['sec_type'] = _bo['sec_type'].tolist()[0]
+                row['sec_id'] = _bo['sec_id'].tolist()[0]
+                row['sec360_name'] = min(_bo['sec_name'].tolist(), key=len)
                 sec = pd.concat([sec, row.to_frame().T])
+                continue
+            # 名称全匹配
+            _bo = bo.loc[bo['sec_name'] == row['sec360_name']]
+            if not _bo.empty:
+                row['sec_type'] = _bo['sec_type'].tolist()[0]
+                row['sec_id'] = _bo['sec_id'].tolist()[0]
+                row['sec_code'] = _bo['sec_code'].tolist()[0]
+                sec = pd.concat([sec, row.to_frame().T])
+                continue
+            # 名称包含匹配
+            for idx, rw in bo.iterrows():
+                if rw['sec_name'] in row['sec360_name'] or row['sec360_name'] in rw['sec_name']:
+                    row['sec_type'] = rw['sec_type']
+                    row['sec_id'] = rw['sec_id']
+                    row['sec_code'] = rw['sec_code']
+                    sec = pd.concat([sec, row.to_frame().T])
+                    break
+            # 名称拆解再模糊匹配
+            sec_name = re.findall(sz, row['sec360_name']) + re.findall(zm, row['sec360_name']) + cn_char_arr_split(re.findall(zw, row['sec360_name']))
+            for idx, rw in bo.iterrows():
+                _sec_name = re.findall(sz, rw['sec_name']) + re.findall(zm, rw['sec_name']) + cn_char_arr_split(re.findall(zw, rw['sec_name']))
+                if len(set(sec_name) & set(_sec_name)) > 0:
+                    row['sec_type'] = rw['sec_type']
+                    row['sec_id'] = rw['sec_id']
+                    row['sec_code'] = rw['sec_code']
+                    sec = pd.concat([sec, row.to_frame().T])
+                    break
     return set_sic_df(sec, _df, exchange)
 
 
@@ -220,15 +256,12 @@ def match_sid_by_code_and_name(df):
     like_name = match6.loc[~match6['cd6'].isin(match['cd6'].tolist())]
     _like_name = pd.DataFrame(columns=like_name.columns)
     for index, row in like_name.iterrows():
-        if row['sec_name'] in row['sec360_name'] or row['sec_name'] in row['exchange_sec_name']:
+        if row['sec_name'] in row['sec360_name'] or row['sec_name'] in row['exchange_sec_name'] or row['sec360_name'] in row['sec_name'] or row['exchange_sec_name'] in row['sec_name']:
             _like_name = pd.concat([_like_name, row.to_frame().T])
     match = pd.concat([match, _like_name])
     # 6位代码 + 名称模糊匹配(按数字、字母(转大写)、中文（至少2个中文搭配）拆分后包含关系)
     like_name = match6.loc[~match6['cd6'].isin(match['cd6'].tolist())]
     _like_name = pd.DataFrame(columns=like_name.columns)
-    sz = r'(\d+)'
-    zm = r'[\u0041-\u005a|\u0061-\u007a]+'
-    zw = r'[\u4e00-\u9fa5]+'
     for index, row in like_name.iterrows():
         sec_name = re.findall(sz, row['sec_name']) + re.findall(zm, row['sec_name']) + cn_char_arr_split(re.findall(zw, row['sec_name']))
         sec360_name = re.findall(sz, row['sec360_name']) + re.findall(zm, row['sec360_name']) + cn_char_arr_split(re.findall(zw, row['sec360_name']))
