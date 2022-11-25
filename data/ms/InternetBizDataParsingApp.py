@@ -400,9 +400,9 @@ def handle_data(_broker_id, _biz_dt, _biz_type, _data, market, persist_flag=True
         ist_df['adjust_type'] = 1
     else:
         # 处理数据库中可能存在的重复数据(问题数据)：重复，保留start_dt最早记录
-        cur_data.sort_values(by=['secu_id', 'adjust_type', 'start_dt', 'cur_value'], inplace=True, ascending=True)
-        duplicate = cur_data[cur_data.duplicated(subset=['secu_id', 'adjust_type'])]
-        _cur_data = cur_data[~cur_data.duplicated(subset=['secu_id', 'adjust_type'])].copy()
+        cur_data.sort_values(by=['secu_id', 'start_dt', 'adjust_type', 'cur_value'], inplace=True, ascending=True)
+        duplicate = cur_data[cur_data.duplicated(subset=['secu_id'])]
+        _cur_data = cur_data[~cur_data.duplicated(subset=['secu_id'])].copy()
         _cur_data['row_id'] = _cur_data['row_id'].astype('str')
         # 数据对比
         _df = _cur_data.merge(data, how='outer', left_on='secu_id', right_on='sec_id')
