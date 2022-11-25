@@ -251,6 +251,7 @@ def persist_data(broker_id, biz_dt, biz_type, duplicate, lgc_del, recovery, inva
             biz_db().execute_uncommit(cnx, ist_sql, data)
         if cnx:
             cnx.commit()
+            time.sleep(5)
     except Exception as err:
         logger.error(f"互联网数据解析异常：{err} =》{str(traceback.format_exc())}")
         if cnx:
