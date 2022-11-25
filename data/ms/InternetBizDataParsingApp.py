@@ -155,7 +155,7 @@ def persist_data(broker_id, biz_dt, biz_type, duplicate, lgc_del, recovery, inva
     """
     # 重复数据处理
     if not duplicate.empty:
-        duplicate['row_id'] = duplicate['row_id'].astype('int64')
+        duplicate = duplicate.copy()
         if duplicate.index.size == 1:
             duplicate_sub_sql = f" = {duplicate['row_id'].values[0]}"
         else:
@@ -171,7 +171,6 @@ def persist_data(broker_id, biz_dt, biz_type, duplicate, lgc_del, recovery, inva
 
     # T日重采处理：逻辑删除错采数据
     if not lgc_del.empty:
-        lgc_del['row_id'] = lgc_del['row_id'].astype('int64')
         if lgc_del.index.size == 1:
             lgc_del_sub_sql = f" = {lgc_del['row_id'].values[0]}"
         else:
@@ -186,7 +185,6 @@ def persist_data(broker_id, biz_dt, biz_type, duplicate, lgc_del, recovery, inva
             """
     # T日重采处理：恢复错采时失效的当前数据
     if not recovery.empty:
-        recovery['secu_id'] = recovery['secu_id'].astype('int64')
         if recovery.index.size == 1:
             recovery_sub_sql = f" = {recovery['secu_id'].values[0]}"
         else:
@@ -203,7 +201,6 @@ def persist_data(broker_id, biz_dt, biz_type, duplicate, lgc_del, recovery, inva
                and data_status = 1
             """
     if not invalid.empty:
-        invalid['row_id'] = invalid['row_id'].astype('int64')
         if invalid.index.size == 1:
             invalid_sub_sql = f" = {invalid['row_id'].values[0]}"
         else:
@@ -217,7 +214,6 @@ def persist_data(broker_id, biz_dt, biz_type, duplicate, lgc_del, recovery, inva
                and biz_type = {biz_type}
             """
     if not ist_df.empty:
-        ist_df['secu_id'] = ist_df['secu_id'].astype('int64')
         ist_sql = f"""
             INSERT INTO t_broker_mt_business_security(broker_id, secu_id, secu_type, biz_type, pre_value,
                         cur_value, adjust_type, data_status, biz_status, start_dt, end_dt, data_desc, create_dt, update_dt) 
@@ -251,7 +247,6 @@ def persist_data(broker_id, biz_dt, biz_type, duplicate, lgc_del, recovery, inva
             biz_db().execute_uncommit(cnx, ist_sql, data)
         if cnx:
             cnx.commit()
-            time.sleep(5)
     except Exception as err:
         logger.error(f"互联网数据解析异常：{err} =》{str(traceback.format_exc())}")
         if cnx:
@@ -407,7 +402,8 @@ def handle_data(_broker_id, _biz_dt, _biz_type, _data, market, persist_flag=True
         # 处理数据库中可能存在的重复数据(问题数据)：重复，保留start_dt最早记录
         cur_data.sort_values(by=['secu_id', 'adjust_type', 'start_dt', 'cur_value'], inplace=True, ascending=True)
         duplicate = cur_data[cur_data.duplicated(subset=['secu_id', 'adjust_type'])]
-        _cur_data = cur_data[~cur_data.duplicated(subset=['secu_id', 'adjust_type'])]
+        _cur_data = cur_data[~cur_data.duplicated(subset=['secu_id', 'adjust_type'])].copy()
+        _cur_data['row_id'] = _cur_data['row_id'].astype('str')
         # 数据对比
         _df = _cur_data.merge(data, how='outer', left_on='secu_id', right_on='sec_id')
         # 过滤掉相同调出
@@ -510,31 +506,6 @@ if __name__ == '__main__':
         exchange_df = get_last_exchange_collect_date(2).sort_values(by='biz_dt', axis=0, ascending=True)
         for index, row in exchange_df.iterrows():
             handle_range_collected_data(row['data_source'], row['data_type'], row['biz_dt'], persist_flag=False)
-        # handle_range_collected_data('国泰君安', 99, '2022-11-24')
         kafka_mq_consumer()
-        # handle_range_collected_data('深圳交易所', 2, '2022-11-14', persist_flag=False)
-        # handle_range_collected_data('深圳交易所', 2, '2022-11-15', persist_flag=False)
-        # handle_range_collected_data('深圳交易所', 2, '2022-11-16', persist_flag=False)
-        # handle_range_collected_data('深圳交易所', 2, '2022-11-17', persist_flag=False)
-        # handle_range_collected_data('深圳交易所', 2, '2022-11-18', persist_flag=False)
-        # handle_range_collected_data('深圳交易所', 2, '2022-11-21', persist_flag=False)
-        # handle_range_collected_data('深圳交易所', 2, '2022-11-22', persist_flag=False)
-        # handle_range_collected_data('深圳交易所', 2, '2022-11-23', persist_flag=False)
-        #
-        # handle_range_collected_data('上海交易所', 2, '2022-11-14')
-        # handle_range_collected_data('上海交易所', 2, '2022-11-15')
-        # handle_range_collected_data('上海交易所', 2, '2022-11-16')
-        # handle_range_collected_data('上海交易所', 2, '2022-11-17')
-        # handle_range_collected_data('上海交易所', 2, '2022-11-18')
-        # handle_range_collected_data('上海交易所', 2, '2022-11-21')
-        # handle_range_collected_data('上海交易所', 2, '2022-11-22')
-        # handle_range_collected_data('上海交易所', 2, '2022-11-23')
-
-        # handle_range_collected_data('国元证券', 2, '2022-11-22')
-        # handle_range_collected_data('中国银河', 99, '2022-11-22')
-        # handle_range_collected_data('广发证券', 2, '2022-11-23')
-        # handle_range_collected_data('广发证券', 4, '2022-11-03')
-        # handle_range_collected_data('广发证券', 5, '2022-11-03')
-        # handle_range_collected_data('国信证券', 2, '2022-11-17')
     except Exception as e:
         logger.error(f"互联网数据解析服务启动异常: {e} =》{str(traceback.format_exc())}")
