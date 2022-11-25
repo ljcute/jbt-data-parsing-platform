@@ -397,6 +397,7 @@ def handle_data(_broker_id, _biz_dt, _biz_type, _data, market, persist_flag=True
         lgc_del = pd.DataFrame()
         recovery = lgc_del
         invalid = lgc_del
+        duplicate = lgc_del
         data['cur_value'] = None
         ist_df = data[['sec_id', 'sec_type', 'cur_value', 'rate']]
         ist_df = ist_df.rename(columns={'sec_id': 'secu_id'})
