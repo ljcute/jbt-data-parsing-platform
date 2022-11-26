@@ -279,13 +279,18 @@ def handle_range_collected_data(data_source, data_type, start_dt=None, end_dt=No
                 continue
             # 如果有则解析
             else:
-                handle_collected_data(cdata, persist_flag)
+                handle_collected_data(cdata, dt, persist_flag)
             logger.info(f"结束计算data_source={data_source} data_type={data_type} {dt}")
     except Exception as e:
         logger.error(f"互联网数据解析服务解析异常data_source={data_source} data_type={data_type} {dt}: {e} =》{str(traceback.format_exc())}")
 
 
-def handle_collected_data(cdata, persist_flag=True):
+def check_biz_dt(dt, biz_dt):
+    if dt != biz_dt:
+        logger.info(f"collect date={dt}, data date is {biz_dt}")
+
+
+def handle_collected_data(cdata, dt, persist_flag=True):
     data_source = cdata['data_source'][0]
     data_type = int(cdata['data_type'][0])
     global brokers
@@ -306,20 +311,25 @@ def handle_collected_data(cdata, persist_flag=True):
         print(1)
     elif data_type == 2:
         biz_dt, dbq, jzd = format_dbq(broker, cdata, market)
+        check_biz_dt(dt, biz_dt)
         handle_dbq(broker_id, biz_dt, dbq, market, persist_flag)
         handle_dbq_jzd(broker_id, biz_dt, jzd, market, persist_flag)
     elif data_type == 3:
         biz_dt, rz_bdq, rq_bdq = format_rz_rq_bdq(broker, cdata, market)
+        check_biz_dt(dt, biz_dt)
         handle_rz_bdq(broker_id, biz_dt, rz_bdq, market, persist_flag)
         handle_rq_bdq(broker_id, biz_dt, rq_bdq, market, persist_flag)
     elif data_type == 4:
         biz_dt, rz_bdq = format_rz_bdq(broker, cdata, market)
+        check_biz_dt(dt, biz_dt)
         handle_rz_bdq(broker_id, biz_dt, rz_bdq, market, persist_flag)
     elif data_type == 5:
         biz_dt, rq_bdq = format_rq_bdq(broker, cdata, market)
+        check_biz_dt(dt, biz_dt)
         handle_rq_bdq(broker_id, biz_dt, rq_bdq, market, persist_flag)
     elif data_type == 99:
         biz_dt, dbq, jzd, rz_bdq, rq_bdq = format_db_rz_rq_bdq(broker, cdata, market)
+        check_biz_dt(dt, biz_dt)
         handle_dbq(broker_id, biz_dt, dbq, market, persist_flag)
         handle_dbq_jzd(broker_id, biz_dt, jzd, market, persist_flag)
         handle_rz_bdq(broker_id, biz_dt, rz_bdq, market, persist_flag)
@@ -377,6 +387,7 @@ def handle_data(_broker_id, _biz_dt, _biz_type, _data, market, persist_flag=True
     """
     if not persist_flag or _data.empty:
         return
+    logger.info(f"begin handle_data {_broker_id} {_biz_dt} {_biz_type} {_data.index.size} {market} {persist_flag}")
     data = _data.copy()
     # 去重, 取控制严格数据
     if _biz_type in (1, 2, 4):

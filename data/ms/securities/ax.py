@@ -18,7 +18,10 @@ def _get_format_df(cdata):
     df['sec_name'] = df['secuName']
     df['start_dt'] = None
     dt = df['effectiveDate'].values[0]
-    biz_dt = str(dt)[:4] + '-' + str(dt)[4:6] + '-' + str(dt)[-2:]
+    if '-' in dt:
+        biz_dt = dt
+    else:
+        biz_dt = str(dt)[:4] + '-' + str(dt)[4:6] + '-' + str(dt)[-2:]
     return biz_dt, code_ref_id(df)
 
 
