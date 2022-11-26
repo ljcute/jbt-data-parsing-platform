@@ -168,8 +168,8 @@ if __name__ == '__main__':
                     pre['pre_rate'] = pre['assureRatio'].apply(lambda x: int(x * 100))
                     cur['cur_rate'] = cur['assureRatio'].apply(lambda x: int(x * 100))
                 elif _data_source in ('国元证券', ):
-                    pre['key'] = pre['secu_code'].apply(lambda x: ('000000' + str(x))[-max(6, len(str(x))):]) + '.' + pre['stkex'].map(lambda x: 'SZ' if str(x) == '0' else 'SH' if str(x) == '1' else 'BJ' if str(x) == '2' else str(x))
-                    cur['key'] = cur['secu_code'].apply(lambda x: ('000000' + str(x))[-max(6, len(str(x))):]) + '.' + cur['stkex'].map(lambda x: 'SZ' if str(x) == '0' else 'SH' if str(x) == '1' else 'BJ' if str(x) == '2' else str(x))
+                    pre['key'] = pre['secu_code'].apply(lambda x: ('000000' + str(x))[-max(6, len(str(x))):])
+                    cur['key'] = cur['secu_code'].apply(lambda x: ('000000' + str(x))[-max(6, len(str(x))):])
                     pre['pre_rate'] = pre['exchange_rate'].apply(lambda x: int(x*100))
                     cur['cur_rate'] = cur['exchange_rate'].apply(lambda x: int(x*100))
                 elif _data_source in ('广发证券', ):

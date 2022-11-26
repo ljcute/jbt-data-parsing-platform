@@ -14,7 +14,7 @@ def _get_format_df(cdata):
     df = get_df_from_cdata(cdata)
     df['market'] = df['stkex'].map(lambda x: 'SZ' if str(x) == '0' else 'SH' if str(x) == '1' else 'BJ' if str(x) == '2' else str(x))
     df['sec_code'] = df['secu_code'].apply(lambda x: ('000000'+str(x))[-max(6, len(str(x))):])
-    df['sec_code'] = df['sec_code'] + '.' + df['market']
+    df['sec_code'] = df['sec_code']
     df['sec_name'] = df['secu_name']
     df['start_dt'] = None
     biz_dt = df['effectivedate'].values[0]
