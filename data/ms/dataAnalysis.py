@@ -49,7 +49,8 @@ def get_adjust_data(db, biz_dt):
     SELECT a.broker_code, a.broker_name,b.* FROM t_security_broker a,
     (SELECT broker_id, 
     (case biz_type when 1 then '融资标的' when 2 then '融券标的' when 3 then '担保券' when 4 then '集中度' else biz_type end) as biz_type, 
-    (case adjust_type when 1 then '调入' when 2 then '调出' when 3 then '调高' when 4 then '调低' else adjust_type end) as adjust_type, 
+    adjust_type,
+    (case adjust_type when 1 then '调入' when 2 then '调出' when 3 then '调高' when 4 then '调低' else adjust_type end) as adjust_type_cn, 
     count(*) as adjust_num
     FROM t_broker_mt_business_security 
     WHERE data_status=1 and start_dt <= '{biz_dt} 00:00:00' and end_dt > '{biz_dt} 00:00:00'
@@ -119,15 +120,19 @@ if __name__ == '__main__':
 
         biz_dt = '2022-11-25'
         adjust = get_adjust_data(biz_db(), biz_dt)
-        clm = adjust.columns.tolist()
         adjust['env'] = env
+        adjust.sort_values(by=['biz_type', 'broker_id', 'adjust_type'], inplace=True, ascending=True)
+        logger.info(f"{biz_dt} {env}环境-调整数据({adjust.index.size}组)\n {adjust}")
+        clm = adjust.columns.tolist()
         pro_adjust = get_adjust_data(pro_biz_db(), biz_dt)
         pro_adjust['env'] = 'pro'
+        pro_adjust.sort_values(by=['biz_type', 'broker_id', 'adjust_type'], inplace=True, ascending=True)
+        logger.info(f"{biz_dt} PRO环境-调整数据({pro_adjust.index.size}组)\n {pro_adjust}")
         un = pd.concat([adjust, pro_adjust])
         duplicate = un[un.duplicated(subset=clm, keep=False)].copy()
-        duplicate.sort_values(by=['broker_id', 'biz_type', 'adjust_type'], inplace=True, ascending=True)
+        duplicate.sort_values(by=['biz_type', 'broker_id', 'adjust_type'], inplace=True, ascending=True)
         diff = un[~un.duplicated(subset=clm, keep=False)].copy()
-        diff.sort_values(by=['broker_id', 'biz_type', 'adjust_type'], inplace=True, ascending=True)
+        diff.sort_values(by=['biz_type', 'broker_id', 'adjust_type'], inplace=True, ascending=True)
         logger.info(f"{biz_dt} 一致数据({duplicate.index.size}组)\n {duplicate}")
         logger.info(f"{biz_dt} 不一致数据({diff.index.size}组)\n {diff}")
         # 仅对比担保券
@@ -187,23 +192,69 @@ if __name__ == '__main__':
                     cur['key'] = cur['stockCode'].apply(lambda x: ('000000'+str(x))[-max(6, len(str(x))):]) + '.' + cur['exchangeCode'].map(lambda x: 'SZ' if str(x) == '深圳' else 'SH' if str(x) == '上海' else 'BJ' if str(x) == '北京' else str(x))
                     pre['pre_rate'] = pre['percent'].apply(lambda x: int(x*100))
                     cur['cur_rate'] = cur['percent'].apply(lambda x: int(x*100))
+                elif _data_source in ('国泰君安', ):
+                    pre = pre.loc[pre['type'] == 1].copy()
+                    cur = cur.loc[cur['type'] == 1].copy()
+                    pre['key'] = pre['secCode'].apply(lambda x: ('000000'+str(x))[-max(6, len(str(x))):]) + '.' + pre['branch'].map(lambda x: 'SZ' if str(x) == '深交所' else 'SH' if str(x) == '上交所' else 'BJ' if str(x) == '北交所' else str(x))
+                    cur['key'] = cur['secCode'].apply(lambda x: ('000000'+str(x))[-max(6, len(str(x))):]) + '.' + cur['branch'].map(lambda x: 'SZ' if str(x) == '深交所' else 'SH' if str(x) == '上交所' else 'BJ' if str(x) == '北交所' else str(x))
+                    pre['pre_rate'] = pre['rate'].apply(lambda x: int(str(x).replace('%', '')))
+                    cur['cur_rate'] = cur['rate'].apply(lambda x: int(str(x).replace('%', '')))
+                elif _data_source in ('中国银河', ):
+                    pre = pre.loc[pre['type'] == 'db'].copy()
+                    cur = cur.loc[cur['type'] == 'db'].copy()
+                    pre['key'] = pre['证券代码'].apply(lambda x: ('000000'+str(x))[-max(6, len(str(x))):])
+                    cur['key'] = cur['证券代码'].apply(lambda x: ('000000'+str(x))[-max(6, len(str(x))):])
+                    pre['pre_rate'] = pre['rate'].apply(lambda x: int(x*100))
+                    cur['cur_rate'] = cur['rate'].apply(lambda x: int(x*100))
+                elif _data_source in ('招商证券', ):
+                    pre['key'] = pre['stkcode'].apply(lambda x: ('000000'+str(x))[-max(6, len(str(x))):]) + '.' + pre['market'].map(lambda x: 'SZ' if str(x) == '2' else 'SH' if str(x) == '1' else 'BJ' if str(x) == '3' else str(x))
+                    cur['key'] = cur['stkcode'].apply(lambda x: ('000000'+str(x))[-max(6, len(str(x))):]) + '.' + cur['market'].map(lambda x: 'SZ' if str(x) == '2' else 'SH' if str(x) == '1' else 'BJ' if str(x) == '3' else str(x))
+                    pre['pre_rate'] = pre['pledgerate'].apply(lambda x: int(x*100))
+                    cur['cur_rate'] = cur['pledgerate'].apply(lambda x: int(x*100))
+                elif _data_source in ('中信建投', ):
+                    pre = pre.loc[~pre['pledgerate'].isna()].copy()
+                    cur = cur.loc[~cur['pledgerate'].isna()].copy()
+                    pre['key'] = pre['stkcode'].apply(lambda x: ('000000'+str(x))[-max(6, len(str(x))):]) + '.' + pre['market'].map(lambda x: 'SZ' if str(x) == '0' else 'SH' if str(x) == '1' else 'BJ' if str(x) == '2' else str(x))
+                    cur['key'] = cur['stkcode'].apply(lambda x: ('000000'+str(x))[-max(6, len(str(x))):]) + '.' + cur['market'].map(lambda x: 'SZ' if str(x) == '0' else 'SH' if str(x) == '1' else 'BJ' if str(x) == '2' else str(x))
+                    pre['pre_rate'] = pre['pledgerate'].apply(lambda x: int(x))
+                    cur['cur_rate'] = cur['pledgerate'].apply(lambda x: int(x))
+                elif _data_source in ('国信证券', ):
+                    pre['key'] = pre['zqdm'].apply(lambda x: ('000000' + str(x))[-max(6, len(str(x))):])
+                    cur['key'] = cur['zqdm'].apply(lambda x: ('000000' + str(x))[-max(6, len(str(x))):])
+                    pre['pre_rate'] = pre['zsl'].apply(lambda x: int(x*100))
+                    cur['cur_rate'] = cur['zsl'].apply(lambda x: int(x*100))
+                elif _data_source in ('兴业证券', ):
+                    pre['key'] = pre['证券代码'].apply(lambda x: ('000000'+str(x))[-max(6, len(str(x))):]) + '.' + pre['exchange'].str.upper()
+                    cur['key'] = cur['证券代码'].apply(lambda x: ('000000'+str(x))[-max(6, len(str(x))):]) + '.' + cur['exchange'].str.upper()
+                    pre['pre_rate'] = pre['折算率'].apply(lambda x: int(x*100))
+                    cur['cur_rate'] = cur['折算率'].apply(lambda x: int(x*100))
+                elif _data_source in ('申万宏源', ):
+                    pre['key'] = pre['证券代码'].apply(lambda x: ('000000'+str(x))[-max(6, len(str(x))):]) + '.' + pre['市场'].map(lambda x: 'SZ' if x == '深圳' else 'SH' if x == '上海' else 'BJ' if x == '北京' else x)
+                    cur['key'] = cur['证券代码'].apply(lambda x: ('000000'+str(x))[-max(6, len(str(x))):]) + '.' + cur['市场'].map(lambda x: 'SZ' if x == '深圳' else 'SH' if x == '上海' else 'BJ' if x == '北京' else x)
+                    pre['pre_rate'] = pre['折算率'].apply(lambda x: int(str(x).replace('%', '').replace('-', '0')))
+                    cur['cur_rate'] = cur['折算率'].apply(lambda x: int(str(x).replace('%', '').replace('-', '0')))
+                elif _data_source in ('中金财富', ):
+                    pre['key'] = pre['stockId'].apply(lambda x: ('000000'+str(x))[-max(6, len(str(x))):]) + '.' + pre['exchange']
+                    cur['key'] = cur['stockId'].apply(lambda x: ('000000'+str(x))[-max(6, len(str(x))):]) + '.' + cur['exchange']
+                    pre['pre_rate'] = pre['rate'].apply(lambda x: int(x*100))
+                    cur['cur_rate'] = cur['rate'].apply(lambda x: int(x*100))
                 else:
-                    logger.warn(f"fix {_data_source}")
+                    logger.warning(f"fix {_data_source}")
                     continue
-                _out = pre.loc[~pre['key'].isin(cur['key'].tolist())]
-                _in = cur.loc[~cur['key'].isin(pre['key'].tolist())]
+                _out = pre.loc[~pre['key'].isin(cur['key'].tolist())].copy()
+                _in = cur.loc[~cur['key'].isin(pre['key'].tolist())].copy()
                 _same = cur.merge(pre, on='key')
-                _up = _same.loc[_same['pre_rate'] < _same['cur_rate']]
-                _down = _same.loc[_same['pre_rate'] > _same['cur_rate']]
-                logger.info(f"{rw['data_source']} {biz_type_map.get(int(rw['data_type']))}({rw['data_type']}) {biz_dt} 调出{_out.index.size} 调入{_in.index.size} 调高{_up.index.size} 调低{_down.index.size} ")
+                _up = _same.loc[_same['pre_rate'] < _same['cur_rate']].copy()
+                _down = _same.loc[_same['pre_rate'] > _same['cur_rate']].copy()
+                logger.info(f"{rw['data_source']} {biz_type_map.get(int(rw['data_type']))}({rw['data_type']}) {biz_dt} 调入{_in.index.size} 调出{_out.index.size} 调高{_up.index.size} 调低{_down.index.size} ")
                 file_name = f"{rw['data_source']}_{biz_type_map.get(int(rw['data_type']))}({rw['data_type']})_{biz_dt}"
-                if not _out.empty:
-                    _out.to_csv(f"{file_name}_out.csv", encoding="GBK")
-                if not _in.empty:
-                    _in.to_csv(f"{file_name}_in.csv", encoding="GBK")
-                if not _up.empty:
-                    _up.to_csv(f"{file_name}_up.csv", encoding="GBK")
-                if not _down.empty:
-                    _down.to_csv(f"{file_name}_down.csv", encoding="GBK")
+                if not _out.empty or not _in.empty or not _up.empty or not _down.empty:
+                    _out['adjust_type'] = 'out'
+                    _in['adjust_type'] = 'in'
+                    _up['adjust_type'] = 'up'
+                    _down['adjust_type'] = 'down'
+                    pd.concat([_in, _out, _up, _down]).to_csv(f"{file_name}_adjust.csv", encoding="GBK")
+                    # with pd.ExcelWriter('test.xlsx') as writer:
+                    #     data.to_excel(writer, sheet_name='data')
     except Exception as e:
         logger.error(f"互联网数据解析服务启动异常: {e} =》{str(traceback.format_exc())}")

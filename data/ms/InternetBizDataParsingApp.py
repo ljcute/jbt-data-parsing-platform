@@ -286,7 +286,7 @@ def handle_range_collected_data(data_source, data_type, start_dt=None, end_dt=No
 
 
 def check_biz_dt(dt, biz_dt):
-    if dt != biz_dt:
+    if f"{dt}" != f"{biz_dt}":
         logger.info(f"collect date={dt}, data date is {biz_dt}")
 
 
@@ -387,7 +387,7 @@ def handle_data(_broker_id, _biz_dt, _biz_type, _data, market, persist_flag=True
     """
     if not persist_flag or _data.empty:
         return
-    logger.info(f"begin handle_data {_broker_id} {_biz_dt} {_biz_type} {_data.index.size} {market} {persist_flag}")
+    logger.info(f"begin handle_data {_broker_id} {_biz_dt} {_biz_type} data size({_data.index.size}) market({market}) {persist_flag}")
     data = _data.copy()
     # 去重, 取控制严格数据
     if _biz_type in (1, 2, 4):
@@ -420,7 +420,7 @@ def handle_data(_broker_id, _biz_dt, _biz_type, _data, market, persist_flag=True
         # 过滤掉相同调出
         _df = _df.loc[~((_df['adjust_type'] == 2) & (_df['sec_id'].isna()))]
         # 过滤掉相同值
-        diff_df = _df.loc[~((_df['adjust_type'].isin([1, 3, 4])) & ((_df['rate'] == _df['cur_value']) | (_df['rate'].isna() & _df['cur_value'].isna())))]
+        diff_df = _df.loc[~((_df['adjust_type'].isin([1, 3, 4])) & ((_df['rate'] == _df['cur_value']) | (~_df['sec_id'].isna() & ~_df['secu_id'].isna() & _df['rate'].isna() & _df['cur_value'].isna())))]
         # 新增调入
         in_df = diff_df.loc[((diff_df['adjust_type'] == 2) & (~diff_df['sec_id'].isna())) | diff_df['row_id'].isna()]
         # 过滤掉新增券
