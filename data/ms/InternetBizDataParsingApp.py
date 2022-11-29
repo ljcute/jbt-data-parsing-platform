@@ -129,8 +129,6 @@ def get_broker_biz_data(broker_id, biz_dt, biz_type, market):
 
 
 def persist_data(broker_id, biz_dt, biz_type, duplicate, lgc_del, recovery, invalid, ist_df, market):
-    if duplicate.empty and lgc_del.empty and recovery.empty and invalid.empty and ist_df.empty:
-        return
     # T日之后所有日已采有效数据做逻辑删除处理
     t1_del_sql = f"""
         update t_broker_mt_business_security
