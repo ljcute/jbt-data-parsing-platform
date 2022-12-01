@@ -571,7 +571,7 @@ def get_and_fix_cur_db_data(_broker_id, _biz_dt, _biz_type, market, data):
                                 rw['cur_value'] = rw['rate']
                                 fix_flag = True
                 if fix_flag:
-                    fix_df = pd.concat(fix_df, row.to_frame().T)
+                    fix_df = pd.concat([fix_df, row.to_frame().T])
             if len(lgc_del) > 0 or len(forever) > 0 or not fix_df.empty:
                 if not fix_df.empty:
                     fix_df = fix_df[cur_data.columns.tolist()].copy()
