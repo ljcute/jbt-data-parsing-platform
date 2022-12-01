@@ -11,10 +11,9 @@
 import os
 import sys
 import traceback
-import numpy as np
 import pandas as pd
 from io import StringIO
-from datetime import datetime, date, timedelta
+from datetime import datetime, timedelta
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.append(BASE_DIR)
@@ -97,6 +96,27 @@ def get_pre_collected_data(data_source, biz_dt):
     """
     return raw_db().select(sql)
 
+def get_message(_adjust, row, rw, env, biz_dt):
+    _in = _adjust.loc[_adjust['adjust_type'] == 1]
+    _out = _adjust.loc[_adjust['adjust_type'] == 2]
+    _up = _adjust.loc[_adjust['adjust_type'] == 3]
+    _down = _adjust.loc[_adjust['adjust_type'] == 4]
+    _in_size = 0
+    _out_size = 0
+    _up_size = 0
+    _down_size = 0
+    if not _in.empty:
+        _in_size = _in['adjust_num'].tolist()[0]
+    if not _out.empty:
+        _out_size = _out['adjust_num'].tolist()[0]
+    if not _up.empty:
+        _up_size = _up['adjust_num'].tolist()[0]
+    if not _down.empty:
+        _down_size = _down['adjust_num'].tolist()[0]
+    _message = f"{rw['data_source']} {row['biz_type']}    {biz_dt} {env} 业务数据： 调入{_in_size} 调出{_out_size} 调高{_up_size} 调低{_down_size} "
+    logger.info(_message)
+    return _message
+
 
 def handle_cmp(biz_dt):
     adjust = get_adjust_data(biz_db(), biz_dt)
@@ -121,13 +141,14 @@ def handle_cmp(biz_dt):
     _diff.drop_duplicates(['broker_id', 'biz_type'], inplace=True)
     logger.info(f"{biz_dt} 校验数据({_diff.index.size}组)\n {_diff}")
     _message = []
-    for index, row in _diff.iterrows():
+    _all = adjust.loc[adjust['biz_type'] == '担保券'].drop_duplicates(['broker_id', 'biz_type'])
+    for index, row in _all.iterrows():
         if row['biz_type'] != '担保券':
             continue
-        logs = get_collected_data(row['broker_name'], biz_dt)
+        logs = get_collected_data(row['broker_name'], biz_dt[:10])
         if logs.empty:
             continue
-        pre_logs = get_pre_collected_data(row['broker_name'], biz_dt)
+        pre_logs = get_pre_collected_data(row['broker_name'], biz_dt[:10])
         if pre_logs.empty:
             logger.info(f"pre_logs is empty: broker_name={row['broker_name']}, biz_dt={biz_dt}")
             continue
@@ -228,7 +249,7 @@ def handle_cmp(biz_dt):
                 _same = cur.merge(pre, on='key')
                 _up = _same.loc[_same['pre_rate'] < _same['cur_rate']].copy()
                 _down = _same.loc[_same['pre_rate'] > _same['cur_rate']].copy()
-                _message.append(f"{rw['data_source']} {row['biz_type']}({rw['data_type']}) {biz_dt} 程序测试： 调入{_in.index.size} 调出{_out.index.size} 调高{_up.index.size} 调低{_down.index.size} ")
+                _message.append(f"{rw['data_source']} {row['biz_type']}({rw['data_type']}) {biz_dt}    程序测试： 调入{_in.index.size} 调出{_out.index.size} 调高{_up.index.size} 调低{_down.index.size} ")
                 logger.info(_message[-1])
                 file_name = f"{rw['data_source']}_{biz_type_map.get(int(rw['data_type']))}({rw['data_type']})_{biz_dt[:10]}"
                 if not _out.empty or not _in.empty or not _up.empty or not _down.empty:
@@ -236,30 +257,15 @@ def handle_cmp(biz_dt):
                     _in['adjust_type'] = 'in'
                     _up['adjust_type'] = 'up'
                     _down['adjust_type'] = 'down'
-                    pd.concat([_in, _out, _up, _down]).to_csv(f"{file_name}_adjust.csv", encoding="GBK")
+                    # pd.concat([_in, _out, _up, _down]).to_csv(f"{file_name}_adjust.csv", encoding="GBK")
                     # with pd.ExcelWriter('test.xlsx') as writer:
                     #     data.to_excel(writer, sheet_name='data')
             except Exception as err:
                 logger.info(f"{rw['data_source']} ({rw['data_type']}) {err}")
         _adjust = adjust.loc[((adjust['broker_id'] == row['broker_id']) & (adjust['biz_type'] == row['biz_type']))]
-        _in = _adjust.loc[_adjust['adjust_type'] == 1]
-        _out = _adjust.loc[_adjust['adjust_type'] == 2]
-        _up = _adjust.loc[_adjust['adjust_type'] == 3]
-        _down = _adjust.loc[_adjust['adjust_type'] == 4]
-        _in_size = 0
-        _out_size = 0
-        _up_size = 0
-        _down_size = 0
-        if not _in.empty:
-            _in_size = _in['adjust_num'].tolist()[0]
-        if not _out.empty:
-            _out_size = _out['adjust_num'].tolist()[0]
-        if not _up.empty:
-            _up_size = _up['adjust_num'].tolist()[0]
-        if not _down.empty:
-            _down_size = _down['adjust_num'].tolist()[0]
-        _message.append(f"{rw['data_source']} {row['biz_type']}    {biz_dt} 业务数据： 调入{_in_size} 调出{_out_size} 调高{_up_size} 调低{_down_size} ")
-        logger.info(_message[-1])
+        _message.append(get_message(_adjust, row, rw, env, biz_dt))
+        _pro_adjust = pro_adjust.loc[((pro_adjust['broker_id'] == row['broker_id']) & (pro_adjust['biz_type'] == row['biz_type']))]
+        _message.append(get_message(_pro_adjust, row, rw, 'pro', biz_dt))
     return _message
 
 
@@ -283,12 +289,15 @@ if __name__ == '__main__':
         pd.set_option('max_colwidth', 200)
         pd.set_option('expand_frame_repr', False)
 
-        _start_dt = datetime.strptime('2022-11-21', '%Y-%m-%d')
+        # _start_dt = datetime.strptime('2022-11-21', '%Y-%m-%d')
+        # _end_dt = datetime.strptime('2022-11-25', '%Y-%m-%d')
+        _start_dt = datetime.strptime('2022-11-25', '%Y-%m-%d')
         _end_dt = datetime.strptime('2022-11-25', '%Y-%m-%d')
         message = []
         for i in range((_end_dt - _start_dt).days + 1):
             dt = _start_dt + timedelta(days=i)
             message += handle_cmp(str(dt))
+        logger.info('\n\n\n')
         for m in message:
             logger.info(m)
     except Exception as e:

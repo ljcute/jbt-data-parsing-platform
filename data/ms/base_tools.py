@@ -243,8 +243,8 @@ def match_sid_by_code_and_name(df):
     df1 = df[['sec_code', 'sec_name']].drop_duplicates()
     _sid_df = get_sic_df().rename(columns={'sec_type': 'stp', 'sec_id': 'sid', 'sec_code': 'scd'})
     _sid_df[['cd6', 'market']] = _sid_df['scd'].str.split('.', n=1, expand=True)
-    _sid_df['cd5'] = _sid_df['cd6'].str[:-1]
-    df1['code5'] = df1['sec_code'].str[:-1]
+    # _sid_df['cd5'] = _sid_df['cd6'].str[:-1]
+    # df1['code5'] = df1['sec_code'].str[:-1]
     # 6位代码唯一匹配
     match6 = _sid_df.merge(df1, how='inner', left_on='cd6', right_on='sec_code')
     ok_match6 = match6.drop_duplicates(['cd6'], keep=False)
@@ -269,14 +269,14 @@ def match_sid_by_code_and_name(df):
         if len(set(sec_name) & set(sec360_name)) > 0 or len(set(sec_name) & set(exchange_sec_name)) > 0:
             _like_name = pd.concat([_like_name, row.to_frame().T])
     match = pd.concat([match, _like_name])
-    # 剩余5位代码匹配
-    _df = df1.loc[~df1['sec_code'].isin(match['cd6'].tolist())]
-    match5 = _sid_df.merge(_df, how='inner', left_on='cd5', right_on='code5')
-    # 相同5位代码，只有1个市场和1个证券类型，则该5位，也为该市场和该证券类型
-    _ok_match5 = match5.drop_duplicates(['cd5', 'stp', 'market'])
-    ok_match5 = _ok_match5.drop_duplicates(['cd5'], keep=False)
-    # 匹配证券
-    match = pd.concat([match, ok_match5])[['sec_code', 'sec_name', 'sid', 'stp', 'market', 'scd']]
+    # 剩余5位代码匹配 识别不准，去掉该逻辑识别 2022-12-01 08:52:00
+    # _df = df1.loc[~df1['sec_code'].isin(match['cd6'].tolist())]
+    # match5 = _sid_df.merge(_df, how='inner', left_on='cd5', right_on='code5')
+    # # 相同5位代码，只有1个市场和1个证券类型，则该5位，也为该市场和该证券类型
+    # _ok_match5 = match5.drop_duplicates(['cd5', 'stp', 'market'])
+    # ok_match5 = _ok_match5.drop_duplicates(['cd5'], keep=False)
+    # # 匹配证券
+    # match = pd.concat([match, ok_match5])[['sec_code', 'sec_name', 'sid', 'stp', 'market', 'scd']]
     # 未匹配证券s
     no_match = df1.loc[~df1['sec_code'].isin(match['sec_code'].tolist())][['sec_code', 'sec_name']].copy()
     # 未匹配证券，通过注册中心寻找历史名称再识别
