@@ -19,8 +19,6 @@ def _get_format_df(cdata):
     df['sec_code'] = df['sec_code'] + '.' + df['market']
     df['sec_name'] = df['STOCK_NAME']
     df['start_dt'] = None
-    ss = df['CREATE_TIME'].values[0][5:len(df['CREATE_TIME'].values[0]) - 2]
-    logger.info(f'sss:{ss}')
     biz_dt = timeStamp(int(df['CREATE_TIME'].values[0][6:len(df['CREATE_TIME'].values[0]) - 2]))[:10]
     return biz_dt, code_ref_id(df)
 
@@ -29,8 +27,7 @@ def timeStamp(timeNum):
     timeStamp = float(timeNum / 1000)
     timeArray = time.localtime(timeStamp)
     otherStyleTime = time.strftime("%Y-%m-%d %H:%M:%S", timeArray)
-    print(otherStyleTime)
-
+    return otherStyleTime
 
 def _format_dbq(cdata, market):
     biz_dt, df = _get_format_df(cdata)
