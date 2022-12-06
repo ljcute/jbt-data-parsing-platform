@@ -33,7 +33,7 @@ def _format_dbq(cdata, market):
     biz_dt, df = _get_format_df(cdata)
     df['rate'] = df['REBATE']
     dbq = df[['sec_type', 'sec_id', 'sec_code', 'rate']].copy()
-    return biz_dt, dbq, pd.DataFrame
+    return biz_dt, dbq, pd.DataFrame()
 
 
 def _format_rz_rq_bdq(cdata, market):
@@ -42,8 +42,9 @@ def _format_rz_rq_bdq(cdata, market):
     df['rq_rate'] = df['STOCK_RATIOS']
     rz = df.loc[df['STOCK_STATE'] == '可融资可融券'][['sec_type', 'sec_id', 'sec_code', 'rz_rate']].copy()
     rz.rename(columns={'rz_rate': 'rate'}, inplace=True)
-    rq = df.loc[df['STOCK_STATE'] == '可融资可融券' or df['STOCK_STATE'] == '禁止融资可融券'][['sec_type', 'sec_id', 'sec_code', 'rq_rate']].copy()
+    rq = df.loc[(df['STOCK_STATE'] == '可融资可融券') | (df['STOCK_STATE'] == '禁止融资可融券')][['sec_type', 'sec_id', 'sec_code', 'rq_rate']].copy()
     rq.rename(columns={'rq_rate': 'rate'}, inplace=True)
+    rz['rate'] = rz['rate'].apply(lambda x: int(x))
     rz = rz[rz['rate'] >= 100]
     rq = rq[rq['rate'] >= 50]
     return biz_dt, rz, rq
