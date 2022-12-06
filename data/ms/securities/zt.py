@@ -9,6 +9,7 @@ import time
 
 import pandas as pd
 from data.ms.base_tools import get_df_from_cdata, code_ref_id
+from util.logs_utils import logger
 
 
 def _get_format_df(cdata):
@@ -18,6 +19,8 @@ def _get_format_df(cdata):
     df['sec_code'] = df['sec_code'] + '.' + df['market']
     df['sec_name'] = df['STOCK_NAME']
     df['start_dt'] = None
+    ss = df['CREATE_TIME'].values[0][5:len(df['CREATE_TIME'].values[0]) - 2]
+    logger.info(f'sss:{ss}')
     biz_dt = timeStamp(df['CREATE_TIME'].values[0][5:len(df['CREATE_TIME'].values[0]) - 2])[:10]
     return biz_dt, code_ref_id(df)
 
