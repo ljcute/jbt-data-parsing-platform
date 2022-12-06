@@ -18,7 +18,7 @@ def _get_format_df(cdata):
     df['sec_code'] = df['sec_code'] + '.' + df['market']
     df['sec_name'] = df['STOCK_NAME']
     df['start_dt'] = None
-    biz_dt = timeStamp(df['CREATE_TIME'].values[0])[:10]
+    biz_dt = timeStamp(df['CREATE_TIME'].values[0][5:len(df['CREATE_TIME'].values[0]) - 2])[:10]
     return biz_dt, code_ref_id(df)
 
 
