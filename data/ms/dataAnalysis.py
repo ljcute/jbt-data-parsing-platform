@@ -114,7 +114,7 @@ def get_message(_adjust, row, rw, env, biz_dt):
     if not _down.empty:
         _down_size = _down['adjust_num'].tolist()[0]
     _message = f"{rw['data_source']} {row['biz_type']}    {biz_dt} {env} 业务数据： 调入{_in_size} 调出{_out_size} 调高{_up_size} 调低{_down_size} "
-    logger.info(_message)
+    # logger.info(_message)
     return _message
 
 
@@ -122,24 +122,24 @@ def handle_cmp(biz_dt):
     adjust = get_adjust_data(biz_db(), biz_dt)
     adjust['env'] = env
     adjust.sort_values(by=['biz_type', 'broker_id', 'adjust_type'], inplace=True, ascending=True)
-    logger.info(f"{biz_dt} {env}环境-调整数据({adjust.index.size}组)\n {adjust}")
+    # logger.info(f"{biz_dt} {env}环境-调整数据({adjust.index.size}组)\n {adjust}")
     clm = adjust.columns.tolist()
     pro_adjust = get_adjust_data(pro_biz_db(), biz_dt)
     pro_adjust['env'] = 'pro'
     pro_adjust.sort_values(by=['biz_type', 'broker_id', 'adjust_type'], inplace=True, ascending=True)
-    logger.info(f"{biz_dt} PRO环境-调整数据({pro_adjust.index.size}组)\n {pro_adjust}")
+    # logger.info(f"{biz_dt} PRO环境-调整数据({pro_adjust.index.size}组)\n {pro_adjust}")
     un = pd.concat([adjust, pro_adjust])
     duplicate = un[un.duplicated(subset=clm, keep=False)].copy()
     duplicate.sort_values(by=['biz_type', 'broker_id', 'adjust_type'], inplace=True, ascending=True)
     diff = un[~un.duplicated(subset=clm, keep=False)].copy()
     diff.sort_values(by=['biz_type', 'broker_id', 'adjust_type'], inplace=True, ascending=True)
-    logger.info(f"{biz_dt} 一致数据({duplicate.index.size}组)\n {duplicate}")
-    logger.info(f"{biz_dt} 不一致数据({diff.index.size}组)\n {diff}")
+    # logger.info(f"{biz_dt} 一致数据({duplicate.index.size}组)\n {duplicate}")
+    # logger.info(f"{biz_dt} 不一致数据({diff.index.size}组)\n {diff}")
     # 仅对比担保券
     _diff = diff.loc[diff['biz_type'] == '担保券'].copy()
-    logger.info(f"{biz_dt} 不一致担保券({_diff.index.size}组)\n {_diff}")
+    # logger.info(f"{biz_dt} 不一致担保券({_diff.index.size}组)\n {_diff}")
     _diff.drop_duplicates(['broker_id', 'biz_type'], inplace=True)
-    logger.info(f"{biz_dt} 校验数据({_diff.index.size}组)\n {_diff}")
+    # logger.info(f"{biz_dt} 校验数据({_diff.index.size}组)\n {_diff}")
     _message = []
     _all = adjust.loc[adjust['biz_type'] == '担保券'].drop_duplicates(['broker_id', 'biz_type'])
     for index, row in _all.iterrows():
@@ -241,6 +241,11 @@ def handle_cmp(biz_dt):
                     cur['key'] = cur['stockId'].apply(lambda x: ('000000' + str(x))[-max(6, len(str(x))):]) + '.' + cur['exchange']
                     pre['pre_rate'] = pre['rate'].apply(lambda x: int(x * 100))
                     cur['cur_rate'] = cur['rate'].apply(lambda x: int(x * 100))
+                elif _data_source in ('中泰证券',):
+                    pre['key'] = pre['STOCK_CODE'].apply(lambda x: ('000000' + str(x))[-max(6, len(str(x))):]) + '.' + pre['BOURSE']
+                    cur['key'] = cur['STOCK_CODE'].apply(lambda x: ('000000' + str(x))[-max(6, len(str(x))):]) + '.' + cur['BOURSE']
+                    pre['pre_rate'] = pre['REBATE']
+                    cur['cur_rate'] = cur['REBATE']
                 else:
                     logger.warning(f"fix {_data_source}")
                     continue
@@ -250,14 +255,14 @@ def handle_cmp(biz_dt):
                 _up = _same.loc[_same['pre_rate'] < _same['cur_rate']].copy()
                 _down = _same.loc[_same['pre_rate'] > _same['cur_rate']].copy()
                 _message.append(f"{rw['data_source']} {row['biz_type']}({rw['data_type']}) {biz_dt}    程序测试： 调入{_in.index.size} 调出{_out.index.size} 调高{_up.index.size} 调低{_down.index.size} ")
-                logger.info(_message[-1])
+                # logger.info(_message[-1])
                 file_name = f"{rw['data_source']}_{biz_type_map.get(int(rw['data_type']))}({rw['data_type']})_{biz_dt[:10]}"
                 if not _out.empty or not _in.empty or not _up.empty or not _down.empty:
                     _out['adjust_type'] = 'out'
                     _in['adjust_type'] = 'in'
                     _up['adjust_type'] = 'up'
                     _down['adjust_type'] = 'down'
-                    # pd.concat([_in, _out, _up, _down]).to_csv(f"{file_name}_adjust.csv", encoding="GBK")
+                    pd.concat([_in, _out, _up, _down]).to_csv(f"excel/{file_name}_adjust.csv", encoding="GBK")
                     # with pd.ExcelWriter('test.xlsx') as writer:
                     #     data.to_excel(writer, sheet_name='data')
             except Exception as err:
@@ -290,9 +295,11 @@ if __name__ == '__main__':
         pd.set_option('expand_frame_repr', False)
 
         # _start_dt = datetime.strptime('2022-11-21', '%Y-%m-%d')
-        # _end_dt = datetime.strptime('2022-11-25', '%Y-%m-%d')
-        _start_dt = datetime.strptime('2022-11-28', '%Y-%m-%d')
-        _end_dt = datetime.strptime('2022-12-01', '%Y-%m-%d')
+        # _start_dt = datetime.strptime('2022-11-28', '%Y-%m-%d')
+        _start_dt = datetime.strptime('2022-12-07', '%Y-%m-%d')
+
+        # _end_dt = datetime.strptime('2022-11-06', '%Y-%m-%d')
+        _end_dt = datetime.strptime('2022-12-07', '%Y-%m-%d')
         message = []
         for i in range((_end_dt - _start_dt).days + 1):
             dt = _start_dt + timedelta(days=i)
