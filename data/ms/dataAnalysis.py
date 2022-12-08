@@ -246,6 +246,18 @@ def handle_cmp(biz_dt):
                     cur['key'] = cur['STOCK_CODE'].apply(lambda x: ('000000' + str(x))[-max(6, len(str(x))):]) + '.' + cur['BOURSE']
                     pre['pre_rate'] = pre['REBATE']
                     cur['cur_rate'] = cur['REBATE']
+                elif _data_source in ('光大证券',):
+                    pre['key'] = pre['证券代码'].apply(lambda x: ('000000'+str(x))[-max(6, len(str(x))):]) + '.' + pre['证券市场'].map(lambda x: 'SZ' if str(x) == '深A' else 'SH' if str(x) == '沪A' else 'BJ' if str(x) == '北A' else str(x))
+                    cur['key'] = cur['证券代码'].apply(lambda x: ('000000'+str(x))[-max(6, len(str(x))):]) + '.' + cur['证券市场'].map(lambda x: 'SZ' if str(x) == '深A' else 'SH' if str(x) == '沪A' else 'BJ' if str(x) == '北A' else str(x))
+                    pre['pre_rate'] = pre['调整后折算率'].apply(lambda x: int(str(x).replace('%', '')))
+                    cur['cur_rate'] = cur['调整后折算率'].apply(lambda x: int(str(x).replace('%', '')))
+                elif _data_source in ('海通证券',):
+                    pre = pre.loc[pre['ifGuarantee'] == 'Y'].copy()
+                    cur = cur.loc[cur['ifGuarantee'] == 'Y'].copy()
+                    pre['key'] = pre['productCode'].apply(lambda x: ('000000' + str(x))[-max(6, len(str(x))):]) + '.' + pre['marketCode'].map(lambda x: 'SZ' if str(x) == '深交所' else 'SH' if str(x) == '上交所' else 'BJ' if str(x) == '北交所' else str(x))
+                    cur['key'] = cur['productCode'].apply(lambda x: ('000000' + str(x))[-max(6, len(str(x))):]) + '.' + cur['marketCode'].map(lambda x: 'SZ' if str(x) == '深交所' else 'SH' if str(x) == '上交所' else 'BJ' if str(x) == '北交所' else str(x))
+                    pre['pre_rate'] = pre['stockConvertRate'].apply(lambda x: int(str(x).replace('%', '')))
+                    cur['cur_rate'] = cur['stockConvertRate'].apply(lambda x: int(str(x).replace('%', '')))
                 else:
                     logger.warning(f"fix {_data_source}")
                     continue
@@ -296,10 +308,10 @@ if __name__ == '__main__':
 
         # _start_dt = datetime.strptime('2022-11-21', '%Y-%m-%d')
         # _start_dt = datetime.strptime('2022-11-28', '%Y-%m-%d')
-        _start_dt = datetime.strptime('2022-12-07', '%Y-%m-%d')
+        _start_dt = datetime.strptime('2022-12-08', '%Y-%m-%d')
 
         # _end_dt = datetime.strptime('2022-11-06', '%Y-%m-%d')
-        _end_dt = datetime.strptime('2022-12-07', '%Y-%m-%d')
+        _end_dt = datetime.strptime('2022-12-08', '%Y-%m-%d')
         message = []
         for i in range((_end_dt - _start_dt).days + 1):
             dt = _start_dt + timedelta(days=i)
