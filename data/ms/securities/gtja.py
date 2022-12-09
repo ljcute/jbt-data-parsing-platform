@@ -25,6 +25,6 @@ def _format_db_rz_rq_bdq(cdata, market):
     biz_dt, df = _get_format_df(cdata)
     df['rate'] = df['rate'].apply(lambda x: int(str(x).replace('%', '')))
     dbq = df.loc[df['type'] == 1][['sec_type', 'sec_id', 'sec_code', 'rate']].copy()
-    rz = df.loc[df['type'] == 2][['sec_type', 'sec_id', 'sec_code', 'rate']].copy()
-    rq = df.loc[df['type'] == 3][['sec_type', 'sec_id', 'sec_code', 'rate']].copy()
+    rz = df.loc[df['type'] == 3][['sec_type', 'sec_id', 'sec_code', 'rate']].copy()
+    rq = df.loc[df['type'] == 2][['sec_type', 'sec_id', 'sec_code', 'rate']].copy()
     return biz_dt, dbq, pd.DataFrame(), rz, rq
