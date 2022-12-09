@@ -315,18 +315,50 @@ def format_db_rz_rq_bdq(broker, cdata, market):
     return eval(f"_format_db_rz_rq_bdq(cdata, market)")
 
 
+def check_dbq_rate(_dbq):
+    if _dbq.empty:
+        return
+    stock = _dbq.loc[_dbq['sec_type'] == 'stock'][['sec_type', 'sec_id', 'sec_code', 'rate']].copy()
+    bond = _dbq.loc[_dbq['sec_type'] == 'bond'][['sec_type', 'sec_id', 'sec_code', 'rate']].copy()
+    fund = _dbq.loc[_dbq['sec_type'] == 'fund'][['sec_type', 'sec_id', 'sec_code', 'rate']].copy()
+    stock_ = stock[(stock['rate'] > 70) | (stock['rate'] < 0)]
+    bond_ = bond[(bond['rate'] > 95) | (bond['rate'] < 0)]
+    fund_ = fund[(fund['rate'] > 95) | (fund['rate'] < 0)]
+    if not stock_.empty:
+        logger.warn(f"担保卷折算率范围违反业务规则,存在严重异常,共股票({stock_.index.size}只)：\n{stock_.reset_index(drop=True)}")
+        return
+    if not bond_.empty:
+        logger.warn(f"担保卷折算率范围违反业务规则,存在严重异常,共债券({bond_.index.size}只)：\n{bond_.reset_index(drop=True)}")
+        return
+    if not fund_.empty:
+        logger.warn(f"担保卷折算率范围违反业务规则,存在严重异常,共基金({fund_.index.size}只)：\n{fund_.reset_index(drop=True)}")
+        return
+
+
+def check_rzrq_rate(df):
+    if df.empty:
+        return
+    df_ = df[(df['rate']) > 200]
+    if not df_.empty:
+        logger.warn(f"融资融券标的卷保证金范围违反业务规则,存在严重异常,共({df_.index.size}只)：\n{df_.reset_index(drop=True)}")
+        return
+
+
 def handle_dbq(_broker_id, _biz_dt, _dbq, market, persist_flag=True):
     biz_type = 3
+    check_dbq_rate(_dbq)
     handle_data(_broker_id, _biz_dt, biz_type, _dbq, market, persist_flag)
 
 
 def handle_rz_bdq(_broker_id, _biz_dt, _rz_bdq, market, persist_flag=True):
     biz_type = 1
+    check_rzrq_rate(_rz_bdq)
     handle_data(_broker_id, _biz_dt, biz_type, _rz_bdq, market, persist_flag)
 
 
 def handle_rq_bdq(_broker_id, _biz_dt, _rq_bdq, market, persist_flag=True):
     biz_type = 2
+    check_rzrq_rate(_rq_bdq)
     handle_data(_broker_id, _biz_dt, biz_type, _rq_bdq, market, persist_flag)
 
 
