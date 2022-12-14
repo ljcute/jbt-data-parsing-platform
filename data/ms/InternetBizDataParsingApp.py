@@ -341,7 +341,7 @@ def check_rzrq_rate(df):
     df_ = df[(df['rate']) > 200]
     if not df_.empty:
         logger.warn(f"融资融券标的卷保证金范围违反业务规则,存在严重异常,共({df_.index.size}只)：\n{df_.reset_index(drop=True)}")
-        raise Exception(f"融资融券标的卷保证金范围违反业务规则,存在严重异常,共({df_.index.size}只)：\n{df_.reset_index(drop=True)}")
+        # raise Exception(f"融资融券标的卷保证金范围违反业务规则,存在严重异常,共({df_.index.size}只)：\n{df_.reset_index(drop=True)}")
 
 
 def handle_dbq(_broker_id, _biz_dt, _dbq, market, persist_flag=True):
