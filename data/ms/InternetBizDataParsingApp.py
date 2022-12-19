@@ -9,7 +9,6 @@
 """
 
 __author__ = 'Eagle (liuzh@igoldenbeta.com)'
-
 import math
 import os
 import sys
@@ -260,9 +259,13 @@ def handle_collected_data(cdata, dt, persist_flag=True):
             market = 'BJ'
 
     if data_type == 0:
-        print(0)
+        biz_dt, jyzl, market = format_jyzl(broker, cdata, market)
+        check_biz_dt(dt, biz_dt)
+        handle_jyzl(biz_dt, jyzl, market, persist_flag)
     elif data_type == 1:
-        print(1)
+        biz_dt, jymx, market = format_jymx(broker, cdata, market)
+        check_biz_dt(dt, biz_dt)
+        handle_jymx(biz_dt, jymx, market, persist_flag)
     elif data_type == 2:
         biz_dt, dbq, jzd = format_dbq(broker, cdata, market)
         check_biz_dt(dt, biz_dt)
@@ -288,6 +291,16 @@ def handle_collected_data(cdata, dt, persist_flag=True):
         handle_dbq_jzd(broker_id, biz_dt, jzd, market, persist_flag)
         handle_rz_bdq(broker_id, biz_dt, rz_bdq, market, persist_flag)
         handle_rq_bdq(broker_id, biz_dt, rq_bdq, market, persist_flag)
+
+
+def format_jyzl(broker, cdata, market):
+    exec(f"from data.ms.securities.{broker['broker_code'].values[0].lower()} import _format_jyzl")
+    return eval(f"_format_jyzl(cdata, market)")
+
+
+def format_jymx(broker, cdata, market):
+    exec(f"from data.ms.securities.{broker['broker_code'].values[0].lower()} import _format_jymx")
+    return eval(f"_format_jymx(cdata, market)")
 
 
 def format_dbq(broker, cdata, market):
@@ -342,6 +355,97 @@ def check_rzrq_rate(df):
     if not df_.empty:
         logger.warn(f"融资融券标的卷保证金范围违反业务规则,存在严重异常,共({df_.index.size}只)：\n{df_.reset_index(drop=True)}")
         # raise Exception(f"融资融券标的卷保证金范围违反业务规则,存在严重异常,共({df_.index.size}只)：\n{df_.reset_index(drop=True)}")
+
+
+def handle_jymx(_biz_dt, _jymx, market, persist_flag=True):
+    if _jymx.empty:
+        logger.error(f'交易明细数据为空，解析入库失败！')
+
+    _jymx.drop(['sec360_name', 'exchange_sec_name', 'sec_code', 'sec_name'], axis=1, inplace=True)
+    _jymx['exchange_market'] = 'SZSE' if market == 'SZ' else 'SSE'
+    _jymx['biz_dt'] = str(_biz_dt.values.tolist()[0])
+    _jymx['data_status'] = 1
+    _jymx['creator_id'] = 414
+    _jymx['create_dt'] = str(datetime.now())
+    _jymx['updater_id'] = 414
+    _jymx['update_dt'] = str(datetime.now())
+    _jymx['fb'] = _jymx['fb'].apply(lambda x: x.replace(',', ''))
+    _jymx['fpa'] = _jymx['fpa'].apply(lambda x: x.replace(',', ''))
+    _jymx['lsv'] = _jymx['lsv'].apply(lambda x: x.replace(',', ''))
+    _jymx['lsa'] = _jymx['lsa'].apply(lambda x: x.replace(',', ''))
+    _jymx['lssv'] = _jymx['lssv'].apply(lambda x: x.replace(',', ''))
+    _jymx['mtb'] = _jymx['mtb'].apply(lambda x: x.replace(',', ''))
+    _jymx = _jymx[['sec_id', 'sec_type', 'exchange_market', 'biz_dt', 'fb', 'fpa', 'lsv', 'lsa', 'lssv', 'mtb', 'data_status',
+                   'creator_id', 'create_dt', 'updater_id', 'update_dt']]
+
+    list = _jymx.values.tolist()
+
+    in_sql = f"""
+    insert into t_exchange_mt_transactions_items(secu_id,secu_type,exchange_market,biz_dt,financing_balance,
+        financing_purchase_amount,lending_securities_volume,lending_securities_amount,lending_securities_sales_volume
+        ,margin_trading_balance,data_status,creator_id,create_dt,updater_id,update_dt)
+           values(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+    """
+    cnx = None
+    try:
+        cnx = biz_db().get_cnx()
+        if not _jymx.empty:
+            biz_db().execute(in_sql, list)
+        if cnx:
+            cnx.commit()
+    except Exception as err:
+        logger.error(f"互联网数据解析异常：{err} =》{str(traceback.format_exc())}")
+        if cnx:
+            cnx.rollback()
+    finally:
+        if cnx:
+            cnx.close()
+
+def handle_jyzl(_biz_dt, _jyzl, market, persist_flag=True):
+    if _jyzl.empty:
+        logger.error(f'交易总量数据为空，解析入库失败！')
+    financing_balance = None
+    financing_purchase_amount = None
+    lending_securities_volume = None
+    lending_securities_amount = None
+    lending_securities_sales_volume = None
+    margin_trading_balance = None
+    if market == 'SZSE':
+        financing_balance = (_jyzl['融资余额(元)'].values.tolist()[0]).replace(',', '')
+        financing_purchase_amount = (_jyzl['融资买入额(元)'].values.tolist()[0]).replace(',', '')
+        lending_securities_volume = (_jyzl['融券余量(股/份)'].values.tolist()[0]).replace(',', '')
+        lending_securities_amount = (_jyzl['融券余额(元)'].values.tolist()[0]).replace(',', '')
+        lending_securities_sales_volume = (_jyzl['融券卖出量(股/份)'].values.tolist()[0]).replace(',', '')
+        margin_trading_balance = (_jyzl['融资融券余额(元)'].values.tolist()[0]).replace(',', '')
+    elif market == 'SSE':
+        financing_balance = (_jyzl['本日融资余额(元)'].values.tolist()[0])
+        financing_purchase_amount = (_jyzl['本日融资买入额(元)'].values.tolist()[0])
+        lending_securities_volume = (_jyzl['本日融券余量'].values.tolist()[0])
+        lending_securities_amount = (_jyzl['本日融券余量金额(元)'].values.tolist()[0])
+        lending_securities_sales_volume = (_jyzl['本日融券卖出量'].values.tolist()[0])
+        margin_trading_balance = (_jyzl['本日融资融券余额(元)'].values.tolist()[0])
+
+    # 数据入库
+    in_sql = f"""
+        INSERT INTO t_exchange_mt_transactions_total(biz_dt, exchange_market, financing_balance, financing_purchase_amount, lending_securities_volume, 
+        lending_securities_amount, lending_securities_sales_volume, margin_trading_balance, data_status, creator_id, create_dt, updater_id, update_dt)
+        VALUES ('{str(_biz_dt.values.tolist()[0])}','{market}',{financing_balance},{financing_purchase_amount},{lending_securities_volume},{lending_securities_amount},{lending_securities_sales_volume},
+        {margin_trading_balance},1,414,now(),414,now())
+    """
+    cnx = None
+    try:
+        cnx = biz_db().get_cnx()
+        if not _jyzl.empty:
+            biz_db().execute(in_sql)
+        if cnx:
+            cnx.commit()
+    except Exception as err:
+        logger.error(f"互联网数据解析异常：{err} =》{str(traceback.format_exc())}")
+        if cnx:
+            cnx.rollback()
+    finally:
+        if cnx:
+            cnx.close()
 
 
 def handle_dbq(_broker_id, _biz_dt, _dbq, market, persist_flag=True):
