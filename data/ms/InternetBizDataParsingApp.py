@@ -369,12 +369,12 @@ def handle_jymx(_biz_dt, _jymx, market, persist_flag=True):
     _jymx['create_dt'] = str(datetime.now())
     _jymx['updater_id'] = 414
     _jymx['update_dt'] = str(datetime.now())
-    _jymx['fb'] = _jymx['fb'].apply(lambda x: x.replace(',', ''))
-    _jymx['fpa'] = _jymx['fpa'].apply(lambda x: x.replace(',', ''))
-    _jymx['lsv'] = _jymx['lsv'].apply(lambda x: x.replace(',', ''))
-    _jymx['lsa'] = _jymx['lsa'].apply(lambda x: x.replace(',', ''))
-    _jymx['lssv'] = _jymx['lssv'].apply(lambda x: x.replace(',', ''))
-    _jymx['mtb'] = _jymx['mtb'].apply(lambda x: x.replace(',', ''))
+    _jymx['fb'] = _jymx['fb'].apply(lambda x: str(x).replace(',', ''))
+    _jymx['fpa'] = _jymx['fpa'].apply(lambda x: str(x).replace(',', ''))
+    _jymx['lsv'] = _jymx['lsv'].apply(lambda x: str(x).replace(',', ''))
+    _jymx['lsa'] = _jymx['lsa'].apply(lambda x: str(x).replace(',', ''))
+    _jymx['lssv'] = _jymx['lssv'].apply(lambda x: str(x).replace(',', ''))
+    _jymx['mtb'] = _jymx['mtb'].apply(lambda x: str(x).replace(',', ''))
     _jymx = _jymx[['sec_id', 'sec_type', 'exchange_market', 'biz_dt', 'fb', 'fpa', 'lsv', 'lsa', 'lssv', 'mtb', 'data_status',
                    'creator_id', 'create_dt', 'updater_id', 'update_dt']]
 
