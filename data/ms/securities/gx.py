@@ -14,6 +14,7 @@ def _get_format_df(cdata, biz_type):
     df = get_df_from_cdata(cdata)
     df['sec_code'] = df['zqdm'].apply(lambda x: ('000000' + str(x))[-max(6, len(str(x))):])
     df['sec_name'] = df['zqmc']
+    df['sec_name'] = df['sec_name'].str.replace(' ', '')
     biz_dt = df['rq'].values[0]
     if biz_type == 'dbq':
         _df = match_sid_by_code_and_name(df)
