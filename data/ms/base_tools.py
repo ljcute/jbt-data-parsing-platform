@@ -102,9 +102,9 @@ def refresh_sic_df(_df, exchange=False):
                     sec = pd.concat([sec, row.to_frame().T])
                     break
             # 名称拆解再模糊匹配
-            sec_name = re.findall(sz, row['sec360_name']) + re.findall(zm, row['sec360_name']) + cn_char_arr_split(re.findall(zw, row['sec360_name']))
+            sec_name = re.findall(sz, row['sec360_name']) + char_arr_split(re.findall(zm, row['sec360_name']), split_length=3) + char_arr_split(re.findall(zw, row['sec360_name']))
             for idx, rw in bo.iterrows():
-                _sec_name = re.findall(sz, rw['sec_name']) + re.findall(zm, rw['sec_name']) + cn_char_arr_split(re.findall(zw, rw['sec_name']))
+                _sec_name = re.findall(sz, rw['sec_name']) + char_arr_split(re.findall(zm, rw['sec_name']), split_length=3) + char_arr_split(re.findall(zw, rw['sec_name']))
                 if len(set(sec_name) & set(_sec_name)) > 0:
                     row['sec_type'] = rw['sec_type']
                     row['sec_id'] = rw['sec_id']
@@ -154,7 +154,7 @@ def get_exchange_discount_limit_rate(biz_dt, df):
     return _df
 
 
-def cn_char_split(value, split_length=2):
+def char_split(value, split_length=2):
     if isinstance(value, str):
         length = len(value)
         if length > split_length:
@@ -165,11 +165,11 @@ def cn_char_split(value, split_length=2):
     return [value]
 
 
-def cn_char_arr_split(values, split_length=2):
+def char_arr_split(values, split_length=2):
     if isinstance(values, list):
         _values = []
         for value in values:
-            _values += cn_char_split(value, split_length)
+            _values += char_split(value, split_length)
         return _values
     return values
 
@@ -211,9 +211,9 @@ def match_sid_by_code_and_name(df):
             row['stp'] = _zc_sec['sec_type'].tolist()[0]
             row['scd'] = _zc_sec['sec_code'].tolist()[0]
             continue
-        sec_name = re.findall(sz, row['sec_name']) + re.findall(zm, row['sec_name']) + cn_char_arr_split(re.findall(zw, row['sec_name']))
+        sec_name = re.findall(sz, row['sec_name']) + char_arr_split(re.findall(zm, row['sec_name']), split_length=3) + char_arr_split(re.findall(zw, row['sec_name']))
         for idx, rw in sec.iterrows():
-            _sec_name = re.findall(sz, rw['sec_name']) + re.findall(zm, rw['sec_name']) + cn_char_arr_split(re.findall(zw, rw['sec_name']))
+            _sec_name = re.findall(sz, rw['sec_name']) + char_arr_split(re.findall(zm, rw['sec_name']), split_length=3) + char_arr_split(re.findall(zw, rw['sec_name']))
             if len(set(sec_name) & set(_sec_name)) > 0:
                 row['sid'] = rw['sec_id']
                 row['stp'] = rw['sec_type']
