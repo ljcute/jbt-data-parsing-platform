@@ -66,8 +66,8 @@ def refresh_sic_df(_df, exchange=False):
     sec = get_sec360_sec_id_code(_df['sec_code'].tolist())
     sec['sec360_name'] = sec['sec360_name'].str.replace(' ', '')
     # 注册中心刷证券ID
-    _df['sec_name'] = _df['sec_name'].str.replace(' ', '')
     no_sec360 = _df.loc[~_df['sec_code'].isin(sec['sec_code'].tolist())][sec.columns.tolist() + ['sec_name']]
+    no_sec360['sec_name'] = no_sec360['sec_name'].str.replace(' ', '')
     no_sec360['sec360_name'] = no_sec360['sec_name']
     no_sec360 = no_sec360[sec.columns.tolist()]
     if not no_sec360.empty:
@@ -192,9 +192,10 @@ def match_sid_by_code_and_name(df):
     not_match = pd.concat([df1, all_match[df1.columns.tolist()]]).drop_duplicates(keep=False)
     # 6位代码 + 名称模糊匹配(包含关系)
     like_name = pd.merge(not_match, _sid_df, left_on='sec_code', right_on='cd6', how='left')
+    like_name = like_name.loc[~like_name['sid'].isna()]
     _like_name = pd.DataFrame(columns=all_match.columns)
     for index, row in like_name.iterrows():
-        if row['sec_name'] in row['sec360_name'] or row['sec_name'] in row['exchange_sec_name'] or row['sec360_name'] in row['sec_name'] or row['exchange_sec_name'] in row['sec_name']:
+        if str(row['sec_name']) in str(row['sec360_name']) or str(row['sec_name']) in str(row['exchange_sec_name']) or str(row['sec360_name']) in str(row['sec_name']) or str(row['exchange_sec_name']) in str(row['sec_name']):
             _like_name = pd.concat([_like_name, row[all_match.columns.tolist()].to_frame().T])
     match = pd.concat([all_match, _like_name])
     # 未匹配证券
