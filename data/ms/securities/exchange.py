@@ -59,7 +59,7 @@ def _format_rq_bdq(cdata, market):
 
 def _get_jyzl_format_df(cdata, market):
     df = get_df_from_cdata(cdata)
-    biz_dt = cdata['biz_dt']
+    biz_dt = df['业务日期']
     if market == 'SZ':
         market = 'SZSE'
     elif market == 'SH':
@@ -81,7 +81,7 @@ def _get_jymx_format_df(cdata, market):
         '本日融资偿还额(元)': 'mtb', '本日融券余量': 'lsv', '本日融券卖出量': 'lssv', '本日融券偿还量': 'lsa'}, inplace=True)
     df['sec_code'] = df['sec_code'].apply(lambda x: ('000000'+str(x))[-max(6, len(str(x))):])
     df['sec_code'] = df['sec_code'] + '.' + market
-    biz_dt = cdata['biz_dt']
+    biz_dt = df['业务日期']
     return biz_dt, code_ref_id(df, exchange=True)
 
 
