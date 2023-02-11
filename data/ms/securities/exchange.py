@@ -16,6 +16,7 @@ def _get_format_df(cdata, market):
     df['sec_code'] = df['证券代码'].apply(lambda x: ('000000'+str(x))[-max(6, len(str(x))):])
     df['sec_code'] = df['sec_code'] + '.' + df['market']
     df['sec_name'] = df['证券简称']
+    df['sec_name'] = df['sec_name'].str.replace(' ', '')
     df['start_dt'] = None
     if market == 'SH':
         biz_dt = df['日期'].values[0]
