@@ -73,12 +73,12 @@ def get_last_exchange_collect_date(days):
     sql = f"""
     select data_source, data_type, biz_dt
       from t_ndc_data_collect_log 
-     where data_source in ('上海交易所', '深圳交易所')
+     where data_source in ('上海交易所', '深圳交易所', '北京交易所')
        and data_type = 2
        and data_status = 1
   group by data_source, data_type, biz_dt
   order by biz_dt desc
-  limit {2*days}
+  limit {3*days}
     """
     return raw_db().select(sql)
 
