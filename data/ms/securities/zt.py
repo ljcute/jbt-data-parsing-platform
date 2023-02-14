@@ -14,7 +14,7 @@ from util.logs_utils import logger
 
 def _get_format_df(cdata):
     df = get_df_from_cdata(cdata)
-    df['market'] = df['BOURSE']
+    df['market'] = df['BOURSE'].str.strip()
     df['sec_code'] = df['STOCK_CODE'].apply(lambda x: ('000000' + str(x))[-max(6, len(str(x))):])
     df['sec_code'] = df['sec_code'] + '.' + df['market']
     df['sec_name'] = df['STOCK_NAME']
