@@ -12,10 +12,11 @@ from data.ms.base_tools import get_df_from_cdata, code_ref_id
 
 def _get_format_df(cdata, biz_type):
     df = get_df_from_cdata(cdata)
-    df['market'] = df['marketCode'].map(
-        lambda x: 'SZ' if str(x) == '深交所' else 'SH' if str(x) == '上交所' else 'BJ' if str(x) == '北交所' else str(x))
+    df['market'] = df['marketCode'].map(lambda x: 'SZ' if str(x) == '深交所' else 'SH' if str(x) == '上交所' else 'BJ' if str(x) == '北交所' else str(x))
     df['sec_code'] = df['productCode'].apply(lambda x: ('000000' + str(x))[-max(6, len(str(x))):])
     df['sec_code'] = df['sec_code'] + '.' + df['market']
+    # 代码8、4开头，把市场修复为BJ
+    df['sec_code'] = df['sec_code'].apply(lambda x: str(x)[:6] + '.BJ' if str(x)[:1] in ('8', '4') else x)
     df['sec_name'] = df['productName']
     df['start_dt'] = None
     dt = str(df['etlDate'].values[0])

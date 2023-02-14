@@ -15,6 +15,8 @@ def _get_format_df(cdata, market):
     df['market'] = df['证券市场'].map(lambda x: 'SZ' if str(x) == '深A' else 'SH' if str(x) == '沪A' else 'BJ' if str(x) == '北A' else str(x))
     df['sec_code'] = df['证券代码'].apply(lambda x: ('000000'+str(x))[-max(6, len(str(x))):])
     df['sec_code'] = df['sec_code'] + '.' + df['market']
+    # 代码8、4开头，把市场修复为BJ
+    df['sec_code'] = df['sec_code'].apply(lambda x: str(x)[:6] + '.BJ' if str(x)[:1] in ('8', '4') else x)
     df['sec_name'] = df['证券简称']
     df['start_dt'] = None
     dt = str(df['日期'].values[0])
