@@ -21,7 +21,7 @@ def _get_format_df(cdata, biz_type):
         df = df.merge(_df, on=['sec_code', 'sec_name'])
         df['sec_code'] = df['scd']
     elif biz_type in ('rz_bdq', 'rq_bdq'):
-        df['market'] = df['sc'].map(lambda x: 'SZ' if str(x) == '1' else 'SH' if str(x) == '0' else 'BJ' if str(x) == '2' else str(x))
+        df['market'] = df['sc'].map(lambda x: 'SZ' if str(x) == '1' else 'SH' if str(x) == '0' else 'BJ' if str(x) == '3' else str(x))
         df['sec_code'] = df['sec_code'] + '.' + df['market']
         df = code_ref_id(df)
     df['start_dt'] = None

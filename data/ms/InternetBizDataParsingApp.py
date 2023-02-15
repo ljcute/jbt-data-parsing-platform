@@ -362,7 +362,7 @@ def handle_jymx(_biz_dt, _jymx, market, persist_flag=True):
         logger.error(f'交易明细数据为空，解析入库失败！')
 
     _jymx.drop(['sec360_name', 'exchange_sec_name', 'sec_code', 'sec_name'], axis=1, inplace=True)
-    _jymx['exchange_market'] = 'SZSE' if market == 'SZ' else 'SSE'
+    _jymx['exchange_market'] = 'SZSE' if market == 'SZ' else 'SSE' if market == 'SH' else 'BSE' if market == 'BJ' else market
     _jymx['biz_dt'] = str(_biz_dt.values.tolist()[0])
     _jymx['data_status'] = 1
     _jymx['creator_id'] = 414
@@ -424,6 +424,14 @@ def handle_jyzl(_biz_dt, _jyzl, market, persist_flag=True):
         lending_securities_amount = (_jyzl['本日融券余量金额(元)'].values.tolist()[0])
         lending_securities_sales_volume = (_jyzl['本日融券卖出量'].values.tolist()[0])
         margin_trading_balance = (_jyzl['本日融资融券余额(元)'].values.tolist()[0])
+    elif market =='BSE':
+        financing_balance = (_jyzl['融资余额（元）'].values.tolist()[0])
+        financing_purchase_amount = (_jyzl['融资买入额（元）'].values.tolist()[0])
+        lending_securities_volume = (_jyzl['融券余量（股）'].values.tolist()[0])
+        lending_securities_amount = (_jyzl['融券余额（元）'].values.tolist()[0])
+        lending_securities_sales_volume = (_jyzl['融券卖出量（股）'].values.tolist()[0])
+        margin_trading_balance = (_jyzl['融资融券余额（元）'].values.tolist()[0])
+
 
     # 数据入库
     in_sql = f"""
