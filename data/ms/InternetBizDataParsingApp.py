@@ -464,13 +464,13 @@ def handle_dbq(_broker_id, _biz_dt, _dbq, market, persist_flag=True):
 
 def handle_rz_bdq(_broker_id, _biz_dt, _rz_bdq, market, persist_flag=True):
     biz_type = 1
-    check_rzrq_rate(_rz_bdq)
+    # check_rzrq_rate(_rz_bdq)
     handle_data(_broker_id, _biz_dt, biz_type, _rz_bdq, market, persist_flag)
 
 
 def handle_rq_bdq(_broker_id, _biz_dt, _rq_bdq, market, persist_flag=True):
     biz_type = 2
-    check_rzrq_rate(_rq_bdq)
+    # check_rzrq_rate(_rq_bdq)
     handle_data(_broker_id, _biz_dt, biz_type, _rq_bdq, market, persist_flag)
 
 
