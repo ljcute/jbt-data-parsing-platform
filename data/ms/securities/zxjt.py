@@ -35,4 +35,4 @@ def _format_db_rz_rq_bdq(cdata, market):
     jzd = df.loc[~df['pledgerate'].isna()][['sec_type', 'sec_id', 'sec_code', 'stkclasses']].copy()
     jzd.rename(columns={'stkclasses': 'rate'}, inplace=True)
     jzd['rate'] = jzd['rate'].apply(lambda x: 1 if str(x).upper() == 'A类' else 2 if str(x).upper() == 'B类' else 3 if str(x).upper() == 'C类' else 4 if str(x).upper() == 'D类' else 5 if str(x).upper() == 'E类' else 0)
-    return biz_dt, dbq, pd.DataFrame(), rz, rq
+    return biz_dt, dbq, jzd, rz, rq

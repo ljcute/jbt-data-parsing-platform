@@ -5,43 +5,37 @@
 # @Site    : 
 # @File    : zj.py
 # @Software: PyCharm
+import math
+
 import pandas as pd
-from data.ms.base_tools import get_df_from_cdata, match_sid_by_code_and_name
+from data.ms.base_tools import get_df_from_cdata, code_ref_id
 
 
 def _get_format_df(cdata):
     df = get_df_from_cdata(cdata)
-    df['sec_code'] = df['证券代码'].apply(lambda x: ('000000'+str(x))[-max(6, len(str(x))):])
-    df['sec_name'] = df['证券名称']
-    df['sec_name'] = df['sec_name'].str.replace(' ', '')
-    _df = match_sid_by_code_and_name(df)
-    df = df.merge(_df, on=['sec_code', 'sec_name'])
-    df['sec_code'] = df['scd']
+    df['market'] = df['exchname'].map(
+        lambda x: 'SZ' if str(x) == '深市' else 'SH' if str(x) == '沪市' else 'BJ' if math.isnan(x) else str(x))
+    df['sec_code'] = df['stkid'].apply(lambda x: ('000000' + str(x))[-max(6, len(str(x))):])
+    df['sec_code'] = df['sec_code'] + '.' + df['market']
+    df['sec_name'] = df['stkname']
     df['start_dt'] = None
     biz_dt = cdata['biz_dt'].values[0]
-    return biz_dt, df
+    return biz_dt, code_ref_id(df)
 
 
-def _format_dbq(cdata, market):
+def _format_db_rz_rq_bdq(cdata, market):
     biz_dt, df = _get_format_df(cdata)
-    df['rate'] = df['中金折算率'].apply(lambda x: int(str(x).replace('%', '')))
-    dbq = df[['sec_type', 'sec_id', 'sec_code', 'rate']].copy()
-    return biz_dt, dbq, pd.DataFrame()
+    dbq = df.loc[df['iscmo'] == 'Y'][['sec_type', 'sec_id', 'sec_code', 'cmorate']].copy()
+    dbq['cmorate'] = dbq['cmorate'].apply(lambda x: int(str(x).replace('%', '')))
+    dbq.rename(columns={'cmorate': 'rate'}, inplace=True)
+    rz = df.loc[df['iscreditcashstk'] == 'Y'][['sec_type', 'sec_id', 'sec_code', 'ccmarginrate']].copy()
+    rz['ccmarginrate'] = rz['ccmarginrate'].apply(lambda x: int(str(x).replace('%', '')))
+    rz.rename(columns={'ccmarginrate': 'rate'}, inplace=True)
+    rq = df.loc[df['iscreditsharestk'] == 'Y'][['sec_type', 'sec_id', 'sec_code', 'csmarginrate']].copy()
+    rq['csmarginrate'] = rq['csmarginrate'].apply(lambda x: int(str(x).replace('%', '')))
+    rq.rename(columns={'csmarginrate': 'rate'}, inplace=True)
 
-
-def _format_rz_bdq(cdata, market):
-    biz_dt, df = _get_format_df(cdata)
-    df['rz_rate'] = df['保证金比例'].apply(lambda x: int(str(x).replace('%', '')))
-    rz = df.loc[df['是否融资标的物'] == '是'][['sec_type', 'sec_id', 'sec_code', 'rz_rate']].copy()
-    rz.rename(columns={'rz_rate': 'rate'}, inplace=True)
-    rz = rz[rz['rate'] >= 100]
-    return biz_dt, rz
-
-
-def _format_rq_bdq(cdata, market):
-    biz_dt, df = _get_format_df(cdata)
-    df['rq_rate'] = df['保证金比例'].apply(lambda x: int(str(x).replace('%', '')))
-    rq = df.loc[df['是否融券标的物'] == '是'][['sec_type', 'sec_id', 'sec_code', 'rq_rate']].copy()
-    rq.rename(columns={'rq_rate': 'rate'}, inplace=True)
-    rq = rq[rq['rate'] >= 50]
-    return biz_dt, rq
+    jzd = df.loc[~df['cmorate'].isna()][['sec_type', 'sec_id', 'sec_code', 'groupid']].copy()
+    jzd.rename(columns={'groupid': 'rate'}, inplace=True)
+    jzd['rate'] = jzd['rate'].apply(lambda x: 1 if str(x).upper() == 'A' else 2 if str(x).upper() == 'B' else 3 if str(x).upper() == 'C' else 4 if str(x).upper() == 'D' else 5 if str(x).upper() == 'E' else 0)
+    return biz_dt, dbq, jzd, rz, rq

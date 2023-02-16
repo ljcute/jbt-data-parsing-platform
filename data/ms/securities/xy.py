@@ -7,22 +7,23 @@
 @Software    : PyCharm
 """
 import pandas as pd
-from data.ms.base_tools import code_ref_id, get_df_from_cdata
+from data.ms.base_tools import code_ref_id, get_df_from_cdata, match_sid_by_code_and_name
 
 
 def _get_format_df(cdata, biz_type):
     df = get_df_from_cdata(cdata)
+    df['sec_name'] = df['证券简称']
     if biz_type == 'dbq':
-        df['market'] = df['exchange'].str.upper()
         df['sec_code'] = df['证券代码'].apply(lambda x: ('000000'+str(x))[-max(6, len(str(x))):])
-        df['sec_code'] = df['sec_code'] + '.' + df['market']
     elif biz_type == 'bdq':
         df['sec_code'] = df['证券代码'].str.upper()
-    df['sec_name'] = df['证券简称']
+
+    _df = match_sid_by_code_and_name(df)
+    df = df.merge(_df, on=['sec_code', 'sec_name'])
+    df['sec_code'] = df['scd']
     df['start_dt'] = None
-    dt = df['biz_dt'].values[0]
-    biz_dt = str(dt)[:4] + '-' + str(dt)[4:6] + '-' + str(dt)[-2:]
-    return biz_dt, code_ref_id(df)
+    biz_dt = cdata['biz_dt'].values[0]
+    return biz_dt, df
 
 
 def _format_dbq(cdata, market):
