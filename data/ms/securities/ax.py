@@ -29,7 +29,10 @@ def _format_dbq(cdata, market):
     biz_dt, df = _get_format_df(cdata)
     df['rate'] = df['collatRatio'].apply(lambda x: int(x*100))
     dbq = df[['sec_type', 'sec_id', 'sec_code', 'rate']].copy()
-    return biz_dt, dbq, pd.DataFrame()
+    jzd = df[['sec_type', 'sec_id', 'sec_code', 'riskLvlDesc']].copy()
+    jzd.rename(columns={'riskLvlDesc': 'rate'}, inplace=True)
+    jzd['rate'] = jzd['rate'].apply(lambda x: 1 if str(x) == 'R1' else 2 if str(x) == 'R2' else 3 if str(x) == 'R3' else 4 if str(x) == 'R4' else 5 if str(x) == 'R5' else 6 if str(x) == 'R6' else str(x))
+    return biz_dt, dbq, jzd
 
 
 def _format_rz_rq_bdq(cdata, market):

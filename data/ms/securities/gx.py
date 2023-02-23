@@ -32,7 +32,10 @@ def _format_dbq(cdata, market):
     biz_dt, df = _get_format_df(cdata, 'dbq')
     df['rate'] = df['zsl'].apply(lambda x: int(x*100))
     dbq = df[['sec_type', 'sec_id', 'sec_code', 'rate']].copy()
-    return biz_dt, dbq, pd.DataFrame()
+    jzd = df[['sec_type', 'sec_id', 'sec_code', 'jzd']].copy()
+    jzd.rename(columns={'jzd': 'rate'}, inplace=True)
+    jzd['rate'] = jzd['rate'].apply(lambda x: 1 if str(x).strip() == 'A' else 2 if str(x).strip() == 'B' else 3 if str(x).strip() == 'C' else 4 if str(x).strip() == 'D' else 5 if str(x).strip() == 'E' else x)
+    return biz_dt, dbq, jzd
 
 
 def _format_rz_bdq(cdata, market):
