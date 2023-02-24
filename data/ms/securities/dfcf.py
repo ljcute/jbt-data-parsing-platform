@@ -26,7 +26,7 @@ def _format_dbq(cdata, market):
     df['rate'] = df['实际折算率'].apply(lambda x: float(str(x).replace('%', '')))
     dbq = df[['sec_type', 'sec_id', 'sec_code', 'rate']].copy()
     jzd = df[['sec_type', 'sec_id', 'sec_code', '组别']].copy()
-    jzd.rename(columns={'riskLvlDesc': 'rate'}, inplace=True)
+    jzd.rename(columns={'组别': 'rate'}, inplace=True)
     jzd['rate'] = jzd['rate'].apply(lambda x: 1 if str(x) == 'A组' else 2 if str(x) == 'B组' else 3 if str(x) == 'C组' else 4 if str(x) == 'D组' else 5 if str(x) == 'E组' else 6 if str(x) == 'F组' else 7 if str(x) == '关注类' else 8 if str(x) == '北交所' else str(x))
     return biz_dt, dbq, jzd
 
