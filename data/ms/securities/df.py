@@ -15,6 +15,7 @@ def _get_format_df(cdata):
     df['sec_code'] = df['securitiescode'].apply(lambda x: ('000000'+str(x))[-max(6, len(str(x))):])
     df['sec_name'] = df['securitieshort'].str.replace(' ', '')
     _df = match_sid_by_code_and_name(df)
+    df = df.merge(_df, on=['sec_code', 'sec_name'])
     df['sec_code'] = df['scd']
     df['start_dt'] = None
     biz_dt = cdata['biz_dt'].values[0]

@@ -33,8 +33,8 @@ def _format_dbq(cdata, market):
 
 def _format_rz_rq_bdq(cdata, market):
     biz_dt, df = _get_format_df(cdata)
-    df['rz_rate'] = df['融资保证金比例'].apply(lambda x: int(str(x).replace('%', '')))
-    df['rq_rate'] = df['融券保证金比例'].apply(lambda x: int(str(x).replace('%', '')))
+    df['rz_rate'] = df['融资保证金比例'].apply(lambda x: float(str(x).replace('%', '')))
+    df['rq_rate'] = df['融券保证金比例'].apply(lambda x: float(str(x).replace('%', '')))
     rz = df[['sec_type', 'sec_id', 'sec_code', 'rz_rate']].copy()
     rz.rename(columns={'rz_rate': 'rate'}, inplace=True)
     rq = df[['sec_type', 'sec_id', 'sec_code', 'rq_rate']].copy()
