@@ -23,7 +23,7 @@ def _get_format_df(cdata):
 
 def _format_dbq(cdata, market):
     biz_dt, df = _get_format_df(cdata)
-    df['rate'] = df['实际折算率'].apply(lambda x: int(str(x).replace('%', '')))
+    df['rate'] = df['实际折算率'].apply(lambda x: float(str(x).replace('%', '')))
     dbq = df[['sec_type', 'sec_id', 'sec_code', 'rate']].copy()
     jzd = df[['sec_type', 'sec_id', 'sec_code', '组别']].copy()
     jzd.rename(columns={'riskLvlDesc': 'rate'}, inplace=True)
