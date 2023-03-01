@@ -83,8 +83,8 @@ def _get_jymx_format_df(cdata, market):
         df.rename(columns={'标的证券代码': 'sec_code', '标的证券简称': 'sec_name', '本日融资余额(元)': 'fb', '本日融资买入额(元)': 'fpa',
         '本日融资偿还额(元)': 'mtb', '本日融券余量': 'lsv', '本日融券卖出量': 'lssv', '本日融券偿还量': 'lsa'}, inplace=True)
     elif market == 'BJ':
-        df.rename(columns={'证券代码': 'sec_code', '证券简称': 'sec_name', '融资买入额（元）': 'fb', '融资余额（元）': 'fpa',
-        '融券卖出量（股）': 'mtb', '融券余量（股）': 'lsv', '融券余额（元）': 'lssv', '融资融券余额（元）': 'lsa'}, inplace=True)
+        df.rename(columns={'zqdm': 'sec_code', 'zqjc': 'sec_name', 'rzmre': 'fb', 'rzye': 'fpa',
+        'rqmcl': 'mtb', 'rqyl': 'lsv', 'rqye': 'lssv', 'rzrqye': 'lsa'}, inplace=True)
     df['market'] = market
     df['sec_code'] = df['sec_code'].apply(lambda x: ('000000'+str(x))[-max(6, len(str(x))):])
     df['sec_code'] = df['sec_code'] + '.' + market

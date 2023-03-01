@@ -425,12 +425,12 @@ def handle_jyzl(_biz_dt, _jyzl, market, persist_flag=True):
         lending_securities_sales_volume = (_jyzl['本日融券卖出量'].values.tolist()[0])
         margin_trading_balance = (_jyzl['本日融资融券余额(元)'].values.tolist()[0])
     elif market =='BSE':
-        financing_balance = (_jyzl['融资余额（元）'].values.tolist()[0])
-        financing_purchase_amount = (_jyzl['融资买入额（元）'].values.tolist()[0])
-        lending_securities_volume = (_jyzl['融券余量（股）'].values.tolist()[0])
-        lending_securities_amount = (_jyzl['融券余额（元）'].values.tolist()[0])
-        lending_securities_sales_volume = (_jyzl['融券卖出量（股）'].values.tolist()[0])
-        margin_trading_balance = (_jyzl['融资融券余额（元）'].values.tolist()[0])
+        financing_balance = (_jyzl['rzye'].values.tolist()[0])
+        financing_purchase_amount = (_jyzl['rzmre'].values.tolist()[0])
+        lending_securities_volume = (_jyzl['rqyl'].values.tolist()[0])
+        lending_securities_amount = (_jyzl['rqye'].values.tolist()[0])
+        lending_securities_sales_volume = (_jyzl['rqmcl'].values.tolist()[0])
+        margin_trading_balance = (_jyzl['rzrqye'].values.tolist()[0])
 
 
     # 数据入库
