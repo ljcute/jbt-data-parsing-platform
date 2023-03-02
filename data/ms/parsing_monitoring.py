@@ -21,6 +21,10 @@ from config import Config
 from database import MysqlClient
 from util.logs_utils import logger
 
+cfg = Config.get_cfg()
+db_biz_pro = MysqlClient(**cfg.get_content(f'pro_db_biz'))
+db_raw_pro = MysqlClient(**cfg.get_content(f'pro_db_raw'))
+
 
 def pro_biz_db():
     global db_biz_pro
@@ -28,24 +32,12 @@ def pro_biz_db():
         db_biz_pro = MysqlClient(**cfg.get_content(f'pro_db_biz'))
     return db_biz_pro
 
+
 def pro_raw_db():
     global db_raw_pro
     if not db_raw_pro:
         db_raw_pro = MysqlClient(**cfg.get_content(f'pro_db_raw'))
     return db_raw_pro
-
-def raw_db():
-    global raw_db
-    if not raw_db:
-        raw_db = MysqlClient(**cfg.get_content(f'{env}_db_raw'))
-    return raw_db
-
-
-def biz_db():
-    global biz_db
-    if not biz_db:
-        biz_db = MysqlClient(**cfg.get_content(f'{env}_db_biz'))
-    return biz_db
 
 
 def get_adjust_data(db, biz_dt):
@@ -157,13 +149,15 @@ def handle_cmp(biz_dt):
     db_df = db_handle(_all, biz_dt, pro_adjust, db_union)
     logger.info(f'担保券数据核验结束---')
 
-    rz_union = union.loc[(union['data_type'] == '3') | (union['data_type'] == '4') | (union['data_type'] == '99')].copy()
+    rz_union = union.loc[
+        (union['data_type'] == '3') | (union['data_type'] == '4') | (union['data_type'] == '99')].copy()
     logger.info(f'开始核验融资标的券数据---')
     _all_rz = pro_adjust.loc[pro_adjust['biz_type'] == '融资标的'].drop_duplicates(['broker_id', 'biz_type'])
     rz_df = rz_handle(_all_rz, biz_dt, pro_adjust, rz_union)
     logger.info(f'融资标的券数据核验结束---')
 
-    rq_union = union.loc[(union['data_type'] == '3') | (union['data_type'] == '5') | (union['data_type'] == '99')].copy()
+    rq_union = union.loc[
+        (union['data_type'] == '3') | (union['data_type'] == '5') | (union['data_type'] == '99')].copy()
     logger.info(f'开始核验融券标的券数据---')
     _all_rq = pro_adjust.loc[pro_adjust['biz_type'] == '融券标的'].drop_duplicates(['broker_id', 'biz_type'])
     rq_df = rq_handle(_all_rq, biz_dt, pro_adjust, rq_union)
@@ -412,14 +406,17 @@ def rq_handle(_all_rq, biz_dt, pro_adjust, union):
                 _down['adjust_type'] = 'down'
         except Exception as err:
             logger.info(f"{rw['data_source']} ({rw['data_type']}) {err}")
-    collect_df = pd.DataFrame(data=_message, columns=['data_source', 'data_type', 'biz_dt', 'platform', 'in', 'out', 'up', 'down'])
+    collect_df = pd.DataFrame(data=_message,
+                              columns=['data_source', 'data_type', 'biz_dt', 'platform', 'in', 'out', 'up', 'down'])
     parsing_message = []
-            
+
     for index, row in _all_rq.iterrows():
-        _pro_adjust = pro_adjust.loc[((pro_adjust['broker_id'] == row['broker_id']) & (pro_adjust['biz_type'] == row['biz_type']))]
+        _pro_adjust = pro_adjust.loc[
+            ((pro_adjust['broker_id'] == row['broker_id']) & (pro_adjust['biz_type'] == row['biz_type']))]
         parsing_message.append(get_message(_pro_adjust, row, biz_dt))
 
-    parsing_df = pd.DataFrame(data=parsing_message, columns=['data_source', 'data_type', 'biz_dt', 'platform', 'in', 'out', 'up', 'down'])
+    parsing_df = pd.DataFrame(data=parsing_message,
+                              columns=['data_source', 'data_type', 'biz_dt', 'platform', 'in', 'out', 'up', 'down'])
     rq_df = pd.concat([collect_df, parsing_df], ignore_index=False)
     return rq_df
 
@@ -662,14 +659,17 @@ def rz_handle(_all_rz, biz_dt, pro_adjust, union):
                 _down['adjust_type'] = 'down'
         except Exception as err:
             logger.info(f"{rw['data_source']} ({rw['data_type']}) {err}")
-    collect_df = pd.DataFrame(data=_message, columns=['data_source', 'data_type', 'biz_dt', 'platform', 'in', 'out', 'up', 'down'])
+    collect_df = pd.DataFrame(data=_message,
+                              columns=['data_source', 'data_type', 'biz_dt', 'platform', 'in', 'out', 'up', 'down'])
     parsing_message = []
 
     for index, row in _all_rz.iterrows():
-        _pro_adjust = pro_adjust.loc[((pro_adjust['broker_id'] == row['broker_id']) & (pro_adjust['biz_type'] == row['biz_type']))]
+        _pro_adjust = pro_adjust.loc[
+            ((pro_adjust['broker_id'] == row['broker_id']) & (pro_adjust['biz_type'] == row['biz_type']))]
         parsing_message.append(get_message(_pro_adjust, row, biz_dt))
 
-    parsing_df = pd.DataFrame(data=parsing_message, columns=['data_source', 'data_type', 'biz_dt', 'platform', 'in', 'out', 'up', 'down'])
+    parsing_df = pd.DataFrame(data=parsing_message,
+                              columns=['data_source', 'data_type', 'biz_dt', 'platform', 'in', 'out', 'up', 'down'])
     rz_df = pd.concat([collect_df, parsing_df], ignore_index=False)
     return rz_df
 
@@ -770,12 +770,12 @@ def db_handle(_all, biz_dt, pro_adjust, union):
                 pre['key'] = pre['stkcode'].apply(lambda x: ('000000' + str(x))[-max(6, len(str(x))):]) + '.' + pre[
                     'market'].map(
                     lambda x: 'SZ' if str(x) == '0' else 'SH' if str(x) == '1' else 'BJ' if str(x) in (
-                    '2', 'B') else str(
+                        '2', 'B') else str(
                         x))
                 cur['key'] = cur['stkcode'].apply(lambda x: ('000000' + str(x))[-max(6, len(str(x))):]) + '.' + cur[
                     'market'].map(
                     lambda x: 'SZ' if str(x) == '0' else 'SH' if str(x) == '1' else 'BJ' if str(x) in (
-                    '2', 'B') else str(
+                        '2', 'B') else str(
                         x))
                 pre['pre_rate'] = pre['pledgerate'].apply(lambda x: int(x))
                 cur['cur_rate'] = cur['pledgerate'].apply(lambda x: int(x))
@@ -901,41 +901,21 @@ def db_handle(_all, biz_dt, pro_adjust, union):
                 _down['adjust_type'] = 'down'
         except Exception as err:
             logger.info(f"{rw['data_source']} ({rw['data_type']}) {err}")
-    collect_df = pd.DataFrame(data=_message, columns=['data_source', 'data_type', 'biz_dt', 'platform', 'in', 'out', 'up', 'down'])
+    collect_df = pd.DataFrame(data=_message,
+                              columns=['data_source', 'data_type', 'biz_dt', 'platform', 'in', 'out', 'up', 'down'])
     parsing_message = []
 
     for index, row in _all.iterrows():
-        _pro_adjust = pro_adjust.loc[((pro_adjust['broker_id'] == row['broker_id']) & (pro_adjust['biz_type'] == row['biz_type']))]
+        _pro_adjust = pro_adjust.loc[
+            ((pro_adjust['broker_id'] == row['broker_id']) & (pro_adjust['biz_type'] == row['biz_type']))]
         parsing_message.append(get_message(_pro_adjust, row, biz_dt))
 
-    parsing_df = pd.DataFrame(data=parsing_message, columns=['data_source', 'data_type', 'biz_dt', 'platform', 'in', 'out', 'up', 'down'])
+    parsing_df = pd.DataFrame(data=parsing_message,
+                              columns=['data_source', 'data_type', 'biz_dt', 'platform', 'in', 'out', 'up', 'down'])
     db_df = pd.concat([collect_df, parsing_df], ignore_index=False)
     return db_df
 
 
 if __name__ == '__main__':
-    try:
-        __environments = ("loc", "dev", "fat", "uat", "pro")
-        biz_type_map = {0: "交易所交易总量", 1: "交易所交易明细", 2: "融资融券可充抵保证金证券", 3: "融资融券标的证券",
-                        4: "融资标的证券", 5: "融券标的证券", 99: "融资融券可充抵保证金证券和融资融券标的证券"}
-        cfg = Config.get_cfg()
-        if "environment" not in cfg.get_sections() or "env" not in cfg.get_options("environment"):
-            raise Exception(f"请设置当前环境environment.env")
-        env = cfg.get_content("environment").get("env")
-        if env not in __environments:
-            raise Exception(f"环境env只能是{__environments}范围内容")
-        raw_db = MysqlClient(**cfg.get_content(f'{env}_db_raw'))
-        biz_db = MysqlClient(**cfg.get_content(f'{env}_db_biz'))
-        db_biz_pro = MysqlClient(**cfg.get_content(f'pro_db_biz'))
-        db_raw_pro = MysqlClient(**cfg.get_content(f'pro_db_raw'))
-
-        pd.set_option('display.max_rows', None)
-        pd.set_option('display.max_columns', None)
-        pd.set_option('max_colwidth', 200)
-        pd.set_option('expand_frame_repr', False)
-
-        cur_dt = datetime.now().strftime('%Y-%m-%d')
-        handle_cmp(cur_dt)
-
-    except Exception as e:
-        logger.error(f"互联网数据解析服务启动异常: {e} =》{str(traceback.format_exc())}")
+    cur_dt = datetime.now().strftime('%Y-%m-%d')
+    handle_cmp(cur_dt)
