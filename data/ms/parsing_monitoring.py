@@ -23,29 +23,29 @@ from util.logs_utils import logger
 
 
 def pro_biz_db():
-    global _db_biz_pro
-    if not _db_biz_pro:
-        _db_biz_pro = MysqlClient(**cfg.get_content(f'pro_db_biz'))
-    return _db_biz_pro
+    global db_biz_pro
+    if not db_biz_pro:
+        db_biz_pro = MysqlClient(**cfg.get_content(f'pro_db_biz'))
+    return db_biz_pro
 
 def pro_raw_db():
-    global _db_raw_pro
-    if not _db_raw_pro:
-        _db_raw_pro = MysqlClient(**cfg.get_content(f'pro_db_raw'))
-    return _db_raw_pro
+    global db_raw_pro
+    if not db_raw_pro:
+        db_raw_pro = MysqlClient(**cfg.get_content(f'pro_db_raw'))
+    return db_raw_pro
 
 def raw_db():
-    global _raw_db
-    if not _raw_db:
-        _raw_db = MysqlClient(**cfg.get_content(f'{env}_db_raw'))
-    return _raw_db
+    global raw_db
+    if not raw_db:
+        raw_db = MysqlClient(**cfg.get_content(f'{env}_db_raw'))
+    return raw_db
 
 
 def biz_db():
-    global _biz_db
-    if not _biz_db:
-        _biz_db = MysqlClient(**cfg.get_content(f'{env}_db_biz'))
-    return _biz_db
+    global biz_db
+    if not biz_db:
+        biz_db = MysqlClient(**cfg.get_content(f'{env}_db_biz'))
+    return biz_db
 
 
 def get_adjust_data(db, biz_dt):
@@ -924,10 +924,10 @@ if __name__ == '__main__':
         env = cfg.get_content("environment").get("env")
         if env not in __environments:
             raise Exception(f"环境env只能是{__environments}范围内容")
-        _raw_db = MysqlClient(**cfg.get_content(f'{env}_db_raw'))
-        _biz_db = MysqlClient(**cfg.get_content(f'{env}_db_biz'))
-        _db_biz_pro = MysqlClient(**cfg.get_content(f'pro_db_biz'))
-        _db_raw_pro = MysqlClient(**cfg.get_content(f'pro_db_raw'))
+        raw_db = MysqlClient(**cfg.get_content(f'{env}_db_raw'))
+        biz_db = MysqlClient(**cfg.get_content(f'{env}_db_biz'))
+        db_biz_pro = MysqlClient(**cfg.get_content(f'pro_db_biz'))
+        db_raw_pro = MysqlClient(**cfg.get_content(f'pro_db_raw'))
 
         pd.set_option('display.max_rows', None)
         pd.set_option('display.max_columns', None)
@@ -935,14 +935,6 @@ if __name__ == '__main__':
         pd.set_option('expand_frame_repr', False)
 
         cur_dt = datetime.now().strftime('%Y-%m-%d')
-        # _start_dt = datetime.strptime(cur_dt, '%Y-%m-%d')
-        # _end_dt = datetime.strptime(cur_dt, '%Y-%m-%d')
-        # _start_dt = datetime.strptime('2022-12-22', '%Y-%m-%d')
-        # _end_dt = datetime.strptime('2022-12-22', '%Y-%m-%d')
-        # message = []
-        # for i in range((_end_dt - _start_dt).days + 1):
-        #     dt = _start_dt + timedelta(days=i)
-        #     handle_cmp(str(dt))
         handle_cmp(cur_dt)
 
     except Exception as e:
