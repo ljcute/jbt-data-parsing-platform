@@ -151,8 +151,7 @@ def handle_cmp(biz_dt):
 
     rzrz_df = pd.concat([rz_df, rq_df], ignore_index=False)
     result_df = pd.concat([db_df, rzrz_df], ignore_index=False)
-    result_df.sort_values(by=['data_source'], ascending=False)
-    result_df = result_df.reset_index()
+    result_df = result_df.sort_values(by=['data_source'], ascending=False)
     return result_df
 
 
