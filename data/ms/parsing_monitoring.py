@@ -26,21 +26,7 @@ db_biz_pro = MysqlClient(**cfg.get_content(f'pro_db_biz'))
 db_raw_pro = MysqlClient(**cfg.get_content(f'pro_db_raw'))
 
 
-def pro_biz_db():
-    global db_biz_pro
-    if not db_biz_pro:
-        db_biz_pro = MysqlClient(**cfg.get_content(f'pro_db_biz'))
-    return db_biz_pro
-
-
-def pro_raw_db():
-    global db_raw_pro
-    if not db_raw_pro:
-        db_raw_pro = MysqlClient(**cfg.get_content(f'pro_db_raw'))
-    return db_raw_pro
-
-
-def get_adjust_data(db, biz_dt):
+def get_adjust_data(biz_dt):
     sql = f"""
     SELECT a.broker_code, a.broker_name,b.* FROM t_security_broker a,
     (SELECT broker_id, 
@@ -55,7 +41,7 @@ def get_adjust_data(db, biz_dt):
     where a.broker_id=b.broker_id
     ORDER BY b.broker_id, biz_type, adjust_type
     """
-    return db.select(sql)
+    return db_biz_pro.select(sql)
 
 
 def get_collected_data(biz_dt):
@@ -72,7 +58,7 @@ def get_collected_data(biz_dt):
                         and data_status=1
                       group by data_source, data_type)
     """
-    return pro_raw_db().select(sql)
+    return db_raw_pro.select(sql)
 
 
 def get_pre_collected_data(biz_dt):
@@ -89,7 +75,7 @@ def get_pre_collected_data(biz_dt):
                         and data_status=1
                       group by data_source, data_type)
     """
-    return pro_raw_db().select(sql)
+    return db_raw_pro.select(sql)
 
 
 def get_message(_adjust, row, biz_dt):
@@ -115,7 +101,7 @@ def get_message(_adjust, row, biz_dt):
 
 
 def handle_cmp(biz_dt):
-    pro_adjust = get_adjust_data(pro_biz_db(), biz_dt)
+    pro_adjust = get_adjust_data(biz_dt)
     pro_adjust['env'] = 'pro'
     pro_adjust.sort_values(by=['biz_type', 'broker_id', 'adjust_type'], inplace=True, ascending=True)
     clm = pro_adjust.columns.tolist()
