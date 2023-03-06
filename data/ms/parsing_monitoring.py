@@ -884,7 +884,7 @@ def db_handle(_all, biz_dt, pro_adjust, union):
                 pre['pre_rate'] = pre['rate'].apply(lambda x: int(x * 100))
                 cur['cur_rate'] = cur['rate'].apply(lambda x: int(x * 100))
             else:
-                logger.warning(f"fix {_data_source}")
+                logger.warning(f"如下证券无相关数据，无法进行数据监控，请检查！fix {_data_source}")
                 continue
             _out = pre.loc[~pre['key'].isin(cur['key'].tolist())].copy()
             _in = cur.loc[~cur['key'].isin(pre['key'].tolist())].copy()
