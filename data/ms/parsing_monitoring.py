@@ -78,6 +78,13 @@ def get_pre_collected_data(biz_dt):
     return db_raw_pro.select(sql)
 
 
+def get_security_data():
+    sql = f"""
+        select broker_id, broker_code, broker_name, order_no from t_security_broker where valid = '1'
+    """
+    return db_biz_pro.select(sql)
+
+
 def get_message(_adjust, row, biz_dt):
     _in = _adjust.loc[_adjust['adjust_type'] == 1]
     _out = _adjust.loc[_adjust['adjust_type'] == 2]
@@ -96,7 +103,8 @@ def get_message(_adjust, row, biz_dt):
     if not _down.empty:
         _down_size = _down['adjust_num'].tolist()[0]
 
-    parsing_temp_list = [row['broker_name'], '担保券', biz_dt, '解析业务数据', _in_size, _out_size, _up_size, _down_size]
+    parsing_temp_list = [row['broker_name'], _adjust['biz_type'].to_list()[0], biz_dt, '解析业务数据', _in_size, _out_size,
+                         _up_size, _down_size]
     return parsing_temp_list
 
 
@@ -111,15 +119,10 @@ def handle_cmp(biz_dt):
     diff.sort_values(by=['biz_type', 'broker_id', 'adjust_type'], inplace=True, ascending=True)
 
     _diff = diff.loc[diff['biz_type'] == '担保券'].copy()
-    logger.info(f"{biz_dt} 不一致担保券({_diff.index.size}组)")
     _diff.drop_duplicates(['broker_id', 'biz_type'], inplace=True)
-
     _diff_rz = diff.loc[diff['biz_type'] == '融资标的'].copy()
-    logger.info(f"{biz_dt} 不一致融资标的券({_diff_rz.index.size}组)")
     _diff.drop_duplicates(['broker_id', 'biz_type'], inplace=True)
-
     _diff_rq = diff.loc[diff['biz_type'] == '融券标的'].copy()
-    logger.info(f"{biz_dt} 不一致融券标的券({_diff_rq.index.size}组)")
     _diff.drop_duplicates(['broker_id', 'biz_type'], inplace=True)
 
     logs = get_collected_data(biz_dt[:10])
@@ -128,30 +131,37 @@ def handle_cmp(biz_dt):
         logger.info(f"pre_logs is empty，biz_dt={biz_dt}")
     # 合并
     union = logs.merge(pre_logs, on=['data_source', 'data_type'])
-
     db_union = union.loc[(union['data_type'] == '2') | (union['data_type'] == '99')].copy()
     logger.info(f'开始核验担保券数据---')
     _all = pro_adjust.loc[pro_adjust['biz_type'] == '担保券'].drop_duplicates(['broker_id', 'biz_type'])
-    db_df = db_handle(_all, biz_dt, pro_adjust, db_union)
+    db_collect_df, db_parsing_df = db_handle(_all, biz_dt, pro_adjust, db_union)
     logger.info(f'担保券数据核验结束---')
 
     rz_union = union.loc[
         (union['data_type'] == '3') | (union['data_type'] == '4') | (union['data_type'] == '99')].copy()
     logger.info(f'开始核验融资标的券数据---')
     _all_rz = pro_adjust.loc[pro_adjust['biz_type'] == '融资标的'].drop_duplicates(['broker_id', 'biz_type'])
-    rz_df = rz_handle(_all_rz, biz_dt, pro_adjust, rz_union)
+    rz_collect_df, rz_parsing_df = rz_handle(_all_rz, biz_dt, pro_adjust, rz_union)
     logger.info(f'融资标的券数据核验结束---')
 
     rq_union = union.loc[
         (union['data_type'] == '3') | (union['data_type'] == '5') | (union['data_type'] == '99')].copy()
     logger.info(f'开始核验融券标的券数据---')
     _all_rq = pro_adjust.loc[pro_adjust['biz_type'] == '融券标的'].drop_duplicates(['broker_id', 'biz_type'])
-    rq_df = rq_handle(_all_rq, biz_dt, pro_adjust, rq_union)
+    rq_collect_df, rq_parsing_df = rq_handle(_all_rq, biz_dt, pro_adjust, rq_union)
     logger.info(f'融券标的券数据核验结束---')
 
-    rzrz_df = pd.concat([rz_df, rq_df], ignore_index=False)
-    result_df = pd.concat([db_df, rzrz_df], ignore_index=False)
-    result_df = result_df.sort_values(by=['data_source'], ascending=False)
+    # 采集数据df
+    collect_df = pd.concat([db_collect_df, rz_collect_df, rq_collect_df], ignore_index=False)
+    # 解析数据df
+    parsing_df = pd.concat([db_parsing_df, rz_parsing_df, rq_parsing_df], ignore_index=False)
+    # 券商配置表df
+    security_df = get_security_data()
+
+    #返回结果df合并排序
+    result_df = pd.concat([collect_df, parsing_df], ignore_index=False)
+    result_df = result_df.sort_values(by=['data_source','data_type'], ascending=False)
+
     return result_df
 
 
@@ -402,13 +412,12 @@ def rq_handle(_all_rq, biz_dt, pro_adjust, union):
 
     for index, row in _all_rq.iterrows():
         _pro_adjust = pro_adjust.loc[
-            ((pro_adjust['broker_id'] == row['broker_id']) & (pro_adjust['biz_type'] == row['biz_type']))]
+            ((pro_adjust['broker_id'] == row['broker_id']) & (pro_adjust['biz_type'] == row['biz_type']))].copy()
         parsing_message.append(get_message(_pro_adjust, row, biz_dt))
 
     parsing_df = pd.DataFrame(data=parsing_message,
                               columns=['data_source', 'data_type', 'biz_dt', 'platform', 'in', 'out', 'up', 'down'])
-    rq_df = pd.concat([collect_df, parsing_df], ignore_index=False)
-    return rq_df
+    return collect_df, parsing_df
 
 
 def rz_handle(_all_rz, biz_dt, pro_adjust, union):
@@ -660,13 +669,12 @@ def rz_handle(_all_rz, biz_dt, pro_adjust, union):
 
     for index, row in _all_rz.iterrows():
         _pro_adjust = pro_adjust.loc[
-            ((pro_adjust['broker_id'] == row['broker_id']) & (pro_adjust['biz_type'] == row['biz_type']))]
+            ((pro_adjust['broker_id'] == row['broker_id']) & (pro_adjust['biz_type'] == row['biz_type']))].copy()
         parsing_message.append(get_message(_pro_adjust, row, biz_dt))
 
     parsing_df = pd.DataFrame(data=parsing_message,
                               columns=['data_source', 'data_type', 'biz_dt', 'platform', 'in', 'out', 'up', 'down'])
-    rz_df = pd.concat([collect_df, parsing_df], ignore_index=False)
-    return rz_df
+    return collect_df, parsing_df
 
 
 def db_handle(_all, biz_dt, pro_adjust, union):
@@ -907,13 +915,12 @@ def db_handle(_all, biz_dt, pro_adjust, union):
 
     for index, row in _all.iterrows():
         _pro_adjust = pro_adjust.loc[
-            ((pro_adjust['broker_id'] == row['broker_id']) & (pro_adjust['biz_type'] == row['biz_type']))]
+            ((pro_adjust['broker_id'] == row['broker_id']) & (pro_adjust['biz_type'] == row['biz_type']))].copy()
         parsing_message.append(get_message(_pro_adjust, row, biz_dt))
 
     parsing_df = pd.DataFrame(data=parsing_message,
                               columns=['data_source', 'data_type', 'biz_dt', 'platform', 'in', 'out', 'up', 'down'])
-    db_df = pd.concat([collect_df, parsing_df], ignore_index=False)
-    return db_df
+    return collect_df, parsing_df
 
 
 if __name__ == '__main__':
