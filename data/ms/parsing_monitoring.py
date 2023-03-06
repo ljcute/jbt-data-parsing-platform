@@ -373,6 +373,11 @@ def rq_handle(_all_rq, biz_dt, pro_adjust, union):
                 cur['key'] = cur['securitiescode'].apply(lambda x: ('000000' + str(x))[-max(6, len(str(x))):])
                 pre['pre_rate'] = 50
                 cur['cur_rate'] = 50
+            elif _data_source in ('方正证券',):
+                pre['key'] = pre['stockCode'].apply(lambda x: ('000000' + str(x))[-max(6, len(str(x))):])
+                cur['key'] = cur['stockCode'].apply(lambda x: ('000000' + str(x))[-max(6, len(str(x))):])
+                pre['pre_rate'] = pre['saleRate'].apply(lambda x: int(x * 100))
+                cur['cur_rate'] = cur['saleRate'].apply(lambda x: int(x * 100))
             else:
                 logger.warning(f"fix {_data_source}")
                 continue
@@ -626,6 +631,11 @@ def rz_handle(_all_rz, biz_dt, pro_adjust, union):
                 cur['key'] = cur['securitiescode'].apply(lambda x: ('000000' + str(x))[-max(6, len(str(x))):])
                 pre['pre_rate'] = 100
                 cur['cur_rate'] = 100
+            elif _data_source in ('方正证券',):
+                pre['key'] = pre['stockCode'].apply(lambda x: ('000000' + str(x))[-max(6, len(str(x))):])
+                cur['key'] = cur['stockCode'].apply(lambda x: ('000000' + str(x))[-max(6, len(str(x))):])
+                pre['pre_rate'] = pre['finRate'].apply(lambda x: int(x * 100))
+                cur['cur_rate'] = cur['finRate'].apply(lambda x: int(x * 100))
             else:
                 logger.warning(f"fix {_data_source}")
                 continue
@@ -868,6 +878,11 @@ def db_handle(_all, biz_dt, pro_adjust, union):
                 cur['key'] = cur['securitiescode'].apply(lambda x: ('000000' + str(x))[-max(6, len(str(x))):])
                 pre['pre_rate'] = pre['convertrate'].apply(lambda x: int(x * 100))
                 cur['cur_rate'] = cur['convertrate'].apply(lambda x: int(x * 100))
+            elif _data_source in ('方正证券',):
+                pre['key'] = pre['stockCode'].apply(lambda x: ('000000' + str(x))[-max(6, len(str(x))):])
+                cur['key'] = cur['stockCode'].apply(lambda x: ('000000' + str(x))[-max(6, len(str(x))):])
+                pre['pre_rate'] = pre['rate'].apply(lambda x: int(x * 100))
+                cur['cur_rate'] = cur['rate'].apply(lambda x: int(x * 100))
             else:
                 logger.warning(f"fix {_data_source}")
                 continue
