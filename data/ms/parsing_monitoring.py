@@ -80,7 +80,7 @@ def get_pre_collected_data(biz_dt):
 
 def get_security_data():
     sql = f"""
-        select broker_id, broker_code, broker_name, order_no from t_security_broker where valid = '1'
+        select broker_id, broker_code, broker_name, order_no from t_security_broker
     """
     return db_biz_pro.select(sql)
 
@@ -150,19 +150,57 @@ def handle_cmp(biz_dt):
     _all_rq = pro_adjust.loc[pro_adjust['biz_type'] == '融券标的'].drop_duplicates(['broker_id', 'biz_type'])
     rq_collect_df, rq_parsing_df = rq_handle(_all_rq, biz_dt, pro_adjust, rq_union)
     logger.info(f'融券标的券数据核验结束---')
-
+    logger.info(f'数据对比开始---')
     # 采集数据df
-    collect_df = pd.concat([db_collect_df, rz_collect_df, rq_collect_df], ignore_index=False)
+    df_collect = pd.concat([db_collect_df, rz_collect_df, rq_collect_df], ignore_index=False)
     # 解析数据df
-    parsing_df = pd.concat([db_parsing_df, rz_parsing_df, rq_parsing_df], ignore_index=False)
+    df_parsing = pd.concat([db_parsing_df, rz_parsing_df, rq_parsing_df], ignore_index=False)
     # 券商配置表df
-    security_df = get_security_data()
-
-    #返回结果df合并排序
-    result_df = pd.concat([collect_df, parsing_df], ignore_index=False)
-    result_df = result_df.sort_values(by=['data_source','data_type'], ascending=False)
-
-    return result_df
+    df_broker = get_security_data()
+    df_collect.rename(columns={'in': 'c_in', 'out': 'c_out', 'up': 'c_up', 'down': 'c_down'}, inplace=True)
+    df_parsing.rename(columns={'in': 'p_in', 'out': 'p_out', 'up': 'p_up', 'down': 'p_down'}, inplace=True)
+    df_collect = df_collect[['data_source', 'data_type', 'biz_dt', 'c_in', 'c_out', 'c_up', 'c_down']]
+    df_parsing = df_parsing[['data_source', 'data_type', 'biz_dt', 'p_in', 'p_out', 'p_up', 'p_down']]
+    df_tmp = pd.merge(df_collect, df_parsing, how='left', on=['data_source', 'data_type', 'biz_dt'])
+    df_tmp.fillna(0, inplace=True)
+    df_tmp['c_in'] = df_tmp['c_in'].astype(int)
+    df_tmp['p_in'] = df_tmp['p_in'].astype(int)
+    df_tmp['c_out'] = df_tmp['c_out'].astype(int)
+    df_tmp['p_out'] = df_tmp['p_out'].astype(int)
+    df_tmp['c_up'] = df_tmp['c_up'].astype(int)
+    df_tmp['p_up'] = df_tmp['p_up'].astype(int)
+    df_tmp['c_down'] = df_tmp['c_down'].astype(int)
+    df_tmp['p_down'] = df_tmp['p_down'].astype(int)
+    df_tmp['告警状态'] = (df_tmp['c_in'] == df_tmp['p_in']) & (df_tmp['c_out'] == df_tmp['p_out']) & (df_tmp['c_up'] == df_tmp['p_up']) & (df_tmp['c_down'] == df_tmp['p_down'])
+    df_tmp['告警状态'] = df_tmp['告警状态'].replace({True: '正常', False: '告警'})
+    df_tmp['in'] = df_tmp['c_in'].astype(str) + '-' + df_tmp['p_in'].astype(str)
+    df_tmp['out'] = df_tmp['c_out'].astype(str) + '-' + df_tmp['p_out'].astype(str)
+    df_tmp['up'] = df_tmp['c_up'].astype(str) + '-' + df_tmp['p_up'].astype(str)
+    df_tmp['down'] = df_tmp['c_down'].astype(str) + '-' + df_tmp['p_down'].astype(str)
+    df_tmp['in_flag'] = (df_tmp['c_in'] == df_tmp['p_in']).replace({True: '正常', False: '告警'})
+    df_tmp['out_flag'] = (df_tmp['c_out'] == df_tmp['p_out']).replace({True: '正常', False: '告警'})
+    df_tmp['up_flag'] = (df_tmp['c_up'] == df_tmp['p_up']).replace({True: '正常', False: '告警'})
+    df_tmp['down_flag'] = (df_tmp['c_down'] == df_tmp['p_down']).replace({True: '正常', False: '告警'})
+    exchange_rows = df_broker[df_broker['broker_name'] == '交易所']
+    sse_rows = exchange_rows.copy()
+    szse_rows = exchange_rows.copy()
+    bse_rows = exchange_rows.copy()
+    sse_rows['broker_name'] = '上海交易所'
+    szse_rows['broker_name'] = '深圳交易所'
+    bse_rows['broker_name'] = '北京交易所'
+    df_broker = pd.concat([sse_rows, szse_rows, bse_rows, df_broker[df_broker['broker_name'] != '交易所']])
+    # 返回结果df合并排序
+    df_tmp = pd.merge(df_tmp, df_broker, how='left', left_on='data_source', right_on='broker_name')
+    df_tmp['broker_id'] = df_tmp['broker_id'].astype(int)
+    df_tmp['order_no'] = df_tmp['order_no'].astype(int)
+    df_result = df_tmp[['biz_dt', 'broker_id', 'broker_code', 'broker_name', 'order_no', 'data_type', 'in', 'in_flag', 'out', 'out_flag', 'up', 'up_flag', 'down', 'down_flag', '告警状态']]
+    df_result = df_result.sort_values(by=['告警状态', 'order_no', 'broker_name', 'data_type'], ascending=True)
+    df_result.reset_index(inplace=True, drop=True)
+    df_result.rename(columns={'biz_dt': '数据日期', 'broker_id': '机构ID', 'broker_code': '机构代码', 'broker_name': '机构名称', 'order_no': '排名', 'data_type': '业务类型',
+                              'in': '调入[采-解]', 'in_flag': '调入[告警状态]', 'out': '调出[采-解]', 'out_flag': '调出[告警状态]',
+                              'up': '调高[采-解]', 'up_flag': '调高[告警状态]', 'down': '调低[采-解]', 'down_flag': '调低[告警状态]', '告警状态': '解析告警状态'}, inplace=True)
+    logger.info(f'数据对比结束---')
+    return df_result
 
 
 def rq_handle(_all_rq, biz_dt, pro_adjust, union):
