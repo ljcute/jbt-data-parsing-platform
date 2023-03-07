@@ -173,14 +173,10 @@ def handle_cmp(biz_dt):
     df_tmp['p_down'] = df_tmp['p_down'].astype(int)
     df_tmp['告警状态'] = (df_tmp['c_in'] == df_tmp['p_in']) & (df_tmp['c_out'] == df_tmp['p_out']) & (df_tmp['c_up'] == df_tmp['p_up']) & (df_tmp['c_down'] == df_tmp['p_down'])
     df_tmp['告警状态'] = df_tmp['告警状态'].replace({True: '正常', False: '告警'})
-    df_tmp['in'] = df_tmp['c_in'].astype(str) + '-' + df_tmp['p_in'].astype(str)
-    df_tmp['out'] = df_tmp['c_out'].astype(str) + '-' + df_tmp['p_out'].astype(str)
-    df_tmp['up'] = df_tmp['c_up'].astype(str) + '-' + df_tmp['p_up'].astype(str)
-    df_tmp['down'] = df_tmp['c_down'].astype(str) + '-' + df_tmp['p_down'].astype(str)
-    df_tmp['in_flag'] = (df_tmp['c_in'] == df_tmp['p_in']).replace({True: '正常', False: '告警'})
-    df_tmp['out_flag'] = (df_tmp['c_out'] == df_tmp['p_out']).replace({True: '正常', False: '告警'})
-    df_tmp['up_flag'] = (df_tmp['c_up'] == df_tmp['p_up']).replace({True: '正常', False: '告警'})
-    df_tmp['down_flag'] = (df_tmp['c_down'] == df_tmp['p_down']).replace({True: '正常', False: '告警'})
+    df_tmp['in'] = df_tmp['c_in'].astype(str) + '-' + df_tmp['p_in'].astype(str) + (df_tmp['c_in'] == df_tmp['p_in']).replace({True: '', False: '(告警)'})
+    df_tmp['out'] = df_tmp['c_out'].astype(str) + '-' + df_tmp['p_out'].astype(str) + (df_tmp['c_out'] == df_tmp['p_out']).replace({True: '', False: '(告警)'})
+    df_tmp['up'] = df_tmp['c_up'].astype(str) + '-' + df_tmp['p_up'].astype(str) + (df_tmp['c_up'] == df_tmp['p_up']).replace({True: '', False: '(告警)'})
+    df_tmp['down'] = df_tmp['c_down'].astype(str) + '-' + df_tmp['p_down'].astype(str) + (df_tmp['c_down'] == df_tmp['p_down']).replace({True: '', False: '(告警)'})
     exchange_rows = df_broker[df_broker['broker_name'] == '交易所']
     sse_rows = exchange_rows.copy()
     szse_rows = exchange_rows.copy()
@@ -193,12 +189,11 @@ def handle_cmp(biz_dt):
     df_tmp = pd.merge(df_tmp, df_broker, how='left', left_on='data_source', right_on='broker_name')
     df_tmp['broker_id'] = df_tmp['broker_id'].astype(int)
     df_tmp['order_no'] = df_tmp['order_no'].astype(int)
-    df_result = df_tmp[['biz_dt', 'broker_id', 'broker_code', 'broker_name', 'order_no', 'data_type', 'in', 'in_flag', 'out', 'out_flag', 'up', 'up_flag', 'down', 'down_flag', '告警状态']]
+    df_result = df_tmp[['biz_dt', 'broker_id', 'broker_code', 'broker_name', 'order_no', 'data_type', 'in', 'out', 'up', 'down', '告警状态']]
     df_result = df_result.sort_values(by=['告警状态', 'order_no', 'broker_name', 'data_type'], ascending=True)
     df_result.reset_index(inplace=True, drop=True)
     df_result.rename(columns={'biz_dt': '数据日期', 'broker_id': '机构ID', 'broker_code': '机构代码', 'broker_name': '机构名称', 'order_no': '排名', 'data_type': '业务类型',
-                              'in': '调入[采-解]', 'in_flag': '调入[告警状态]', 'out': '调出[采-解]', 'out_flag': '调出[告警状态]',
-                              'up': '调高[采-解]', 'up_flag': '调高[告警状态]', 'down': '调低[采-解]', 'down_flag': '调低[告警状态]', '告警状态': '解析告警状态'}, inplace=True)
+                              'in': '调入[采-解]', 'out': '调出[采-解]', 'up': '调高[采-解]', 'down': '调低[采-解]', '告警状态': '解析告警状态'}, inplace=True)
     logger.info(f'数据对比结束---')
     return df_result
 
