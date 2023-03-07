@@ -11,7 +11,7 @@ from data.ms.base_tools import code_ref_id, get_df_from_cdata, match_sid_by_code
 
 
 def _get_format_df(cdata, biz_type):
-    df = get_df_from_cdata(cdata)
+    data_source, df = get_df_from_cdata(cdata)
     df['sec_name'] = df['证券简称']
     df['sec_name'] = df['sec_name'].str.replace(' ', '')
     if biz_type == 'dbq':
@@ -19,7 +19,7 @@ def _get_format_df(cdata, biz_type):
     elif biz_type == 'bdq':
         df['sec_code'] = df['证券代码'].str.upper()
 
-    _df = match_sid_by_code_and_name(df)
+    _df = match_sid_by_code_and_name(df, data_source)
     df = df.merge(_df, on=['sec_code', 'sec_name'])
     df['sec_code'] = df['scd']
     df['start_dt'] = None

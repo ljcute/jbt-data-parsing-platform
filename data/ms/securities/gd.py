@@ -11,7 +11,7 @@ from data.ms.base_tools import get_df_from_cdata, code_ref_id
 
 
 def _get_format_df(cdata, market):
-    df = get_df_from_cdata(cdata)
+    data_source, df = get_df_from_cdata(cdata)
     df['market'] = df['证券市场'].map(lambda x: 'SZ' if str(x) == '深A' else 'SH' if str(x) == '沪A' else 'BJ' if str(x) == '北A' else str(x))
     df['sec_code'] = df['证券代码'].apply(lambda x: ('000000'+str(x))[-max(6, len(str(x))):])
     df['sec_code'] = df['sec_code'] + '.' + df['market']
@@ -24,7 +24,7 @@ def _get_format_df(cdata, market):
         biz_dt = dt
     else:
         biz_dt = str(dt)[:4] + '-' + str(dt)[4:6] + '-' + str(dt)[-2:]
-    return biz_dt, code_ref_id(df)
+    return biz_dt, code_ref_id(df, data_source)
 
 def _format_dbq(cdata, market):
     biz_dt, df = _get_format_df(cdata, 'dbq')

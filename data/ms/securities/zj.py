@@ -12,7 +12,7 @@ from data.ms.base_tools import get_df_from_cdata, code_ref_id
 
 
 def _get_format_df(cdata):
-    df = get_df_from_cdata(cdata)
+    data_source, df = get_df_from_cdata(cdata)
     df['market'] = df['exchname'].map(
         lambda x: 'SZ' if str(x) == '深市' else 'SH' if str(x) == '沪市' else 'BJ' if math.isnan(x) else str(x))
     df['sec_code'] = df['stkid'].apply(lambda x: ('000000' + str(x))[-max(6, len(str(x))):])
@@ -20,7 +20,7 @@ def _get_format_df(cdata):
     df['sec_name'] = df['stkname']
     df['start_dt'] = None
     biz_dt = cdata['biz_dt'].values[0]
-    return biz_dt, code_ref_id(df)
+    return biz_dt, code_ref_id(df, data_source)
 
 
 def _format_db_rz_rq_bdq(cdata, market):

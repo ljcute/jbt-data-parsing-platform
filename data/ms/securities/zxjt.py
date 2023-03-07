@@ -11,14 +11,14 @@ from data.ms.base_tools import code_ref_id, get_df_from_cdata
 
 
 def _get_format_df(cdata):
-    df = get_df_from_cdata(cdata)
+    data_source, df = get_df_from_cdata(cdata)
     df['market'] = df['market'].map(lambda x: 'SZ' if str(x) == '0' else 'SH' if str(x) == '1' else 'BJ' if str(x) in ('2', 'B') else str(x))
     df['sec_code'] = df['stkcode'].apply(lambda x: ('000000'+str(x))[-max(6, len(str(x))):])
     df['sec_code'] = df['sec_code'] + '.' + df['market']
     df['sec_name'] = df['stkname']
     df['start_dt'] = None
     biz_dt = str(df['updatedate'].values[0])[:10]
-    return biz_dt, code_ref_id(df)
+    return biz_dt, code_ref_id(df, data_source)
 
 
 def _format_db_rz_rq_bdq(cdata, market):

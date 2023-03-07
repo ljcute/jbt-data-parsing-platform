@@ -13,14 +13,14 @@ from util.logs_utils import logger
 
 
 def _get_format_df(cdata):
-    df = get_df_from_cdata(cdata)
+    data_source, df = get_df_from_cdata(cdata)
     df['market'] = df['BOURSE'].str.strip()
     df['sec_code'] = df['STOCK_CODE'].apply(lambda x: ('000000' + str(x))[-max(6, len(str(x))):])
     df['sec_code'] = df['sec_code'] + '.' + df['market']
     df['sec_name'] = df['STOCK_NAME']
     df['start_dt'] = None
     biz_dt = timeStamp(int(df['CREATE_TIME'].values[0][6:len(df['CREATE_TIME'].values[0]) - 2]))[:10]
-    return biz_dt, code_ref_id(df)
+    return biz_dt, code_ref_id(df, data_source)
 
 
 def timeStamp(timeNum):

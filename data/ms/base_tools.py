@@ -20,7 +20,7 @@ zw = r'[\u4e00-\u9fa5]+'
 
 
 def get_df_from_cdata(cdata):
-    return pd.read_csv(StringIO(cdata['data_text'][0]), sep=",")
+    return cdata['data_source'].to_list()[0], pd.read_csv(StringIO(cdata['data_text'][0]), sep=",")
 
 
 class Cache(object):
@@ -120,7 +120,7 @@ def register_sic_df(_df, exchange=False):
     return set_sic_df(register_sec360_security(_df[['sec_type', 'sec_code', 'sec_name']]), _df, exchange)
 
 
-def code_ref_id(_df, exchange=False):
+def code_ref_id(_df, data_source, exchange=False):
     df1 = _df.merge(get_sic_df(), how='left', on='sec_code')
     no_sec_id_df = df1.loc[df1['sec_id'].isna()]
     if not no_sec_id_df.empty:
@@ -129,7 +129,7 @@ def code_ref_id(_df, exchange=False):
         zc_sec_df = df1.loc[df1['sec_id'].isna()][['market', 'sec_code', 'sec_name']]
         if not zc_sec_df.empty:
             # 监控并Email关键词：本次需注册证券对象有
-            logger.warn(f"本次需注册证券对象有({zc_sec_df.index.size}只)：\n{zc_sec_df.reset_index(drop=True)}")
+            logger.warn(f"{data_source}中本次需注册证券对象有({zc_sec_df.index.size}只)：\n{zc_sec_df.reset_index(drop=True)}")
     return df1.loc[~df1['sec_id'].isna()].copy()
 
 
@@ -174,7 +174,7 @@ def char_arr_split(values, split_length=2):
     return values
 
 
-def match_sid_by_code_and_name(df):
+def match_sid_by_code_and_name(df, data_source):
     """"
     1、找出df中每个代码，在sid_df中只存在1个代码的代码，认为是相同代码
     2、再再出df中每个代码的前5位，在sid_df中只存在1个市场和证券类型的代码，认为是相同市场的相同证券类型
@@ -225,5 +225,5 @@ def match_sid_by_code_and_name(df):
     no_match = no_match.loc[no_match['sid'].isna()]
     if not no_match.empty:
         # 监控并Email关键词：如下证券对象无法识别
-        logger.warn(f"如下证券对象无法识别\n {no_match}")
+        logger.warn(f"{data_source}中如下证券对象无法识别\n {no_match}")
     return match.rename(columns={'sid': 'sec_id', 'stp': 'sec_type'})

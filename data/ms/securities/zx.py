@@ -11,7 +11,7 @@ from data.ms.base_tools import code_ref_id, get_df_from_cdata
 
 
 def _get_format_df(cdata, biz_type):
-    df = get_df_from_cdata(cdata)
+    data_source, df = get_df_from_cdata(cdata)
     if biz_type == 'dbq':
         df = df.loc[(df['isValid'] == 1) & (df['status'] == '正常')].copy()
     df['market'] = df['exchangeCode'].map(lambda x: 'SZ' if str(x) == '深圳' else 'SH' if str(x) == '上海' else 'BJ' if str(x) == '北京' else str(x))
@@ -21,7 +21,7 @@ def _get_format_df(cdata, biz_type):
     df['start_dt'] = None
     dt = df['dataDate'].values[0]
     biz_dt = str(dt)[:4] + '-' + str(dt)[4:6] + '-' + str(dt)[-2:]
-    return biz_dt, code_ref_id(df)
+    return biz_dt, code_ref_id(df, data_source)
 
 
 def _format_dbq(cdata, market):

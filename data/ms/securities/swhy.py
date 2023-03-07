@@ -11,12 +11,12 @@ from data.ms.base_tools import code_ref_id, get_df_from_cdata
 
 
 def _get_format_df(cdata):
-    df = get_df_from_cdata(cdata)
+    data_source, df = get_df_from_cdata(cdata)
     df['market'] = df['市场'].map(lambda x: 'SZ' if x == '深圳' else 'SH' if x == '上海' else 'BJ' if x in ('北京', 'B') else x)
     df['sec_code'] = df['证券代码'].apply(lambda x: ('000000'+str(x))[-max(6, len(str(x))):])
     df['sec_code'] = df['sec_code'] + '.' + df['market']
     df['sec_name'] = df['证券简称']
-    return cdata['biz_dt'].values[0], code_ref_id(df)
+    return cdata['biz_dt'].values[0], code_ref_id(df, data_source)
 
 
 def _format_dbq(cdata, market):
