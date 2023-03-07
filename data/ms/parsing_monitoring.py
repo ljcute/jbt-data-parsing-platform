@@ -28,18 +28,15 @@ db_raw_pro = MysqlClient(**cfg.get_content(f'pro_db_raw'))
 
 def get_adjust_data(biz_dt):
     sql = f"""
-    SELECT a.broker_code, a.broker_name,b.* FROM t_security_broker a,
-    (SELECT broker_id, 
-    (case biz_type when 1 then '融资标的' when 2 then '融券标的' when 3 then '担保券' when 4 then '集中度' else biz_type end) as biz_type, 
-    adjust_type,
+    SELECT broker_id, 
+    (case biz_type when 1 then '融资标的' when 2 then '融券标的' when 3 then '担保券' when 4 then '集中度' else biz_type end) as data_type, 
+    adjust_type, data_desc,
     (case adjust_type when 1 then '调入' when 2 then '调出' when 3 then '调高' when 4 then '调低' else adjust_type end) as adjust_type_cn, 
     count(*) as adjust_num
     FROM t_broker_mt_business_security 
     WHERE data_status=1 and start_dt <= '{biz_dt} 00:00:00' and end_dt > '{biz_dt} 00:00:00'
      and biz_type in (1,2,3) and start_dt='{biz_dt} 00:00:00'
-    GROUP BY broker_id, biz_type, adjust_type) b 
-    where a.broker_id=b.broker_id
-    ORDER BY b.broker_id, biz_type, adjust_type
+    GROUP BY broker_id, biz_type, adjust_type, data_desc
     """
     return db_biz_pro.select(sql)
 
@@ -54,7 +51,7 @@ def get_collected_data(biz_dt):
       from t_ndc_data_collect_log 
      where log_id in (select max(log_id) 
                        from t_ndc_data_collect_log 
-                      where biz_dt='{biz_dt}' 
+                      where biz_dt='{biz_dt}'
                         and data_status=1
                       group by data_source, data_type)
     """
@@ -109,59 +106,60 @@ def get_message(_adjust, row, biz_dt):
 
 
 def handle_cmp(biz_dt):
-    pro_adjust = get_adjust_data(biz_dt)
-    pro_adjust['env'] = 'pro'
-    pro_adjust.sort_values(by=['biz_type', 'broker_id', 'adjust_type'], inplace=True, ascending=True)
-    clm = pro_adjust.columns.tolist()
-    duplicate = pro_adjust[pro_adjust.duplicated(subset=clm, keep=False)].copy()
-    duplicate.sort_values(by=['biz_type', 'broker_id', 'adjust_type'], inplace=True, ascending=True)
-    diff = pro_adjust[~pro_adjust.duplicated(subset=clm, keep=False)].copy()
-    diff.sort_values(by=['biz_type', 'broker_id', 'adjust_type'], inplace=True, ascending=True)
-
-    _diff = diff.loc[diff['biz_type'] == '担保券'].copy()
-    _diff.drop_duplicates(['broker_id', 'biz_type'], inplace=True)
-    _diff_rz = diff.loc[diff['biz_type'] == '融资标的'].copy()
-    _diff.drop_duplicates(['broker_id', 'biz_type'], inplace=True)
-    _diff_rq = diff.loc[diff['biz_type'] == '融券标的'].copy()
-    _diff.drop_duplicates(['broker_id', 'biz_type'], inplace=True)
-
+    logger.info(f'开始当日采集数据提取---')
     logs = get_collected_data(biz_dt[:10])
+    logger.info(f'结束当日采集数据提取---')
+    logger.info(f'开始前日采集数据提取---')
     pre_logs = get_pre_collected_data(biz_dt[:10])
+    logger.info(f'结束前日采集数据提取---')
     if pre_logs.empty:
         logger.info(f"pre_logs is empty，biz_dt={biz_dt}")
     # 合并
     union = logs.merge(pre_logs, on=['data_source', 'data_type'])
     db_union = union.loc[(union['data_type'] == '2') | (union['data_type'] == '99')].copy()
     logger.info(f'开始核验担保券数据---')
-    _all = pro_adjust.loc[pro_adjust['biz_type'] == '担保券'].drop_duplicates(['broker_id', 'biz_type'])
-    db_collect_df, db_parsing_df = db_handle(_all, biz_dt, pro_adjust, db_union)
+    db_collect_df = db_handle(biz_dt, db_union)
     logger.info(f'担保券数据核验结束---')
 
     rz_union = union.loc[
         (union['data_type'] == '3') | (union['data_type'] == '4') | (union['data_type'] == '99')].copy()
     logger.info(f'开始核验融资标的券数据---')
-    _all_rz = pro_adjust.loc[pro_adjust['biz_type'] == '融资标的'].drop_duplicates(['broker_id', 'biz_type'])
-    rz_collect_df, rz_parsing_df = rz_handle(_all_rz, biz_dt, pro_adjust, rz_union)
+    rz_collect_df = rz_handle(biz_dt, rz_union)
     logger.info(f'融资标的券数据核验结束---')
 
     rq_union = union.loc[
         (union['data_type'] == '3') | (union['data_type'] == '5') | (union['data_type'] == '99')].copy()
     logger.info(f'开始核验融券标的券数据---')
-    _all_rq = pro_adjust.loc[pro_adjust['biz_type'] == '融券标的'].drop_duplicates(['broker_id', 'biz_type'])
-    rq_collect_df, rq_parsing_df = rq_handle(_all_rq, biz_dt, pro_adjust, rq_union)
+    rq_collect_df = rq_handle(biz_dt, rq_union)
     logger.info(f'融券标的券数据核验结束---')
     logger.info(f'数据对比开始---')
     # 采集数据df
     df_collect = pd.concat([db_collect_df, rz_collect_df, rq_collect_df], ignore_index=False)
-    # 解析数据df
-    df_parsing = pd.concat([db_parsing_df, rz_parsing_df, rq_parsing_df], ignore_index=False)
     # 券商配置表df
     df_broker = get_security_data()
+    # 解析数据df
+    _df_parsing = get_adjust_data(biz_dt)
+    _df_parsing = pd.merge(_df_parsing, df_broker, how='left', on='broker_id')
+    _df_parsing['data_desc'] = _df_parsing['data_desc'].astype(str)
+    _df_parsing['data_source'] = _df_parsing['broker_name']
+    _df_parsing['data_source'] = (_df_parsing['data_desc'] == '1').replace({True: '深圳', False: ''}) + _df_parsing['data_source']
+    _df_parsing['data_source'] = (_df_parsing['data_desc'] == '2').replace({True: '上海', False: ''}) + _df_parsing['data_source']
+    _df_parsing['data_source'] = (_df_parsing['data_desc'] == '3').replace({True: '北京', False: ''}) + _df_parsing['data_source']
+    df_parsing = _df_parsing.pivot_table(index=['data_source', 'data_type'], columns='adjust_type', values='adjust_num')
+    df_parsing.rename(columns={1: 'p_in', 2: 'p_out', 3: 'p_up', 4: 'p_down'}, inplace=True)
+    df_parsing = df_parsing.reset_index()
+    df_parsing.fillna(0, inplace=True)
+    exchange_rows = df_broker[df_broker['broker_name'] == '交易所']
+    sse_rows = exchange_rows.copy()
+    szse_rows = exchange_rows.copy()
+    bse_rows = exchange_rows.copy()
+    sse_rows['broker_name'] = '上海交易所'
+    szse_rows['broker_name'] = '深圳交易所'
+    bse_rows['broker_name'] = '北京交易所'
+    df_broker = pd.concat([sse_rows, szse_rows, bse_rows, df_broker[df_broker['broker_name'] != '交易所']])
     df_collect.rename(columns={'in': 'c_in', 'out': 'c_out', 'up': 'c_up', 'down': 'c_down'}, inplace=True)
-    df_parsing.rename(columns={'in': 'p_in', 'out': 'p_out', 'up': 'p_up', 'down': 'p_down'}, inplace=True)
     df_collect = df_collect[['data_source', 'data_type', 'biz_dt', 'c_in', 'c_out', 'c_up', 'c_down']]
-    df_parsing = df_parsing[['data_source', 'data_type', 'biz_dt', 'p_in', 'p_out', 'p_up', 'p_down']]
-    df_tmp = pd.merge(df_collect, df_parsing, how='left', on=['data_source', 'data_type', 'biz_dt'])
+    df_tmp = pd.merge(df_collect, df_parsing, how='left', on=['data_source', 'data_type'])
     df_tmp.fillna(0, inplace=True)
     df_tmp['c_in'] = df_tmp['c_in'].astype(int)
     df_tmp['p_in'] = df_tmp['p_in'].astype(int)
@@ -177,14 +175,6 @@ def handle_cmp(biz_dt):
     df_tmp['out'] = df_tmp['c_out'].astype(str) + '-' + df_tmp['p_out'].astype(str) + (df_tmp['c_out'] == df_tmp['p_out']).replace({True: '', False: '(告警)'})
     df_tmp['up'] = df_tmp['c_up'].astype(str) + '-' + df_tmp['p_up'].astype(str) + (df_tmp['c_up'] == df_tmp['p_up']).replace({True: '', False: '(告警)'})
     df_tmp['down'] = df_tmp['c_down'].astype(str) + '-' + df_tmp['p_down'].astype(str) + (df_tmp['c_down'] == df_tmp['p_down']).replace({True: '', False: '(告警)'})
-    exchange_rows = df_broker[df_broker['broker_name'] == '交易所']
-    sse_rows = exchange_rows.copy()
-    szse_rows = exchange_rows.copy()
-    bse_rows = exchange_rows.copy()
-    sse_rows['broker_name'] = '上海交易所'
-    szse_rows['broker_name'] = '深圳交易所'
-    bse_rows['broker_name'] = '北京交易所'
-    df_broker = pd.concat([sse_rows, szse_rows, bse_rows, df_broker[df_broker['broker_name'] != '交易所']])
     # 返回结果df合并排序
     df_tmp = pd.merge(df_tmp, df_broker, how='left', left_on='data_source', right_on='broker_name')
     df_tmp['broker_id'] = df_tmp['broker_id'].astype(int)
@@ -198,7 +188,7 @@ def handle_cmp(biz_dt):
     return df_result
 
 
-def rq_handle(_all_rq, biz_dt, pro_adjust, union):
+def rq_handle(biz_dt, union):
     _message = []
     for idx, rw in union.iterrows():
         try:
@@ -441,19 +431,10 @@ def rq_handle(_all_rq, biz_dt, pro_adjust, union):
             logger.info(f"{rw['data_source']} ({rw['data_type']}) {err}")
     collect_df = pd.DataFrame(data=_message,
                               columns=['data_source', 'data_type', 'biz_dt', 'platform', 'in', 'out', 'up', 'down'])
-    parsing_message = []
-
-    for index, row in _all_rq.iterrows():
-        _pro_adjust = pro_adjust.loc[
-            ((pro_adjust['broker_id'] == row['broker_id']) & (pro_adjust['biz_type'] == row['biz_type']))].copy()
-        parsing_message.append(get_message(_pro_adjust, row, biz_dt))
-
-    parsing_df = pd.DataFrame(data=parsing_message,
-                              columns=['data_source', 'data_type', 'biz_dt', 'platform', 'in', 'out', 'up', 'down'])
-    return collect_df, parsing_df
+    return collect_df
 
 
-def rz_handle(_all_rz, biz_dt, pro_adjust, union):
+def rz_handle(biz_dt, union):
     _message = []
     for idx, rw in union.iterrows():
         try:
@@ -698,19 +679,10 @@ def rz_handle(_all_rz, biz_dt, pro_adjust, union):
             logger.info(f"{rw['data_source']} ({rw['data_type']}) {err}")
     collect_df = pd.DataFrame(data=_message,
                               columns=['data_source', 'data_type', 'biz_dt', 'platform', 'in', 'out', 'up', 'down'])
-    parsing_message = []
-
-    for index, row in _all_rz.iterrows():
-        _pro_adjust = pro_adjust.loc[
-            ((pro_adjust['broker_id'] == row['broker_id']) & (pro_adjust['biz_type'] == row['biz_type']))].copy()
-        parsing_message.append(get_message(_pro_adjust, row, biz_dt))
-
-    parsing_df = pd.DataFrame(data=parsing_message,
-                              columns=['data_source', 'data_type', 'biz_dt', 'platform', 'in', 'out', 'up', 'down'])
-    return collect_df, parsing_df
+    return collect_df
 
 
-def db_handle(_all, biz_dt, pro_adjust, union):
+def db_handle(biz_dt, union):
     _message = []
     for idx, rw in union.iterrows():
         try:
@@ -944,16 +916,7 @@ def db_handle(_all, biz_dt, pro_adjust, union):
             logger.info(f"{rw['data_source']} ({rw['data_type']}) {err}")
     collect_df = pd.DataFrame(data=_message,
                               columns=['data_source', 'data_type', 'biz_dt', 'platform', 'in', 'out', 'up', 'down'])
-    parsing_message = []
-
-    for index, row in _all.iterrows():
-        _pro_adjust = pro_adjust.loc[
-            ((pro_adjust['broker_id'] == row['broker_id']) & (pro_adjust['biz_type'] == row['biz_type']))].copy()
-        parsing_message.append(get_message(_pro_adjust, row, biz_dt))
-
-    parsing_df = pd.DataFrame(data=parsing_message,
-                              columns=['data_source', 'data_type', 'biz_dt', 'platform', 'in', 'out', 'up', 'down'])
-    return collect_df, parsing_df
+    return collect_df
 
 
 if __name__ == '__main__':
