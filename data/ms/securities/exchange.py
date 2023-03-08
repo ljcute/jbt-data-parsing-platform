@@ -59,7 +59,7 @@ def _format_rq_bdq(cdata, market):
 
 
 def _get_jyzl_format_df(cdata, market):
-    df = get_df_from_cdata(cdata)
+    data_source, df = get_df_from_cdata(cdata)
     biz_dt = df['业务日期']
     if market == 'SZ':
         market = 'SZSE'
@@ -75,7 +75,7 @@ def _format_jyzl(cdata, market):
 
 
 def _get_jymx_format_df(cdata, market):
-    df = get_df_from_cdata(cdata)
+    data_source, df = get_df_from_cdata(cdata)
     if market == 'SZ':
         df.rename(columns={'证券代码': 'sec_code', '证券简称': 'sec_name', '融资买入额(元)': 'fpa', '融资余额(元)': 'fb',
         '融券卖出量(股/份)': 'lssv', '融券余量(股/份)': 'lsv', '融券余额(元)': 'lsa', '融资融券余额(元)': 'mtb'}, inplace=True)
@@ -89,7 +89,7 @@ def _get_jymx_format_df(cdata, market):
     df['sec_code'] = df['sec_code'].apply(lambda x: ('000000'+str(x))[-max(6, len(str(x))):])
     df['sec_code'] = df['sec_code'] + '.' + market
     biz_dt = df['业务日期']
-    return biz_dt, code_ref_id(df, exchange=True)
+    return biz_dt, code_ref_id(df, data_source, exchange=True)
 
 
 def _format_jymx(cdata, market):
