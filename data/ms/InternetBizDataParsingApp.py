@@ -694,18 +694,23 @@ def get_and_fix_cur_db_data(_broker_id, _biz_dt, _biz_type, market, data):
                             lgc_del.append(rw['row_id'])
                             forever.append(rw['pre_row_id'])
                         else:
-                            # 前后值不一致，调高
-                            if rw['pre_cur_value'] < rw['rate']:
-                                # 调整类型错误
-                                if rw['adjust_type'] != 3:
-                                    rw['adjust_type'] = 3
-                                    fix_flag = True
-                            # 前后值不一致，调低
-                            elif rw['pre_cur_value'] > rw['rate']:
-                                # 调整类型错误
-                                if rw['adjust_type'] != 4:
-                                    rw['adjust_type'] = 4
-                                    fix_flag = True
+                            # 前值空，且调出，当前有值，则为调入
+                            if rw['pre_adjust_type'] == 2 and rw['pre_cur_value'] == n_one and rw['rate'] != n_one and rw['adjust_type'] != 1:
+                                rw['adjust_type'] = 1
+                                fix_flag = True
+                            else:
+                                # 前后值不一致，调高
+                                if rw['pre_cur_value'] != n_one and rw['pre_cur_value'] < rw['rate']:
+                                    # 调整类型错误
+                                    if rw['adjust_type'] != 3:
+                                        rw['adjust_type'] = 3
+                                        fix_flag = True
+                                # 前后值不一致，调低
+                                elif rw['rate'] != n_one and rw['pre_cur_value'] > rw['rate']:
+                                    # 调整类型错误
+                                    if rw['adjust_type'] != 4:
+                                        rw['adjust_type'] = 4
+                                        fix_flag = True
                             # 前值错误
                             if rw['pre_value'] != rw['pre_cur_value']:
                                 rw['pre_value'] = rw['pre_cur_value']
@@ -861,6 +866,11 @@ if __name__ == '__main__':
         exchange_df = get_last_exchange_collect_date(2).sort_values(by='biz_dt', axis=0, ascending=True)
         for index, row in exchange_df.iterrows():
             handle_range_collected_data(row['data_source'], row['data_type'], row['biz_dt'], persist_flag=False)
+        # handle_range_collected_data('广发证券', 2, '2023-03-07', persist_flag=True)
+        # handle_range_collected_data('广发证券', 4, '2023-03-07', persist_flag=True)
+        # handle_range_collected_data('东方财富', 2, '2023-03-07', persist_flag=True)
+        # handle_range_collected_data('东方财富', 3, '2023-03-07', persist_flag=True)
+        # handle_range_collected_data('信达证券', 2, '2023-03-07', persist_flag=True)
         kafka_mq_consumer()
     except Exception as e:
         logger.error(f"互联网数据解析服务启动异常: {e} =》{str(traceback.format_exc())}")
