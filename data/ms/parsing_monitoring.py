@@ -10,16 +10,16 @@
 import math
 import os
 import sys
-import traceback
 import pandas as pd
 from io import StringIO
-from datetime import datetime, timedelta
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.append(BASE_DIR)
 from config import Config
 from database import MysqlClient
 from util.logs_utils import logger
+from data.ms.base_tools import get_df_from_cdata, match_sid_by_code_and_name
+
 
 cfg = Config.get_cfg()
 db_biz_pro = MysqlClient(**cfg.get_content(f'pro_db_biz'))
@@ -185,6 +185,8 @@ def handle_cmp(biz_dt):
     df_result.rename(columns={'biz_dt': '数据日期', 'broker_id': '机构ID', 'broker_code': '机构代码', 'broker_name': '机构名称', 'order_no': '排名', 'data_type': '业务类型',
                               'in': '调入[采-解]', 'out': '调出[采-解]', 'up': '调高[采-解]', 'down': '调低[采-解]', '告警状态': '解析告警状态'}, inplace=True)
     logger.info(f'数据对比结束---')
+    df_result.to_csv('data.csv', index=False)
+    print(df_result)
     return df_result
 
 
@@ -305,7 +307,7 @@ def rq_handle(biz_dt, union):
                 pre['key'] = pre['zqdm'].apply(lambda x: ('000000' + str(x))[-max(6, len(str(x))):]) + '.' + pre[
                     'sc'].map(
                     lambda x: 'SZ' if str(x) == '1' else 'SH' if str(x) == '0' else 'BJ' if str(x) == '3' else str(x))
-                cur['key'] = cur['zqdm'].apply(lambda x: ('000000' + str(x))[-max(6, len(str(x))):]) + '.' + pre[
+                cur['key'] = cur['zqdm'].apply(lambda x: ('000000' + str(x))[-max(6, len(str(x))):]) + '.' + cur[
                     'sc'].map(
                     lambda x: 'SZ' if str(x) == '1' else 'SH' if str(x) == '0' else 'BJ' if str(x) == '3' else str(x))
                 pre['pre_rate'] = pre['rzbzjbl'].apply(lambda x: int(x * 100))
@@ -570,7 +572,7 @@ def rz_handle(biz_dt, union):
                     'sc'].map(
                     lambda x: 'SZ' if str(x) == '1' else 'SH' if str(x) == '0' else 'BJ' if str(x) == '3' else str(
                         x))
-                cur['key'] = cur['zqdm'].apply(lambda x: ('000000' + str(x))[-max(6, len(str(x))):]) + '.' + pre[
+                cur['key'] = cur['zqdm'].apply(lambda x: ('000000' + str(x))[-max(6, len(str(x))):]) + '.' + cur[
                     'sc'].map(
                     lambda x: 'SZ' if str(x) == '1' else 'SH' if str(x) == '0' else 'BJ' if str(x) == '3' else str(
                         x))
@@ -897,8 +899,17 @@ def db_handle(biz_dt, union):
                 pre['pre_rate'] = pre['cmorate'].apply(lambda x: int(str(x).replace('%', '')))
                 cur['cur_rate'] = cur['cmorate'].apply(lambda x: int(str(x).replace('%', '')))
             elif _data_source in ('信达证券',):
-                pre['key'] = pre['secu_code'].apply(lambda x: ('000000' + str(x))[-max(6, len(str(x))):])
-                cur['key'] = cur['secu_code'].apply(lambda x: ('000000' + str(x))[-max(6, len(str(x))):])
+                pre['sec_code'] = pre['secu_code'].apply(lambda x: ('000000' + str(x))[-max(6, len(str(x))):])
+                pre['sec_name'] = pre['secu_name'].str.replace(' ', '')
+                _pre = match_sid_by_code_and_name(pre, _data_source)
+                pre = pre.merge(_pre, on=['sec_code', 'sec_name'])
+                pre.rename(columns={'sec_code': 'key'}, inplace=True)
+                cur['sec_code'] = cur['secu_code'].apply(lambda x: ('000000' + str(x))[-max(6, len(str(x))):])
+                cur['sec_name'] = cur['secu_name'].str.replace(' ', '')
+                _cur = match_sid_by_code_and_name(cur, _data_source)
+                cur = cur.merge(_cur, on=['sec_code', 'sec_name'])
+                cur.rename(columns={'sec_code': 'key'}, inplace=True)
+
                 pre['pre_rate'] = pre['dbpzabl'].apply(lambda x: int(str(x).replace('%', '')))
                 cur['cur_rate'] = cur['dbpzabl'].apply(lambda x: int(str(x).replace('%', '')))
             elif _data_source in ('东北证券',):
