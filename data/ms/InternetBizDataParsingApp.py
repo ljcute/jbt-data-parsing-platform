@@ -26,6 +26,9 @@ from config import Config
 from database import MysqlClient
 from util.logs_utils import logger
 
+cfg = Config.get_cfg()
+db_biz_pro = MysqlClient(**cfg.get_content(f'pro_db_biz'))
+db_raw_pro = MysqlClient(**cfg.get_content(f'pro_db_raw'))
 
 def raw_db():
     global _raw_db
@@ -94,7 +97,7 @@ def get_collect_data(data_source, data_type, biz_dt):
                         and biz_dt='{biz_dt}' 
                         and data_status=1)
     """
-    return raw_db().select(sql)
+    return db_raw_pro.select(sql)
 
 
 def get_brokers():
@@ -102,7 +105,7 @@ def get_brokers():
     select * 
       from t_security_broker
     """
-    return biz_db().select(sql)
+    return db_biz_pro.select(sql)
 
 
 def market_sql_handle(market, sql):

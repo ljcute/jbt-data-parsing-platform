@@ -17,6 +17,8 @@ def _get_format_df(cdata):
     df['sec_code'] = df['sec_code'] + '.' + df['market']
     df['sec_name'] = df['证券简称']
     df['start_dt'] = None
+    df.sort_values(by=["sec_code", "sec_name"], ascending=[True, True])
+    df.drop_duplicates(subset=["sec_code", "sec_name"], keep='first', inplace=True, ignore_index=False)
     biz_dt = cdata['biz_dt'].values[0]
     return biz_dt, code_ref_id(df, data_source)
 

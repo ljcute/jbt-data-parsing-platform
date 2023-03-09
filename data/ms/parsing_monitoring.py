@@ -16,17 +16,33 @@ from datetime import datetime, timedelta
 import pandas as pd
 from io import StringIO
 
+
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.append(BASE_DIR)
 from config import Config
 from database import MysqlClient
 from util.logs_utils import logger
-from data.ms.base_tools import get_df_from_cdata, match_sid_by_code_and_name
+from data.ms.base_tools import get_df_from_cdata, match_sid_by_code_and_name, code_ref_id, get_exchange_discount_limit_rate
+from data.ms.InternetBizDataParsingApp import get_last_exchange_collect_date, handle_range_collected_data
 
 
 cfg = Config.get_cfg()
 db_biz_pro = MysqlClient(**cfg.get_content(f'pro_db_biz'))
 db_raw_pro = MysqlClient(**cfg.get_content(f'pro_db_raw'))
+
+
+def get_last_exchange_collect_date(days):
+    sql = f"""
+    select data_source, data_type, biz_dt
+      from t_ndc_data_collect_log 
+     where data_source in ('上海交易所', '深圳交易所', '北京交易所')
+       and data_type = 2
+       and data_status = 1
+  group by data_source, data_type, biz_dt
+  order by biz_dt desc
+  limit {3*days}
+    """
+    return db_raw_pro.select(sql)
 
 
 def get_adjust_data(biz_dt):
@@ -109,6 +125,10 @@ def get_message(_adjust, row, biz_dt):
 
 
 def handle_cmp(biz_dt):
+    # 启动应用跑交易所数据，填充共享内存证券代码与对象ID内容
+    exchange_df = get_last_exchange_collect_date(2).sort_values(by='biz_dt', axis=0, ascending=True)
+    for index, row in exchange_df.iterrows():
+        handle_range_collected_data(row['data_source'], row['data_type'], row['biz_dt'], persist_flag=False)
     logger.info(f'开始当日采集数据提取---')
     logs = get_collected_data(biz_dt[:10])
     logger.info(f'结束当日采集数据提取---')
@@ -188,8 +208,6 @@ def handle_cmp(biz_dt):
     df_result.rename(columns={'biz_dt': '数据日期', 'broker_id': '机构ID', 'broker_code': '机构代码', 'broker_name': '机构名称', 'order_no': '排名', 'data_type': '业务类型',
                               'in': '调入[采-解]', 'out': '调出[采-解]', 'up': '调高[采-解]', 'down': '调低[采-解]', '告警状态': '解析告警状态'}, inplace=True)
     logger.info(f'数据对比结束---')
-    df_result.to_csv('data.csv', index=False)
-    print(df_result)
     return df_result
 
 
@@ -886,8 +904,22 @@ def db_handle(biz_dt, union):
                 pre['pre_rate'] = pre['stockConvertRate'].apply(lambda x: int(str(x).replace('%', '')))
                 cur['cur_rate'] = cur['stockConvertRate'].apply(lambda x: int(str(x).replace('%', '')))
             elif _data_source in ('平安证券',):
-                pre['key'] = pre['证券代码'].apply(lambda x: ('000000' + str(x))[-max(6, len(str(x))):])
-                cur['key'] = cur['证券代码'].apply(lambda x: ('000000' + str(x))[-max(6, len(str(x))):])
+                pre['sec_code'] = pre['证券代码'].apply(lambda x: ('000000' + str(x))[-max(6, len(str(x))):])
+                pre['sec_name'] = pre['证券简称'].str.replace(' ', '')
+                _pre = match_sid_by_code_and_name(pre, _data_source)
+                pre = pre.merge(_pre, on=['sec_code', 'sec_name'])
+                pre.sort_values(by=["sec_code", "sec_name"], ascending=[True, True])
+                pre.drop_duplicates(subset=["sec_code", "sec_name"], keep='first', inplace=True, ignore_index=False)
+                pre['key'] = pre['scd']
+
+                cur['sec_code'] = cur['证券代码'].apply(lambda x: ('000000' + str(x))[-max(6, len(str(x))):])
+                cur['sec_name'] = cur['证券简称'].str.replace(' ', '')
+                _cur = match_sid_by_code_and_name(cur, _data_source)
+                cur = cur.merge(_cur, on=['sec_code', 'sec_name'])
+                cur.sort_values(by=["sec_code", "sec_name"], ascending=[True, True])
+                cur.drop_duplicates(subset=["sec_code", "sec_name"], keep='first', inplace=True, ignore_index=False)
+                cur['key'] = cur['scd']
+
                 pre['pre_rate'] = pre['折算率'].apply(lambda x: int(x * 100))
                 cur['cur_rate'] = cur['折算率'].apply(lambda x: int(x * 100))
             elif _data_source in ('中金公司',):
@@ -932,14 +964,24 @@ def db_handle(biz_dt, union):
                 pre['pre_rate'] = pre['assure_ratio'].apply(lambda x: int(x * 100))
                 cur['cur_rate'] = cur['assure_ratio'].apply(lambda x: int(x * 100))
             elif _data_source in ('东方财富',):
-                pre['key'] = pre['证券代码'].apply(lambda x: ('000000' + str(x))[-max(6, len(str(x))):]) + '.' + pre[
-                    '市场'].map(
-                    lambda x: 'SZ' if str(x) == '深圳' else 'SH' if str(x) == '上海' else 'BJ' if str(x) == '北京' else str(
-                        x))
-                cur['key'] = cur['证券代码'].apply(lambda x: ('000000' + str(x))[-max(6, len(str(x))):]) + '.' + cur[
-                    '市场'].map(
-                    lambda x: 'SZ' if str(x) == '深圳' else 'SH' if str(x) == '上海' else 'BJ' if str(x) == '北京' else str(
-                        x))
+                pre['sec_code'] = pre['证券代码'].apply(lambda x: ('000000' + str(x))[-max(6, len(str(x))):]) + '.' + pre[
+                    '市场'].map(lambda x: 'SZ' if str(x) == '深圳' else 'SH' if str(x) == '上海' else 'BJ' if str(x) == '北京' else str(x))
+                pre['sec_name'] = pre['证券简称']
+                pre['start_dt'] = None
+                pre = code_ref_id(pre, _data_source)
+                pre['key'] = pre['sec_code']
+                pre.sort_values(by=["key", "sec_name"], ascending=[True, True])
+                pre.drop_duplicates(subset=["key", "sec_name"], keep='first', inplace=True, ignore_index=False)
+
+                cur['sec_code'] = cur['证券代码'].apply(lambda x: ('000000' + str(x))[-max(6, len(str(x))):]) + '.' + cur[
+                    '市场'].map(lambda x: 'SZ' if str(x) == '深圳' else 'SH' if str(x) == '上海' else 'BJ' if str(x) == '北京' else str(x))
+                cur['sec_name'] = cur['证券简称']
+                cur['start_dt'] = None
+                cur = code_ref_id(cur, _data_source)
+                cur['key'] = cur['sec_code']
+                cur.sort_values(by=["key", "sec_name"], ascending=[True, True])
+                cur.drop_duplicates(subset=["key", "sec_name"], keep='first', inplace=True, ignore_index=False)
+
                 pre['pre_rate'] = pre['实际折算率'].apply(lambda x: float(str(x).replace('%', '')))
                 cur['cur_rate'] = cur['实际折算率'].apply(lambda x: float(str(x).replace('%', '')))
             elif _data_source in ('东方证券',):
@@ -948,8 +990,18 @@ def db_handle(biz_dt, union):
                 pre['pre_rate'] = pre['convertrate'].apply(lambda x: int(x * 100))
                 cur['cur_rate'] = cur['convertrate'].apply(lambda x: int(x * 100))
             elif _data_source in ('方正证券',):
-                pre['key'] = pre['stockCode'].apply(lambda x: ('000000' + str(x))[-max(6, len(str(x))):])
-                cur['key'] = cur['stockCode'].apply(lambda x: ('000000' + str(x))[-max(6, len(str(x))):])
+                pre['sec_code'] = pre['stockCode'].apply(lambda x: ('000000' + str(x))[-max(6, len(str(x))):])
+                pre['sec_name'] = pre['stockName'].str.replace(' ', '')
+                _pre = match_sid_by_code_and_name(pre, _data_source)
+                pre = pre.merge(_pre, on=['sec_code', 'sec_name'])
+                pre['key'] = pre['scd']
+
+                cur['sec_code'] = cur['stockCode'].apply(lambda x: ('000000' + str(x))[-max(6, len(str(x))):])
+                cur['sec_name'] = cur['stockName'].str.replace(' ', '')
+                _cur = match_sid_by_code_and_name(cur, _data_source)
+                cur = cur.merge(_cur, on=['sec_code', 'sec_name'])
+                cur['key'] = cur['scd']
+
                 pre['pre_rate'] = pre['rate'].apply(lambda x: int(x * 100))
                 cur['cur_rate'] = cur['rate'].apply(lambda x: int(x * 100))
             else:
