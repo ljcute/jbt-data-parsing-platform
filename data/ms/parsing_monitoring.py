@@ -70,7 +70,7 @@ def get_collected_data(biz_dt):
       from t_ndc_data_collect_log 
      where log_id in (select max(log_id) 
                        from t_ndc_data_collect_log 
-                      where biz_dt='{biz_dt}'
+                      where biz_dt=(select max(biz_dt) from t_ndc_data_collect_log where data_status=1 and biz_dt <= '{biz_dt}')
                         and data_status=1
                       group by data_source, data_type)
     """
@@ -87,7 +87,7 @@ def get_pre_collected_data(biz_dt):
       from t_ndc_data_collect_log 
      where log_id in (select max(log_id) 
                        from t_ndc_data_collect_log 
-                      where biz_dt= (select max(biz_dt) from t_ndc_data_collect_log where data_status=1 and biz_dt < '{biz_dt}')
+                      where biz_dt= (select max(biz_dt) from t_ndc_data_collect_log where data_status=1 and biz_dt<(select max(biz_dt) from t_ndc_data_collect_log where data_status=1 and biz_dt <= '{biz_dt}'))
                         and data_status=1
                       group by data_source, data_type)
     """
@@ -131,7 +131,8 @@ def handle_cmp(biz_dt):
         handle_range_collected_data(row['data_source'], row['data_type'], row['biz_dt'], persist_flag=False)
     logger.info(f'开始当日采集数据提取---')
     logs = get_collected_data(biz_dt[:10])
-    logger.info(f'结束当日采集数据提取---')
+    biz_dt = str(logs['biz_dt'].tolist()[0])
+    logger.info(f'结束当日采集数据提取---real biz_dt={biz_dt}')
     logger.info(f'开始前日采集数据提取---')
     pre_logs = get_pre_collected_data(biz_dt[:10])
     logger.info(f'结束前日采集数据提取---')
@@ -463,10 +464,13 @@ def rq_handle(biz_dt, union):
             temp_list = [rw['data_source'], '融券标的', biz_dt, '采集业务数据', _in.index.size, _out.index.size, _up.index.size,
                          _down.index.size]
             _message.append(temp_list)
-            if not _out.empty or not _in.empty or not _up.empty or not _down.empty:
+            if not _out.empty:
                 _out['adjust_type'] = 'out'
+            if not _in.empty:
                 _in['adjust_type'] = 'in'
+            if not _up.empty:
                 _up['adjust_type'] = 'up'
+            if not _down.empty:
                 _down['adjust_type'] = 'down'
         except Exception as err:
             logger.info(f"{rw['data_source']} ({rw['data_type']}) {err}")
@@ -729,10 +733,13 @@ def rz_handle(biz_dt, union):
             temp_list = [rw['data_source'], '融资标的', biz_dt, '采集业务数据', _in.index.size, _out.index.size, _up.index.size,
                          _down.index.size]
             _message.append(temp_list)
-            if not _out.empty or not _in.empty or not _up.empty or not _down.empty:
+            if not _out.empty:
                 _out['adjust_type'] = 'out'
+            if not _in.empty:
                 _in['adjust_type'] = 'in'
+            if not _up.empty:
                 _up['adjust_type'] = 'up'
+            if not _down.empty:
                 _down['adjust_type'] = 'down'
         except Exception as err:
             logger.info(f"{rw['data_source']} ({rw['data_type']}) {err}")
@@ -1015,10 +1022,13 @@ def db_handle(biz_dt, union):
             temp_list = [rw['data_source'], '担保券', biz_dt, '采集业务数据', _in.index.size, _out.index.size, _up.index.size,
                          _down.index.size]
             _message.append(temp_list)
-            if not _out.empty or not _in.empty or not _up.empty or not _down.empty:
+            if not _out.empty:
                 _out['adjust_type'] = 'out'
+            if not _in.empty:
                 _in['adjust_type'] = 'in'
+            if not _up.empty:
                 _up['adjust_type'] = 'up'
+            if not _down.empty:
                 _down['adjust_type'] = 'down'
         except Exception as err:
             logger.info(f"{rw['data_source']} ({rw['data_type']}) {err}")
@@ -1029,4 +1039,5 @@ def db_handle(biz_dt, union):
 
 if __name__ == '__main__':
     cur_dt = datetime.now().strftime('%Y-%m-%d')
+    # cur_dt = '2023-03-07'
     handle_cmp(cur_dt)
