@@ -655,6 +655,10 @@ def get_and_fix_cur_db_data(_broker_id, _biz_dt, _biz_type, market, data):
             fix_df = pd.DataFrame()
             for idx, rw in cur_add_data.iterrows():
                 fix_flag = False
+                if rw['adjust_type'] == 2 and rw['pre_adjust_type'] == 2:
+                    lgc_del.append(rw['row_id'])
+                    forever.append(rw['pre_row_id'])
+                    continue
                 # 从无
                 if isinstance(rw['pre_secu_id'], float) and math.isnan(rw['pre_secu_id']):
                     # 到无，中间记录多余，逻辑删除
@@ -874,6 +878,7 @@ if __name__ == '__main__':
         # handle_range_collected_data('东方财富', 2, '2023-03-07', persist_flag=True)
         # handle_range_collected_data('东方财富', 3, '2023-03-07', persist_flag=True)
         # handle_range_collected_data('信达证券', 2, '2023-03-07', persist_flag=True)
+        # handle_range_collected_data('东方财富', 2, '2023-03-09', persist_flag=True)
         kafka_mq_consumer()
     except Exception as e:
         logger.error(f"互联网数据解析服务启动异常: {e} =》{str(traceback.format_exc())}")
