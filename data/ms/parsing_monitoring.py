@@ -279,6 +279,8 @@ def rq_handle(biz_dt, union):
                                      x) == '北京' else str(x))
                 pre['pre_rate'] = pre['rqPercent'].apply(lambda x: int(x * 100))
                 cur['cur_rate'] = cur['rqPercent'].apply(lambda x: int(x * 100))
+                pre = pre[pre['pre_rate'] >= 50]
+                cur = cur[cur['cur_rate'] >= 50]
             elif _data_source in ('国泰君安',):
                 pre = pre.loc[pre['type'] == 2].copy()
                 cur = cur.loc[cur['type'] == 2].copy()
@@ -546,6 +548,8 @@ def rz_handle(biz_dt, union):
                                      x) == '北京' else str(x))
                 pre['pre_rate'] = pre['rzPercent'].apply(lambda x: int(x * 100))
                 cur['cur_rate'] = cur['rzPercent'].apply(lambda x: int(x * 100))
+                pre = pre[pre['pre_rate'] >= 100]
+                cur = cur[cur['cur_rate'] >= 100]
             elif _data_source in ('国泰君安',):
                 pre = pre.loc[pre['type'] == 3].copy()
                 cur = cur.loc[cur['type'] == 3].copy()
