@@ -1140,6 +1140,7 @@ def db_handle(biz_dt, union):
 
 def last_work_day(search_date):
     import time, datetime  # 时间
+    search_date = datetime.datetime.strptime(search_date,'%Y-%m-%d')
     date = datetime.datetime.combine(search_date, datetime.time())
     # date = datetime.datetime.today()  # 今天
     w = date.weekday() + 1
