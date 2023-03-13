@@ -209,6 +209,8 @@ def handle_cmp(biz_dt):
     df_result.rename(columns={'biz_dt': '数据日期', 'broker_id': '机构ID', 'broker_code': '机构代码', 'broker_name': '机构名称', 'order_no': '排名', 'data_type': '业务类型',
                               'in': '调入[采-解]', 'out': '调出[采-解]', 'up': '调高[采-解]', 'down': '调低[采-解]', '告警状态': '解析告警状态'}, inplace=True)
     logger.info(f'数据对比结束---')
+    # df_result.to_csv('data.csv',index=False)
+    # print(df_result)
     return df_result
 
 
@@ -248,11 +250,15 @@ def rq_handle(biz_dt, union):
                 cur['key'] = cur['secu_code'].apply(lambda x: ('000000' + str(x))[-max(6, len(str(x))):])
                 pre['pre_rate'] = pre['rq_ratio'].apply(lambda x: int(str(x).replace('%', '')))
                 cur['cur_rate'] = cur['rq_ratio'].apply(lambda x: int(str(x).replace('%', '')))
+                pre = pre[pre['pre_rate'] >= 50]
+                cur = cur[cur['cur_rate'] >= 50]
             elif _data_source in ('广发证券',):
                 pre['key'] = pre['0'].apply(lambda x: (str(x))[-6:])
                 cur['key'] = cur['0'].apply(lambda x: (str(x))[-6:])
                 pre['pre_rate'] = pre['1'].apply(lambda x: int(str(x).replace('%', '')))
                 cur['cur_rate'] = cur['1'].apply(lambda x: int(str(x).replace('%', '')))
+                pre = pre[pre['pre_rate'] >= 50]
+                cur = cur[cur['cur_rate'] >= 50]
             elif _data_source in ('安信证券',):
                 pre = pre.loc[pre['enableSl'] == '可以融券'].copy()
                 cur = cur.loc[cur['enableSl'] == '可以融券'].copy()
@@ -266,6 +272,8 @@ def rq_handle(biz_dt, union):
                                      x) == '3' else str(x))
                 pre['pre_rate'] = pre['slMarginRatio'].apply(lambda x: int(x * 100))
                 cur['cur_rate'] = cur['slMarginRatio'].apply(lambda x: int(x * 100))
+                pre = pre[pre['pre_rate'] >= 50]
+                cur = cur[cur['cur_rate'] >= 50]
             elif _data_source in ('中信证券',):
                 pre = pre.loc[pre['rqFloag'] == 1].copy()
                 cur = cur.loc[cur['rqFloag'] == 1].copy()
@@ -292,6 +300,8 @@ def rq_handle(biz_dt, union):
                     x) == '北交所' else str(x))
                 pre['pre_rate'] = pre['rate'].apply(lambda x: int(str(x).replace('%', '')))
                 cur['cur_rate'] = cur['rate'].apply(lambda x: int(str(x).replace('%', '')))
+                pre = pre[pre['pre_rate'] >= 50]
+                cur = cur[cur['cur_rate'] >= 50]
             elif _data_source in ('中国银河',):
                 pre = pre.loc[pre['type'] == 'rq'].copy()
                 cur = cur.loc[cur['type'] == 'rq'].copy()
@@ -299,6 +309,8 @@ def rq_handle(biz_dt, union):
                 cur['key'] = cur['证券代码'].apply(lambda x: ('000000' + str(x))[-max(6, len(str(x))):])
                 pre['pre_rate'] = pre['rate'].apply(lambda x: int(x * 100))
                 cur['cur_rate'] = cur['rate'].apply(lambda x: int(x * 100))
+                pre = pre[pre['pre_rate'] >= 50]
+                cur = cur[cur['cur_rate'] >= 50]
             elif _data_source in ('招商证券',):
                 pre = pre.loc[pre['creditstkctrl'] == 0].copy()
                 cur = cur.loc[cur['creditstkctrl'] == 0].copy()
@@ -312,6 +324,8 @@ def rq_handle(biz_dt, union):
                         x))
                 pre['pre_rate'] = pre['marginratestk'].apply(lambda x: int(x * 100))
                 cur['cur_rate'] = cur['marginratestk'].apply(lambda x: int(x * 100))
+                pre = pre[pre['pre_rate'] >= 50]
+                cur = cur[cur['cur_rate'] >= 50]
             elif _data_source in ('中信建投',):
                 pre = pre.loc[pre['stkctrlflag'] == 0].copy()
                 cur = cur.loc[cur['stkctrlflag'] == 0].copy()
@@ -327,6 +341,8 @@ def rq_handle(biz_dt, union):
                         x))
                 pre['pre_rate'] = pre['marginratestk'].apply(lambda x: int(x))
                 cur['cur_rate'] = cur['marginratestk'].apply(lambda x: int(x))
+                pre = pre[pre['pre_rate'] >= 50]
+                cur = cur[cur['cur_rate'] >= 50]
             elif _data_source in ('国信证券',):
                 pre['key'] = pre['zqdm'].apply(lambda x: ('000000' + str(x))[-max(6, len(str(x))):]) + '.' + pre[
                     'sc'].map(
@@ -336,11 +352,15 @@ def rq_handle(biz_dt, union):
                     lambda x: 'SZ' if str(x) == '1' else 'SH' if str(x) == '0' else 'BJ' if str(x) == '3' else str(x))
                 pre['pre_rate'] = pre['rzbzjbl'].apply(lambda x: int(x * 100))
                 cur['cur_rate'] = cur['rzbzjbl'].apply(lambda x: int(x * 100))
+                pre = pre[pre['pre_rate'] >= 50]
+                cur = cur[cur['cur_rate'] >= 50]
             elif _data_source in ('兴业证券',):
                 pre['key'] = pre['证券代码'].str.upper()
                 cur['key'] = cur['证券代码'].str.upper()
                 pre['pre_rate'] = pre['融券保证金比例'].apply(lambda x: int(float(str(x).replace('/', '0')) * 100))
                 cur['cur_rate'] = cur['融券保证金比例'].apply(lambda x: int(float(str(x).replace('/', '0')) * 100))
+                pre = pre[pre['pre_rate'] >= 50]
+                cur = cur[cur['cur_rate'] >= 50]
             elif _data_source in ('申万宏源',):
                 pre['key'] = pre['证券代码'].apply(lambda x: ('000000' + str(x))[-max(6, len(str(x))):]) + '.' + pre[
                     '市场'].map(
@@ -350,6 +370,8 @@ def rq_handle(biz_dt, union):
                     lambda x: 'SZ' if x == '深圳' else 'SH' if x == '上海' else 'BJ' if x in ('北京', 'B') else x)
                 pre['pre_rate'] = pre['融券保证金比例'].apply(lambda x: int(str(x).replace('%', '').replace('-', '0')))
                 cur['cur_rate'] = cur['融券保证金比例'].apply(lambda x: int(str(x).replace('%', '').replace('-', '0')))
+                pre = pre[pre['pre_rate'] >= 50]
+                cur = cur[cur['cur_rate'] >= 50]
             elif _data_source in ('中金财富',):
                 pre = pre.loc[pre['stockTarget'] == 'Y'].copy()
                 cur = cur.loc[cur['stockTarget'] == 'Y'].copy()
@@ -359,6 +381,8 @@ def rq_handle(biz_dt, union):
                     'exchange'].map(lambda x: 'BJ' if str(x) in ('1', 'BJ') else str(x))
                 pre['pre_rate'] = pre['guaranteeStock'].apply(lambda x: int(x * 100))
                 cur['cur_rate'] = cur['guaranteeStock'].apply(lambda x: int(x * 100))
+                pre = pre[pre['pre_rate'] >= 50]
+                cur = cur[cur['cur_rate'] >= 50]
             elif _data_source in ('中泰证券',):
                 pre = pre.loc[pre['STOCK_STATE'] == '可融资可融券'].copy()
                 cur = cur.loc[cur['STOCK_STATE'] == '可融资可融券'].copy()
@@ -368,6 +392,8 @@ def rq_handle(biz_dt, union):
                              cur['BOURSE'].str.strip()
                 pre['pre_rate'] = pre['STOCK_RATIOS']
                 cur['cur_rate'] = cur['STOCK_RATIOS']
+                pre = pre[pre['pre_rate'] >= 50]
+                cur = cur[cur['cur_rate'] >= 50]
             elif _data_source in ('光大证券',):
                 pre = pre.loc[pre['融券标的'] == '是'].copy()
                 cur = cur.loc[cur['融券标的'] == '是'].copy()
@@ -397,6 +423,8 @@ def rq_handle(biz_dt, union):
                 cur['key'] = cur['证券代码'].apply(lambda x: ('000000' + str(x))[-max(6, len(str(x))):])
                 pre['pre_rate'] = pre['融券比例'].apply(lambda x: int(x * 100))
                 cur['cur_rate'] = cur['融券比例'].apply(lambda x: int(x * 100))
+                pre = pre[pre['pre_rate'] >= 50]
+                cur = cur[cur['cur_rate'] >= 50]
             elif _data_source in ('中金公司',):
                 pre = pre.loc[pre['iscreditsharestk'] == 'Y'].copy()
                 cur = cur.loc[cur['iscreditsharestk'] == 'Y'].copy()
@@ -411,16 +439,22 @@ def rq_handle(biz_dt, union):
                         x) else str(x))
                 pre['pre_rate'] = pre['csmarginrate'].apply(lambda x: int(str(x).replace('%', '')))
                 cur['cur_rate'] = cur['csmarginrate'].apply(lambda x: int(str(x).replace('%', '')))
+                pre = pre[pre['pre_rate'] >= 50]
+                cur = cur[cur['cur_rate'] >= 50]
             elif _data_source in ('信达证券',):
                 pre['key'] = pre['secu_code'].apply(lambda x: ('000000' + str(x))[-max(6, len(str(x))):])
                 cur['key'] = cur['secu_code'].apply(lambda x: ('000000' + str(x))[-max(6, len(str(x))):])
                 pre['pre_rate'] = pre['rqbzjbl'].apply(lambda x: int(str(x).replace('%', '')))
                 cur['cur_rate'] = cur['rqbzjbl'].apply(lambda x: int(str(x).replace('%', '')))
+                pre = pre[pre['pre_rate'] >= 50]
+                cur = cur[cur['cur_rate'] >= 50]
             elif _data_source in ('东北证券',):
                 pre['key'] = pre['bm'].apply(lambda x: ('000000' + str(x))[-max(6, len(str(x))):])
                 cur['key'] = cur['bm'].apply(lambda x: ('000000' + str(x))[-max(6, len(str(x))):])
                 pre['pre_rate'] = pre['rq'].apply(lambda x: int(x))
                 cur['cur_rate'] = cur['rq'].apply(lambda x: int(x))
+                pre = pre[pre['pre_rate'] >= 50]
+                cur = cur[cur['cur_rate'] >= 50]
             elif _data_source in ('长江证券',):
                 pre = pre.loc[pre['rqbd'] == '是'].copy()
                 cur = cur.loc[cur['rqbd'] == '是'].copy()
@@ -432,6 +466,8 @@ def rq_handle(biz_dt, union):
                     lambda x: 'SZ' if str(x) == '2' else 'SH' if str(x) == '1' else 'BJ' if str(x) == '9' else str(x))
                 pre['pre_rate'] = pre['bail_ratio'].apply(lambda x: int(x * 100))
                 cur['cur_rate'] = cur['bail_ratio'].apply(lambda x: int(x * 100))
+                pre = pre[pre['pre_rate'] >= 50]
+                cur = cur[cur['cur_rate'] >= 50]
             elif _data_source in ('东方财富',):
                 pre['key'] = pre['证券代码'].apply(lambda x: ('000000' + str(x))[-max(6, len(str(x))):]) + '.' + pre[
                     '市场'].map(
@@ -443,6 +479,8 @@ def rq_handle(biz_dt, union):
                         x))
                 pre['pre_rate'] = pre['融券保证金比例'].apply(lambda x: float(str(x).replace('%', '')))
                 cur['cur_rate'] = cur['融券保证金比例'].apply(lambda x: float(str(x).replace('%', '')))
+                pre = pre[pre['pre_rate'] >= 50]
+                cur = cur[cur['cur_rate'] >= 50]
             elif _data_source in ('东方证券',):
                 pre = pre.loc[pre['financingtarget'] == '是'].copy()
                 cur = cur.loc[cur['financingtarget'] == '是'].copy()
@@ -455,6 +493,8 @@ def rq_handle(biz_dt, union):
                 cur['key'] = cur['stockCode'].apply(lambda x: ('000000' + str(x))[-max(6, len(str(x))):])
                 pre['pre_rate'] = pre['saleRate'].apply(lambda x: int(x * 100))
                 cur['cur_rate'] = cur['saleRate'].apply(lambda x: int(x * 100))
+                pre = pre[pre['pre_rate'] >= 50]
+                cur = cur[cur['cur_rate'] >= 50]
             else:
                 logger.warning(f"fix {_data_source}")
                 continue
@@ -512,16 +552,22 @@ def rz_handle(biz_dt, union):
                                      x) == 9 else str(x))
                 pre['pre_rate'] = pre['finRatio'].apply(lambda x: int(x * 100))
                 cur['cur_rate'] = cur['finRatio'].apply(lambda x: int(x * 100))
+                pre = pre[pre['pre_rate'] >= 100]
+                cur = cur[cur['cur_rate'] >= 100]
             elif _data_source in ('国元证券',):
                 pre['key'] = pre['secu_code'].apply(lambda x: ('000000' + str(x))[-max(6, len(str(x))):])
                 cur['key'] = cur['secu_code'].apply(lambda x: ('000000' + str(x))[-max(6, len(str(x))):])
                 pre['pre_rate'] = pre['rz_ratio'].apply(lambda x: int(str(x).replace('%', '')))
                 cur['cur_rate'] = cur['rz_ratio'].apply(lambda x: int(str(x).replace('%', '')))
+                pre = pre[pre['pre_rate'] >= 100]
+                cur = cur[cur['cur_rate'] >= 100]
             elif _data_source in ('广发证券',):
                 pre['key'] = pre['0'].apply(lambda x: (str(x))[-6:])
                 cur['key'] = cur['0'].apply(lambda x: (str(x))[-6:])
                 pre['pre_rate'] = pre['1'].apply(lambda x: int(str(x).replace('%', '')))
                 cur['cur_rate'] = cur['1'].apply(lambda x: int(str(x).replace('%', '')))
+                pre = pre[pre['pre_rate'] >= 100]
+                cur = cur[cur['cur_rate'] >= 100]
             elif _data_source in ('安信证券',):
                 pre = pre.loc[pre['enableFi'] == '可以融资'].copy()
                 cur = cur.loc[cur['enableFi'] == '可以融资'].copy()
@@ -535,6 +581,8 @@ def rz_handle(biz_dt, union):
                                      x) == '3' else str(x))
                 pre['pre_rate'] = pre['fiMarginRatio'].apply(lambda x: int(x * 100))
                 cur['cur_rate'] = cur['fiMarginRatio'].apply(lambda x: int(x * 100))
+                pre = pre[pre['pre_rate'] >= 100]
+                cur = cur[cur['cur_rate'] >= 100]
             elif _data_source in ('中信证券',):
                 pre = pre.loc[pre['rzFloag'] == 1].copy()
                 cur = cur.loc[cur['rzFloag'] == 1].copy()
@@ -561,6 +609,8 @@ def rz_handle(biz_dt, union):
                     x) == '北交所' else str(x))
                 pre['pre_rate'] = pre['rate'].apply(lambda x: int(str(x).replace('%', '')))
                 cur['cur_rate'] = cur['rate'].apply(lambda x: int(str(x).replace('%', '')))
+                pre = pre[pre['pre_rate'] >= 100]
+                cur = cur[cur['cur_rate'] >= 100]
             elif _data_source in ('中国银河',):
                 pre = pre.loc[pre['type'] == 'rz'].copy()
                 cur = cur.loc[cur['type'] == 'rz'].copy()
@@ -568,6 +618,8 @@ def rz_handle(biz_dt, union):
                 cur['key'] = cur['证券代码'].apply(lambda x: ('000000' + str(x))[-max(6, len(str(x))):])
                 pre['pre_rate'] = pre['rate'].apply(lambda x: int(x * 100))
                 cur['cur_rate'] = cur['rate'].apply(lambda x: int(x * 100))
+                pre = pre[pre['pre_rate'] >= 100]
+                cur = cur[cur['cur_rate'] >= 100]
             elif _data_source in ('招商证券',):
                 pre = pre.loc[pre['creditfundctrl'] == 0].copy()
                 cur = cur.loc[cur['creditfundctrl'] == 0].copy()
@@ -581,6 +633,8 @@ def rz_handle(biz_dt, union):
                         x))
                 pre['pre_rate'] = pre['marginratefund'].apply(lambda x: int(x * 100))
                 cur['cur_rate'] = cur['marginratefund'].apply(lambda x: int(x * 100))
+                pre = pre[pre['pre_rate'] >= 100]
+                cur = cur[cur['cur_rate'] >= 100]
             elif _data_source in ('中信建投',):
                 pre = pre.loc[pre['fundctrlflag'] == 0].copy()
                 cur = cur.loc[cur['fundctrlflag'] == 0].copy()
@@ -596,6 +650,8 @@ def rz_handle(biz_dt, union):
                         x))
                 pre['pre_rate'] = pre['marginratefund'].apply(lambda x: int(x))
                 cur['cur_rate'] = cur['marginratefund'].apply(lambda x: int(x))
+                pre = pre[pre['pre_rate'] >= 100]
+                cur = cur[cur['cur_rate'] >= 100]
             elif _data_source in ('国信证券',):
                 pre['key'] = pre['zqdm'].apply(lambda x: ('000000' + str(x))[-max(6, len(str(x))):]) + '.' + pre[
                     'sc'].map(
@@ -607,11 +663,15 @@ def rz_handle(biz_dt, union):
                         x))
                 pre['pre_rate'] = pre['rzbzjbl'].apply(lambda x: int(x * 100))
                 cur['cur_rate'] = cur['rzbzjbl'].apply(lambda x: int(x * 100))
+                pre = pre[pre['pre_rate'] >= 100]
+                cur = cur[cur['cur_rate'] >= 100]
             elif _data_source in ('兴业证券',):
                 pre['key'] = pre['证券代码'].str.upper()
                 cur['key'] = cur['证券代码'].str.upper()
                 pre['pre_rate'] = pre['融资保证金比例'].apply(lambda x: int(float(str(x).replace('/', '0')) * 100))
                 cur['cur_rate'] = cur['融资保证金比例'].apply(lambda x: int(float(str(x).replace('/', '0')) * 100))
+                pre = pre[pre['pre_rate'] >= 100]
+                cur = cur[cur['cur_rate'] >= 100]
             elif _data_source in ('申万宏源',):
                 pre['key'] = pre['证券代码'].apply(lambda x: ('000000' + str(x))[-max(6, len(str(x))):]) + '.' + pre[
                     '市场'].map(
@@ -621,6 +681,8 @@ def rz_handle(biz_dt, union):
                     lambda x: 'SZ' if x == '深圳' else 'SH' if x == '上海' else 'BJ' if x in ('北京', 'B') else x)
                 pre['pre_rate'] = pre['融资保证金比例'].apply(lambda x: int(str(x).replace('%', '').replace('-', '0')))
                 cur['cur_rate'] = cur['融资保证金比例'].apply(lambda x: int(str(x).replace('%', '').replace('-', '0')))
+                pre = pre[pre['pre_rate'] >= 100]
+                cur = cur[cur['cur_rate'] >= 100]
             elif _data_source in ('中金财富',):
                 pre = pre.loc[pre['moneyTarget'] == 'Y'].copy()
                 cur = cur.loc[cur['moneyTarget'] == 'Y'].copy()
@@ -630,6 +692,8 @@ def rz_handle(biz_dt, union):
                     'exchange'].map(lambda x: 'BJ' if str(x) in ('1', 'BJ') else str(x))
                 pre['pre_rate'] = pre['guaranteeMoney'].apply(lambda x: int(x * 100))
                 cur['cur_rate'] = cur['guaranteeMoney'].apply(lambda x: int(x * 100))
+                pre = pre[pre['pre_rate'] >= 100]
+                cur = cur[cur['cur_rate'] >= 100]
             elif _data_source in ('中泰证券',):
                 pre = pre.loc[pre['STOCK_STATE'] == '可融资可融券'].copy()
                 cur = cur.loc[cur['STOCK_STATE'] == '可融资可融券'].copy()
@@ -639,6 +703,10 @@ def rz_handle(biz_dt, union):
                              cur['BOURSE'].str.strip()
                 pre['pre_rate'] = pre['FUND_RATIOS']
                 cur['cur_rate'] = cur['FUND_RATIOS']
+                pre['pre_rate'] = pre['pre_rate'].apply(lambda x: int(x))
+                cur['cur_rate'] = cur['cur_rate'].apply(lambda x: int(x))
+                pre = pre[pre['pre_rate'] >= 100]
+                cur = cur[cur['cur_rate'] >= 100]
             elif _data_source in ('光大证券',):
                 pre = pre.loc[pre['融资标的'] == '是'].copy()
                 cur = cur.loc[cur['融资标的'] == '是'].copy()
@@ -668,6 +736,8 @@ def rz_handle(biz_dt, union):
                 cur['key'] = cur['证券代码'].apply(lambda x: ('000000' + str(x))[-max(6, len(str(x))):])
                 pre['pre_rate'] = pre['融资比例'].apply(lambda x: int(x * 100))
                 cur['cur_rate'] = cur['融资比例'].apply(lambda x: int(x * 100))
+                pre = pre[pre['pre_rate'] >= 100]
+                cur = cur[cur['cur_rate'] >= 100]
             elif _data_source in ('中金公司',):
                 pre = pre.loc[pre['iscreditcashstk'] == 'Y'].copy()
                 cur = cur.loc[cur['iscreditcashstk'] == 'Y'].copy()
@@ -682,16 +752,22 @@ def rz_handle(biz_dt, union):
                         x) else str(x))
                 pre['pre_rate'] = pre['ccmarginrate'].apply(lambda x: int(str(x).replace('%', '')))
                 cur['cur_rate'] = cur['ccmarginrate'].apply(lambda x: int(str(x).replace('%', '')))
+                pre = pre[pre['pre_rate'] >= 100]
+                cur = cur[cur['cur_rate'] >= 100]
             elif _data_source in ('信达证券',):
                 pre['key'] = pre['secu_code'].apply(lambda x: ('000000' + str(x))[-max(6, len(str(x))):])
                 cur['key'] = cur['secu_code'].apply(lambda x: ('000000' + str(x))[-max(6, len(str(x))):])
                 pre['pre_rate'] = pre['rzbzjbl'].apply(lambda x: int(str(x).replace('%', '')))
                 cur['cur_rate'] = cur['rzbzjbl'].apply(lambda x: int(str(x).replace('%', '')))
+                pre = pre[pre['pre_rate'] >= 100]
+                cur = cur[cur['cur_rate'] >= 100]
             elif _data_source in ('东北证券',):
                 pre['key'] = pre['bm'].apply(lambda x: ('000000' + str(x))[-max(6, len(str(x))):])
                 cur['key'] = cur['bm'].apply(lambda x: ('000000' + str(x))[-max(6, len(str(x))):])
                 pre['pre_rate'] = pre['rz'].apply(lambda x: int(x))
                 cur['cur_rate'] = cur['rz'].apply(lambda x: int(x))
+                pre = pre[pre['pre_rate'] >= 100]
+                cur = cur[cur['cur_rate'] >= 100]
             elif _data_source in ('长江证券',):
                 pre = pre.loc[pre['rzbd'] == '是'].copy()
                 cur = cur.loc[cur['rzbd'] == '是'].copy()
@@ -703,6 +779,8 @@ def rz_handle(biz_dt, union):
                     lambda x: 'SZ' if str(x) == '2' else 'SH' if str(x) == '1' else 'BJ' if str(x) == '9' else str(x))
                 pre['pre_rate'] = pre['fin_ratio'].apply(lambda x: int(x * 100))
                 cur['cur_rate'] = cur['fin_ratio'].apply(lambda x: int(x * 100))
+                pre = pre[pre['pre_rate'] >= 100]
+                cur = cur[cur['cur_rate'] >= 100]
             elif _data_source in ('东方财富',):
                 pre['key'] = pre['证券代码'].apply(lambda x: ('000000' + str(x))[-max(6, len(str(x))):]) + '.' + pre[
                     '市场'].map(
@@ -714,6 +792,8 @@ def rz_handle(biz_dt, union):
                         x))
                 pre['pre_rate'] = pre['融资保证金比例'].apply(lambda x: float(str(x).replace('%', '')))
                 cur['cur_rate'] = cur['融资保证金比例'].apply(lambda x: float(str(x).replace('%', '')))
+                pre = pre[pre['pre_rate'] >= 100]
+                cur = cur[cur['cur_rate'] >= 100]
             elif _data_source in ('东方证券',):
                 pre = pre.loc[pre['margintradingtarget'] == '是'].copy()
                 cur = cur.loc[cur['margintradingtarget'] == '是'].copy()
@@ -726,6 +806,8 @@ def rz_handle(biz_dt, union):
                 cur['key'] = cur['stockCode'].apply(lambda x: ('000000' + str(x))[-max(6, len(str(x))):])
                 pre['pre_rate'] = pre['finRate'].apply(lambda x: int(x * 100))
                 cur['cur_rate'] = cur['finRate'].apply(lambda x: int(x * 100))
+                pre = pre[pre['pre_rate'] >= 100]
+                cur = cur[cur['cur_rate'] >= 100]
             else:
                 logger.warning(f"fix {_data_source}")
                 continue
@@ -979,7 +1061,6 @@ def db_handle(biz_dt, union):
                     '市场'].map(lambda x: 'SZ' if str(x) == '深圳' else 'SH' if str(x) == '上海' else 'BJ' if str(x) == '北京' else str(x))
                 pre['sec_name'] = pre['证券简称']
                 pre['start_dt'] = None
-                pre = code_ref_id(pre, _data_source)
                 pre['key'] = pre['sec_code']
                 pre.sort_values(by=["key", "sec_name"], ascending=[True, True])
                 pre.drop_duplicates(subset=["key", "sec_name"], keep='first', inplace=True, ignore_index=False)
@@ -988,7 +1069,6 @@ def db_handle(biz_dt, union):
                     '市场'].map(lambda x: 'SZ' if str(x) == '深圳' else 'SH' if str(x) == '上海' else 'BJ' if str(x) == '北京' else str(x))
                 cur['sec_name'] = cur['证券简称']
                 cur['start_dt'] = None
-                cur = code_ref_id(cur, _data_source)
                 cur['key'] = cur['sec_code']
                 cur.sort_values(by=["key", "sec_name"], ascending=[True, True])
                 cur.drop_duplicates(subset=["key", "sec_name"], keep='first', inplace=True, ignore_index=False)
@@ -1043,5 +1123,5 @@ def db_handle(biz_dt, union):
 
 if __name__ == '__main__':
     cur_dt = datetime.now().strftime('%Y-%m-%d')
-    # cur_dt = '2023-03-07'
+    # cur_dt = '2023-03-10'
     handle_cmp(cur_dt)
