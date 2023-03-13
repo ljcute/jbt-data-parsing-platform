@@ -209,8 +209,7 @@ def handle_cmp(biz_dt):
     df_result.rename(columns={'biz_dt': '数据日期', 'broker_id': '机构ID', 'broker_code': '机构代码', 'broker_name': '机构名称', 'order_no': '排名', 'data_type': '业务类型',
                               'in': '调入[采-解]', 'out': '调出[采-解]', 'up': '调高[采-解]', 'down': '调低[采-解]', '告警状态': '解析告警状态'}, inplace=True)
     logger.info(f'数据对比结束---')
-    # df_result.to_csv('data.csv',index=False)
-    # print(df_result)
+    print(df_result)
     return df_result
 
 
@@ -230,8 +229,8 @@ def rq_handle(biz_dt, union):
                 cur['证券代码'] = cur['证券代码'].astype('str')
                 pre['key'] = pre['证券代码']
                 cur['key'] = cur['证券代码']
-                pre['pre_rate'] = None
-                cur['cur_rate'] = None
+                pre['pre_rate'] = 50
+                cur['cur_rate'] = 50
             elif _data_source in ('华泰证券',):
                 pre = pre.loc[pre['sloStatus'] == 0].copy()
                 cur = cur.loc[cur['sloStatus'] == 0].copy()
@@ -537,8 +536,8 @@ def rz_handle(biz_dt, union):
                 cur['证券代码'] = cur['证券代码'].astype('str')
                 pre['key'] = pre['证券代码']
                 cur['key'] = cur['证券代码']
-                pre['pre_rate'] = None
-                cur['cur_rate'] = None
+                pre['pre_rate'] = 100
+                cur['cur_rate'] = 100
             elif _data_source in ('华泰证券',):
                 pre = pre.loc[pre['finStatus'] == 0].copy()
                 cur = cur.loc[cur['finStatus'] == 0].copy()
@@ -846,12 +845,30 @@ def db_handle(biz_dt, union):
             cur = pd.read_csv(StringIO(rw['data_text']), sep=",")
             # 对比：每家不一样
             if _data_source in ('上海交易所', '深圳交易所', '北京交易所'):
-                pre['证券代码'] = pre['证券代码'].astype('str')
-                cur['证券代码'] = cur['证券代码'].astype('str')
-                pre['key'] = pre['证券代码']
-                cur['key'] = cur['证券代码']
-                pre['pre_rate'] = None
-                cur['cur_rate'] = None
+                market = ''
+                if _data_source == '上海交易所':
+                    market = 'SH'
+                elif _data_source == '深圳交易所':
+                    market = 'SZ'
+                elif _data_source == '北京交易所':
+                    market = 'BJ'
+                pre['sec_code'] = pre['证券代码'].apply(lambda x: ('000000'+str(x))[-max(6, len(str(x))):]) + '.' + market
+                pre['sec_name'] = pre['证券简称'].str.replace(' ', '')
+                pre['start_dt'] = None
+                pre = code_ref_id(pre, _data_source, exchange=True)
+                pre = get_exchange_discount_limit_rate(biz_dt, pre)
+                pre = pre[['sec_type', 'sec_id', 'sec_code', 'rate']].copy()
+                pre['key'] = pre['sec_code']
+                pre['pre_rate'] = pre['rate']
+
+                cur['sec_code'] = cur['证券代码'].apply(lambda x: ('000000'+str(x))[-max(6, len(str(x))):]) + '.' + market
+                cur['sec_name'] = cur['证券简称'].str.replace(' ', '')
+                cur['start_dt'] = None
+                cur = code_ref_id(cur, _data_source, exchange=True)
+                cur = get_exchange_discount_limit_rate(biz_dt, cur)
+                cur = cur[['sec_type', 'sec_id', 'sec_code', 'rate']].copy()
+                cur['key'] = cur['sec_code']
+                cur['cur_rate'] = cur['rate']
             elif _data_source in ('华泰证券',):
                 pre = pre.loc[pre['assureStatus'] == 0].copy()
                 cur = cur.loc[cur['assureStatus'] == 0].copy()
