@@ -857,11 +857,10 @@ def db_handle(biz_dt, union):
                 pre['sec_name'] = pre['证券简称'].str.replace(' ', '')
                 pre['start_dt'] = None
                 pre = code_ref_id(pre, _data_source, exchange=True)
-                pre = get_exchange_discount_limit_rate(biz_dt, pre)
+                pre = get_exchange_discount_limit_rate(last_work_day(biz_dt), pre)
                 pre = pre[['sec_type', 'sec_id', 'sec_code', 'rate']].copy()
                 pre['key'] = pre['sec_code']
                 pre['pre_rate'] = pre['rate'].apply(lambda x: int(x))
-                logger.info(f'pre:{pre}')
                 cur['sec_code'] = cur['证券代码'].apply(lambda x: ('000000'+str(x))[-max(6, len(str(x))):]) + '.' + market
                 cur['sec_name'] = cur['证券简称'].str.replace(' ', '')
                 cur['start_dt'] = None
@@ -870,7 +869,6 @@ def db_handle(biz_dt, union):
                 cur = cur[['sec_type', 'sec_id', 'sec_code', 'rate']].copy()
                 cur['key'] = cur['sec_code']
                 cur['cur_rate'] = cur['rate'].apply(lambda x: int(x))
-                logger.info(f'cur:{cur}')
             elif _data_source in ('华泰证券',):
                 pre = pre.loc[pre['assureStatus'] == 0].copy()
                 cur = cur.loc[cur['assureStatus'] == 0].copy()
@@ -1138,6 +1136,22 @@ def db_handle(biz_dt, union):
     collect_df = pd.DataFrame(data=_message,
                               columns=['data_source', 'data_type', 'biz_dt', 'platform', 'in', 'out', 'up', 'down'])
     return collect_df
+
+
+def last_work_day(search_date):
+    import time, datetime  # 时间
+    date = datetime.datetime.combine(search_date, datetime.time())
+    # date = datetime.datetime.today()  # 今天
+    w = date.weekday() + 1
+    # print(w) #周日到周六对应1-7
+    if w == 1:  # 如果是周一，则返回上周五
+        lastworkday = (date + datetime.timedelta(days=-3)).strftime("%Y-%m-%d")
+    elif 1 < w < 7:  # 如果是周二到周五，则返回昨天
+        lastworkday = (date + datetime.timedelta(days=-1)).strftime("%Y-%m-%d")
+    elif w == 7:  # 如果是周日
+        lastworkday = (date + datetime.timedelta(days=-2)).strftime("%Y-%m-%d")
+
+    return lastworkday
 
 
 if __name__ == '__main__':
