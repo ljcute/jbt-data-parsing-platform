@@ -209,6 +209,8 @@ def handle_cmp(biz_dt):
     df_result.rename(columns={'biz_dt': '数据日期', 'broker_id': '机构ID', 'broker_code': '机构代码', 'broker_name': '机构名称', 'order_no': '排名', 'data_type': '业务类型',
                               'in': '调入[采-解]', 'out': '调出[采-解]', 'up': '调高[采-解]', 'down': '调低[采-解]', '告警状态': '解析告警状态'}, inplace=True)
     logger.info(f'数据对比结束---')
+    # df_result.to_csv('data.csv',index=False)
+    # print(df_result)
     return df_result
 
 
@@ -858,8 +860,8 @@ def db_handle(biz_dt, union):
                 pre = get_exchange_discount_limit_rate(biz_dt, pre)
                 pre = pre[['sec_type', 'sec_id', 'sec_code', 'rate']].copy()
                 pre['key'] = pre['sec_code']
-                pre['pre_rate'] = pre['rate']
-
+                pre['pre_rate'] = pre['rate'].apply(lambda x: int(x))
+                logger.info(f'pre:{pre}')
                 cur['sec_code'] = cur['证券代码'].apply(lambda x: ('000000'+str(x))[-max(6, len(str(x))):]) + '.' + market
                 cur['sec_name'] = cur['证券简称'].str.replace(' ', '')
                 cur['start_dt'] = None
@@ -867,7 +869,8 @@ def db_handle(biz_dt, union):
                 cur = get_exchange_discount_limit_rate(biz_dt, cur)
                 cur = cur[['sec_type', 'sec_id', 'sec_code', 'rate']].copy()
                 cur['key'] = cur['sec_code']
-                cur['cur_rate'] = cur['rate']
+                cur['cur_rate'] = cur['rate'].apply(lambda x: int(x))
+                logger.info(f'cur:{cur}')
             elif _data_source in ('华泰证券',):
                 pre = pre.loc[pre['assureStatus'] == 0].copy()
                 cur = cur.loc[cur['assureStatus'] == 0].copy()
