@@ -384,12 +384,12 @@ def rq_handle(biz_dt, union):
                 pre = pre[pre['pre_rate'] >= 50]
                 cur = cur[cur['cur_rate'] >= 50]
             elif _data_source in ('中泰证券',):
-                pre = pre.loc[pre['STOCK_STATE'] == '可融资可融券'].copy()
-                cur = cur.loc[cur['STOCK_STATE'] == '可融资可融券'].copy()
-                pre['key'] = pre['STOCK_CODE'].apply(lambda x: ('000000' + str(x))[-max(6, len(str(x))):]) + '.' + \
-                             pre['BOURSE'].str.strip()
-                cur['key'] = cur['STOCK_CODE'].apply(lambda x: ('000000' + str(x))[-max(6, len(str(x))):]) + '.' + \
-                             cur['BOURSE'].str.strip()
+                pre = pre.loc[(pre['STOCK_STATE'] == '可融资可融券') | (pre['STOCK_STATE'] == '禁止融资可融券')].copy()
+                cur = cur.loc[(cur['STOCK_STATE'] == '可融资可融券') | (cur['STOCK_STATE'] == '禁止融资可融券')].copy()
+                pre['key'] = pre['STOCK_CODE'].apply(lambda x: ('000000' + str(x))[-max(6, len(str(x))):]) + '.' + pre[
+                    'BOURSE'].str.strip()
+                cur['key'] = cur['STOCK_CODE'].apply(lambda x: ('000000' + str(x))[-max(6, len(str(x))):]) + '.' + cur[
+                    'BOURSE'].str.strip()
                 pre['pre_rate'] = pre['STOCK_RATIOS']
                 cur['cur_rate'] = cur['STOCK_RATIOS']
                 pre = pre[pre['pre_rate'] >= 50]
