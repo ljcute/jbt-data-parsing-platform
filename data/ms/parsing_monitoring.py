@@ -169,8 +169,8 @@ def handle_cmp(biz_dt):
     _df_parsing['data_source'] = (_df_parsing['data_desc'] == '1').replace({True: '深圳', False: ''}) + _df_parsing['data_source']
     _df_parsing['data_source'] = (_df_parsing['data_desc'] == '2').replace({True: '上海', False: ''}) + _df_parsing['data_source']
     _df_parsing['data_source'] = (_df_parsing['data_desc'] == '3').replace({True: '北京', False: ''}) + _df_parsing['data_source']
+    _df_parsing['adjust_type'] = _df_parsing['adjust_type'].replace(1, 'p_in').replace(2, 'p_out').replace(3, 'p_up').replace(4, 'p_down')
     df_parsing = _df_parsing.pivot_table(index=['data_source', 'data_type'], columns='adjust_type', values='adjust_num')
-    df_parsing.rename(columns={1: 'p_in', 2: 'p_out', 3: 'p_up', 4: 'p_down'}, inplace=True)
     df_parsing = df_parsing.reset_index()
     df_parsing.fillna(0, inplace=True)
     exchange_rows = df_broker[df_broker['broker_name'] == '交易所']
