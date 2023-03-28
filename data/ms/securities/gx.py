@@ -34,7 +34,7 @@ def _format_dbq(cdata, market):
     dbq = df[['sec_type', 'sec_id', 'sec_code', 'rate']].copy()
     jzd = df[['sec_type', 'sec_id', 'sec_code', 'jzd']].copy()
     jzd.rename(columns={'jzd': 'rate'}, inplace=True)
-    jzd['rate'] = jzd['rate'].apply(lambda x: 1 if str(x).strip() == 'A' else 2 if str(x).strip() == 'B' else 3 if str(x).strip() == 'C' else 4 if str(x).strip() == 'D' else 5 if str(x).strip() == 'E' else 6 if str(x).strip() == 'F' else x)
+    jzd['rate'] = jzd['rate'].apply(lambda x: -1 if str(x).strip() == '非法字符' else 1 if str(x).strip() == 'A' else 2 if str(x).strip() == 'B' else 3 if str(x).strip() == 'C' else 4 if str(x).strip() == 'D' else 5 if str(x).strip() == 'E' else 6 if str(x).strip() == 'F' else x)
     return biz_dt, dbq, jzd
 
 
