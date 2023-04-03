@@ -477,7 +477,14 @@ def rq_handle(biz_dt, union):
                     '市场'].map(
                     lambda x: 'SZ' if str(x) == '深圳' else 'SH' if str(x) == '上海' else 'BJ' if str(x) == '北京' else str(
                         x))
+                pre['sec_name'] = pre['证券简称']
+                pre.sort_values(by=["key", "sec_name"], ascending=[True, True])
+                pre.drop_duplicates(subset=["key", "sec_name"], keep='first', inplace=True, ignore_index=False)
                 pre['pre_rate'] = pre['融券保证金比例'].apply(lambda x: float(str(x).replace('%', '')))
+
+                cur['sec_name'] = cur['证券简称']
+                cur.sort_values(by=["key", "sec_name"], ascending=[True, True])
+                cur.drop_duplicates(subset=["key", "sec_name"], keep='first', inplace=True, ignore_index=False)
                 cur['cur_rate'] = cur['融券保证金比例'].apply(lambda x: float(str(x).replace('%', '')))
                 pre = pre[pre['pre_rate'] >= 50]
                 cur = cur[cur['cur_rate'] >= 50]
@@ -790,7 +797,14 @@ def rz_handle(biz_dt, union):
                     '市场'].map(
                     lambda x: 'SZ' if str(x) == '深圳' else 'SH' if str(x) == '上海' else 'BJ' if str(x) == '北京' else str(
                         x))
+                pre['sec_name'] = pre['证券简称']
+                pre.sort_values(by=["key", "sec_name"], ascending=[True, True])
+                pre.drop_duplicates(subset=["key", "sec_name"], keep='first', inplace=True, ignore_index=False)
                 pre['pre_rate'] = pre['融资保证金比例'].apply(lambda x: float(str(x).replace('%', '')))
+
+                cur['sec_name'] = cur['证券简称']
+                cur.sort_values(by=["key", "sec_name"], ascending=[True, True])
+                cur.drop_duplicates(subset=["key", "sec_name"], keep='first', inplace=True, ignore_index=False)
                 cur['cur_rate'] = cur['融资保证金比例'].apply(lambda x: float(str(x).replace('%', '')))
                 pre = pre[pre['pre_rate'] >= 100]
                 cur = cur[cur['cur_rate'] >= 100]
@@ -887,6 +901,16 @@ def db_handle(biz_dt, union):
                 cur['key'] = cur['secu_code'].apply(lambda x: ('000000' + str(x))[-max(6, len(str(x))):])
                 pre['pre_rate'] = pre['exchange_rate'].apply(lambda x: int(x * 100))
                 cur['cur_rate'] = cur['exchange_rate'].apply(lambda x: int(x * 100))
+                pre['sec_code'] = pre['key']
+                pre['sec_name'] = pre['secu_name']
+                pre['market'] = pre['stkex'].map(lambda x: 'SZ' if str(x) == '0' else 'SH' if str(x) == '1' else 'BJ' if str(x) == '2' else str(x))
+                pre = code_ref_id(pre, _data_source, exchange=True)
+                pre['key'] = pre['sec_code']
+                cur['sec_code'] = cur['key']
+                cur['sec_name'] = cur['secu_name']
+                cur['market'] = cur['stkex'].map(lambda x: 'SZ' if str(x) == '0' else 'SH' if str(x) == '1' else 'BJ' if str(x) == '2' else str(x))
+                cur = code_ref_id(cur, _data_source, exchange=True)
+                cur['key'] = cur['sec_code']
             elif _data_source in ('广发证券',):
                 pre['key'] = pre['0'].apply(lambda x: (str(x))[-6:])
                 cur['key'] = cur['0'].apply(lambda x: (str(x))[-6:])
