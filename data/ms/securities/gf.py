@@ -12,14 +12,13 @@ from data.ms.base_tools import get_df_from_cdata, match_sid_by_code_and_name
 
 def _get_format_df(cdata, biz_type):
     data_source, df = get_df_from_cdata(cdata)
+    biz_dt = df['2'].values[0]
     df['sec_code'] = df['0'].apply(lambda x: (str(x))[-6:])
     df['sec_name'] = df['0'].apply(lambda x: (str(x))[:-6])
     df['sec_name'] = df['sec_name'].str.replace(' ', '')
-    _df = match_sid_by_code_and_name(df, data_source)
+    _df = match_sid_by_code_and_name(biz_dt, df, data_source)
     df = df.merge(_df, on=['sec_code', 'sec_name'])
-    df['sec_code'] = df['scd']
     df['start_dt'] = None
-    biz_dt = df['2'].values[0]
     return biz_dt, df
 
 

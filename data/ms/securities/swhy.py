@@ -16,7 +16,7 @@ def _get_format_df(cdata):
     df['sec_code'] = df['证券代码'].apply(lambda x: ('000000'+str(x))[-max(6, len(str(x))):])
     df['sec_code'] = df['sec_code'] + '.' + df['market']
     df['sec_name'] = df['证券简称']
-    return cdata['biz_dt'].values[0], code_ref_id(df, data_source)
+    return cdata['biz_dt'].values[0], code_ref_id(cdata['biz_dt'].values[0], df, data_source)
 
 
 def _format_dbq(cdata, market):

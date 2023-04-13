@@ -19,7 +19,7 @@ def _get_format_df(cdata):
     df['start_dt'] = df['initDate'].apply(lambda x: str(x)[:4]+'-'+str(x)[4:6]+'-'+str(x)[-2:])
     dt = df['dataDt'].values[0]
     biz_dt = str(dt)[:4] + '-' + str(dt)[4:6] + '-' + str(dt)[-2:]
-    return biz_dt, code_ref_id(df, data_source)
+    return biz_dt, code_ref_id(biz_dt, df, data_source)
 
 
 def _format_dbq(cdata, market):

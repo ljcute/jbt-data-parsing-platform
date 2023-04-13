@@ -17,13 +17,12 @@ def _get_format_df(cdata, biz_type):
     df['sec_name'] = df['sec_name'].str.replace(' ', '')
     biz_dt = df['rq'].values[0]
     if biz_type == 'dbq':
-        _df = match_sid_by_code_and_name(df, data_source)
+        _df = match_sid_by_code_and_name(biz_dt, df, data_source)
         df = df.merge(_df, on=['sec_code', 'sec_name'])
-        df['sec_code'] = df['scd']
     elif biz_type in ('rz_bdq', 'rq_bdq'):
         df['market'] = df['sc'].map(lambda x: 'SZ' if str(x) == '1' else 'SH' if str(x) == '0' else 'BJ' if str(x) == '3' else str(x))
         df['sec_code'] = df['sec_code'] + '.' + df['market']
-        df = code_ref_id(df, data_source)
+        df = code_ref_id(biz_dt, df, data_source)
     df['start_dt'] = None
     return biz_dt, df
 

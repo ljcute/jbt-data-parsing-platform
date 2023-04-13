@@ -20,7 +20,7 @@ def _get_format_df(cdata):
     df['sec_name'] = df['stkname']
     df['start_dt'] = None
     biz_dt = cdata['biz_dt'].values[0]
-    return biz_dt, code_ref_id(df, data_source)
+    return biz_dt, code_ref_id(biz_dt, df, data_source)
 
 
 def _format_db_rz_rq_bdq(cdata, market):

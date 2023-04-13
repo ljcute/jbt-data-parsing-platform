@@ -22,7 +22,7 @@ def _get_format_df(cdata, market):
         biz_dt = df['日期'].values[0]
     else:
         biz_dt = cdata['biz_dt'].values[0]
-    return biz_dt, code_ref_id(df, data_source, exchange=True)
+    return biz_dt, code_ref_id(biz_dt, df, data_source, exchange=True)
 
 
 def _format_dbq(cdata, market):
@@ -89,7 +89,7 @@ def _get_jymx_format_df(cdata, market):
     df['sec_code'] = df['sec_code'].apply(lambda x: ('000000'+str(x))[-max(6, len(str(x))):])
     df['sec_code'] = df['sec_code'] + '.' + market
     biz_dt = df['业务日期']
-    return biz_dt, code_ref_id(df, data_source, exchange=True)
+    return biz_dt, code_ref_id(biz_dt, df, data_source, exchange=True)
 
 
 def _format_jymx(cdata, market):

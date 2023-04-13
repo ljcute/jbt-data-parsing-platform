@@ -20,7 +20,7 @@ def _get_format_df(cdata):
     df['sec_name'] = df['STOCK_NAME']
     df['start_dt'] = None
     biz_dt = timeStamp(int(df['CREATE_TIME'].values[0][6:len(df['CREATE_TIME'].values[0]) - 2]))[:10]
-    return biz_dt, code_ref_id(df, data_source)
+    return biz_dt, code_ref_id(biz_dt, df, data_source)
 
 
 def timeStamp(timeNum):

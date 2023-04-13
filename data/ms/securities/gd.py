@@ -24,7 +24,7 @@ def _get_format_df(cdata, market):
         biz_dt = dt
     else:
         biz_dt = str(dt)[:4] + '-' + str(dt)[4:6] + '-' + str(dt)[-2:]
-    return biz_dt, code_ref_id(df, data_source)
+    return biz_dt, code_ref_id(biz_dt, df, data_source)
 
 def _format_dbq(cdata, market):
     biz_dt, df = _get_format_df(cdata, 'dbq')

@@ -20,7 +20,7 @@ def _get_format_df(cdata):
     df.sort_values(by=["sec_code", "sec_name"], ascending=[True, True])
     df.drop_duplicates(subset=["sec_code", "sec_name"], keep='first', inplace=True, ignore_index=False)
     biz_dt = cdata['biz_dt'].values[0]
-    return biz_dt, code_ref_id(df, data_source)
+    return biz_dt, code_ref_id(biz_dt, df, data_source)
 
 
 def _format_dbq(cdata, market):

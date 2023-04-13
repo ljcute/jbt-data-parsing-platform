@@ -18,7 +18,7 @@ def _get_format_df(cdata):
     df['sec_code'] = df['sec_code'] + '.' + df['market']
     df['sec_name'] = df['stockName']
     df['start_dt'] = None
-    return cdata['biz_dt'].values[0], code_ref_id(df, data_source)
+    return cdata['biz_dt'].values[0], code_ref_id(cdata['biz_dt'].values[0], df, data_source)
 
 
 def _format_dbq(cdata, market):
