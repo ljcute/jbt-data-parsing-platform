@@ -88,7 +88,7 @@ def _get_jymx_format_df(cdata, market):
     df['market'] = market
     df['sec_code'] = df['sec_code'].apply(lambda x: ('000000'+str(x))[-max(6, len(str(x))):])
     df['sec_code'] = df['sec_code'] + '.' + market
-    biz_dt = df['业务日期']
+    biz_dt = df['业务日期'][0]
     return biz_dt, code_ref_id(biz_dt, df, data_source, exchange=True)
 
 

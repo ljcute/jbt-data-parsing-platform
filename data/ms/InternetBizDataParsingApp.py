@@ -364,9 +364,9 @@ def handle_jymx(_biz_dt, _jymx, market, persist_flag=True):
     if _jymx.empty:
         logger.error(f'交易明细数据为空，解析入库失败！')
 
-    _jymx.drop(['sec360_name', 'exchange_sec_name', 'sec_code', 'sec_name'], axis=1, inplace=True)
+    _jymx.drop(['bo_name', 'sec_code', 'sec_name'], axis=1, inplace=True)
     _jymx['exchange_market'] = 'SZSE' if market == 'SZ' else 'SSE' if market == 'SH' else 'BSE' if market == 'BJ' else market
-    _jymx['biz_dt'] = str(_biz_dt.values.tolist()[0])
+    _jymx['biz_dt'] = _biz_dt
     _jymx['data_status'] = 1
     _jymx['creator_id'] = 414
     _jymx['create_dt'] = str(datetime.now())
