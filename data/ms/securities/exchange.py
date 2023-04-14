@@ -30,6 +30,7 @@ def _format_dbq(cdata, market):
     # 从FDB取交易所折算率上限
     df = get_exchange_discount_limit_rate(biz_dt, df)
     dbq = df[['sec_type', 'sec_id', 'sec_code', 'rate']].copy()
+    dbq['rate'] = dbq['rate'].apply(lambda x: float(x))
     return biz_dt, dbq, pd.DataFrame()
 
 

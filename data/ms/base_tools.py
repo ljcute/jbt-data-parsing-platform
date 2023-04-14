@@ -13,7 +13,7 @@ from datetime import datetime
 import pandas as pd
 from io import StringIO
 
-from data.ms.InternetBizDataParsingApp import cfg
+from data.ms.InternetBizDataParsingApp import cfg, get_collect_data
 from database import MysqlClient
 from util.logs_utils import logger
 from data.ms.fdb import get_ex_discount_limit_rate
@@ -272,10 +272,10 @@ def match_sid_by_code_and_name(biz_dt, df, data_source):
     filtered_df_ = filtered_df_.drop(columns=['end_dt'])
     last_not_matched_df = filtered_df[~filtered_df['sec_code'].isin(filtered_df_['sec_code'])]
     last_not_matched_df = last_not_matched_df.drop_duplicates(subset='sec_code')
-
+    # get_data_log(biz_dt, last_not_matched_df)
     if not last_not_matched_df.empty:
         # 监控并Email关键词：如下证券对象无法识别
-        logger.warn(f"{data_source}中如下证券对象无法识别\n {last_not_matched_df[['sec_code', 'sec_name']]}")
+        logger.warn(f"解析业务日期:{biz_dt},{data_source}中如下证券对象无法识别\n {last_not_matched_df[['sec_code', 'sec_name']]}")
     _like_name.rename(columns={'sid': 'sec_id', 'stp': 'sec_type'}, inplace=True)
     _like_name = _like_name.drop(columns=['scn'])
     _like_name = _like_name.drop(columns=['end_dt'])
@@ -286,8 +286,28 @@ def match_sid_by_code_and_name(biz_dt, df, data_source):
     data_df = pd.concat([sec_id_df, sec_id_matched, _like_name_df, filtered_df_])
     never_sec_id_df = data_df.loc[data_df['sec_id'].isna()]
     if not never_sec_id_df.empty:
-        logger.warn(f"{data_source}中本次需注册证券对象有({never_sec_id_df.index.size}只)：\n{never_sec_id_df[['market', 'sec_code', 'sec_name']].reset_index(drop=True)}")
+        logger.warn(f"解析业务日期:{biz_dt},{data_source}中本次需注册证券对象有({never_sec_id_df.index.size}只)：\n{never_sec_id_df[['market', 'sec_code', 'sec_name']].reset_index(drop=True)}")
     return data_df
+#
+#
+# def get_data_log(dt, df):
+#
+#     szdata = pd.read_csv(StringIO(get_collect_data('深圳交易所', 2, dt)['data_text'][0]), sep=",")
+#     szdata['sec_code'] = szdata['证券代码'].apply(lambda x: ('000000'+str(x))[-max(6, len(str(x))):])
+#     sz_ = pd.merge(df, szdata, on='sec_code', how='left')
+#
+#     bjdata = pd.read_csv(StringIO(get_collect_data('北京交易所', 2, dt)['data_text'][0]), sep=",")
+#     bjdata['sec_code'] = bjdata['证券代码'].apply(lambda x: ('000000'+str(x))[-max(6, len(str(x))):])
+#     bj_ = pd.merge(df, bjdata, on='sec_code', how='left')
+#
+#     shdata = pd.read_csv(StringIO(get_collect_data('上海交易所', 2, dt)['data_text'][0]), sep=",")
+#     shdata['sec_code'] = shdata['证券代码'].apply(lambda x: ('000000'+str(x))[-max(6, len(str(x))):])
+#     sh_ = pd.merge(df, shdata, on='sec_code', how='left')
+#     for index, row in df.iterrows():
+#         row['sec_code']
+#         print(row)
+#
+#     print(shdata)
 
     # if df.empty:
     #     return df
