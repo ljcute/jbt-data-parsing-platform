@@ -141,7 +141,7 @@ def code_ref_id(biz_dt, _df, data_source, exchange=False):
     df_ = pd.merge(_df, temp_df, on='sec_code', how='left')
     no_sec_id_df = df_.loc[df_['sec_id'].isna()]
     if not no_sec_id_df.empty:
-        logger.warn(f"{data_source}中本次需注册证券对象有({no_sec_id_df.index.size}只)：\n{no_sec_id_df[['market', 'sec_code', 'sec_name']].reset_index(drop=True)}")
+        logger.warn(f"业务解析日期：{biz_dt}，{data_source}中本次需注册证券对象有({no_sec_id_df.index.size}只)：\n{no_sec_id_df[['market', 'sec_code', 'sec_name']].reset_index(drop=True)}")
     return df_.loc[~df_['sec_id'].isna()].copy()
     # df1 = _df.merge(get_sic_df(), how='left', on='sec_code')
     # no_sec_id_df = df1.loc[df1['sec_id'].isna()]
@@ -272,10 +272,17 @@ def match_sid_by_code_and_name(biz_dt, df, data_source):
     filtered_df_ = filtered_df_.drop(columns=['end_dt'])
     last_not_matched_df = filtered_df[~filtered_df['sec_code'].isin(filtered_df_['sec_code'])]
     last_not_matched_df = last_not_matched_df.drop_duplicates(subset='sec_code')
-    # get_data_log(biz_dt, last_not_matched_df)
     if not last_not_matched_df.empty:
-        # 监控并Email关键词：如下证券对象无法识别
-        logger.warn(f"解析业务日期:{biz_dt},{data_source}中如下证券对象无法识别\n {last_not_matched_df[['sec_code', 'sec_name']]}")
+        s_df = get_data_log(biz_dt, last_not_matched_df)
+        s_df['scd'] = s_df['sec_code']
+        s_df = s_df.drop(columns=['sec_code'])
+        find_df = pd.merge(s_df, exchange_sec, on=['scd'], how='left')
+        find_df = find_df[['sec_code', 'sec_name', 'sid', 'stp', 'market']]
+        find_df.rename(columns={'sid': 'sec_id', 'stp': 'sec_type'}, inplace=True)
+        filtered_df_ = pd.concat([filtered_df_, find_df])
+    # if not last_not_matched_df.empty:
+    #     # 监控并Email关键词：如下证券对象无法识别
+    #     logger.warn(f"解析业务日期:{biz_dt},{data_source}中如下证券对象无法识别\n {last_not_matched_df[['sec_code', 'sec_name']]}")
     _like_name.rename(columns={'sid': 'sec_id', 'stp': 'sec_type'}, inplace=True)
     _like_name = _like_name.drop(columns=['scn'])
     _like_name = _like_name.drop(columns=['end_dt'])
@@ -286,28 +293,34 @@ def match_sid_by_code_and_name(biz_dt, df, data_source):
     data_df = pd.concat([sec_id_df, sec_id_matched, _like_name_df, filtered_df_])
     never_sec_id_df = data_df.loc[data_df['sec_id'].isna()]
     if not never_sec_id_df.empty:
-        logger.warn(f"解析业务日期:{biz_dt},{data_source}中本次需注册证券对象有({never_sec_id_df.index.size}只)：\n{never_sec_id_df[['market', 'sec_code', 'sec_name']].reset_index(drop=True)}")
+        logger.warn(f"解析业务日期:{biz_dt},{data_source}证券对象无法识别,或需要注册证券对象有({never_sec_id_df.index.size}只)：\n{never_sec_id_df[['market', 'sec_code', 'sec_name']].reset_index(drop=True)}")
     return data_df
-#
-#
-# def get_data_log(dt, df):
-#
-#     szdata = pd.read_csv(StringIO(get_collect_data('深圳交易所', 2, dt)['data_text'][0]), sep=",")
-#     szdata['sec_code'] = szdata['证券代码'].apply(lambda x: ('000000'+str(x))[-max(6, len(str(x))):])
-#     sz_ = pd.merge(df, szdata, on='sec_code', how='left')
-#
-#     bjdata = pd.read_csv(StringIO(get_collect_data('北京交易所', 2, dt)['data_text'][0]), sep=",")
-#     bjdata['sec_code'] = bjdata['证券代码'].apply(lambda x: ('000000'+str(x))[-max(6, len(str(x))):])
-#     bj_ = pd.merge(df, bjdata, on='sec_code', how='left')
-#
-#     shdata = pd.read_csv(StringIO(get_collect_data('上海交易所', 2, dt)['data_text'][0]), sep=",")
-#     shdata['sec_code'] = shdata['证券代码'].apply(lambda x: ('000000'+str(x))[-max(6, len(str(x))):])
-#     sh_ = pd.merge(df, shdata, on='sec_code', how='left')
-#     for index, row in df.iterrows():
-#         row['sec_code']
-#         print(row)
-#
-#     print(shdata)
+
+
+def get_data_log(dt, df):
+    df = df[['sec_code', 'sec_name']]
+    szdata = pd.read_csv(StringIO(get_collect_data('深圳交易所', 2, dt)['data_text'][0]), sep=",")
+    szdata['sec_code'] = szdata['证券代码'].apply(lambda x: ('000000'+str(x))[-max(6, len(str(x))):])
+    sz_ = pd.merge(df, szdata, on='sec_code', how='left')
+    sz_['市场'] = 'SZ'
+    bjdata = pd.read_csv(StringIO(get_collect_data('北京交易所', 2, dt)['data_text'][0]), sep=",")
+    bjdata['sec_code'] = bjdata['证券代码'].apply(lambda x: ('000000'+str(x))[-max(6, len(str(x))):])
+    bj_ = pd.merge(df, bjdata, on='sec_code', how='left')
+    bj_ = bj_.drop(columns=['日期'])
+    bj_['市场'] = 'BJ'
+    shdata = pd.read_csv(StringIO(get_collect_data('上海交易所', 2, dt)['data_text'][0]), sep=",")
+    shdata['sec_code'] = shdata['证券代码'].apply(lambda x: ('000000'+str(x))[-max(6, len(str(x))):])
+    sh_ = pd.merge(df, shdata, on='sec_code', how='left')
+    sh_ = sh_.drop(columns=['日期'])
+    sh_['市场'] = 'SH'
+    dd = pd.concat([sh_, bj_ ,sz_])
+    _like_name = pd.DataFrame(columns=df.columns)
+    for index, row in dd.iterrows():
+        if str(row['sec_name']) in str(row['证券简称']) or str(row['证券简称']) in str(row['sec_name']):
+            s_df = pd.concat([_like_name,row[dd.columns.tolist()].to_frame().T])
+    s_df['sec_code'] = s_df['sec_code'] + '.' + s_df['市场']
+    s_df = s_df[['sec_code', 'sec_name']]
+    return s_df
 
     # if df.empty:
     #     return df

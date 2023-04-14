@@ -16,8 +16,15 @@ def _get_format_df(cdata):
     df['sec_code'] = df['证券代码'].apply(lambda x: ('000000'+str(x))[-max(6, len(str(x))):])
     df['sec_name'] = df['证券简称']
     df['sec_name'] = df['sec_name'].str.replace(' ', '')
+    t_df = df.copy()
+    df.sort_values(by=["sec_code", "sec_name"], ascending=[True, True])
+    dep_data = df.duplicated(["sec_code", "sec_name"]).sum()
+    dep_line = df[df.duplicated(["sec_code", "sec_name"], keep='last')]  # 查看删除重复的行
+    dep_list = dep_line.values.tolist()
+    df.drop_duplicates(subset=["sec_code", "sec_name"], keep='first', inplace=True, ignore_index=False)
+
     _df = match_sid_by_code_and_name(biz_dt, df, data_source)
-    df = df.merge(_df, on=['sec_code', 'sec_name'])
+    df = pd.merge(_df, t_df, on=['sec_code', 'sec_name'], how='right')
     df['start_dt'] = None
     return biz_dt, df
 
