@@ -18,7 +18,6 @@ def _get_format_df(cdata):
     df['sec_name'] = df['sec_name'].str.replace(' ', '')
     _df = match_sid_by_code_and_name(biz_dt, df, data_source)
     df = df.merge(_df, on=['sec_code', 'sec_name'])
-    df['sec_code'] = df['scd']
     df['start_dt'] = None
     return biz_dt, df
 

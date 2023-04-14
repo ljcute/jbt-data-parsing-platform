@@ -137,7 +137,7 @@ def register_sic_df(_df, exchange=False):
 def code_ref_id(biz_dt, _df, data_source, exchange=False):
     exchange_sec = get_exchange_sec_data(biz_dt)
     exchange_sec.rename(columns={'bo_id': 'sec_id', 'bo_id_type': 'sec_type', 'bo_id_code': 'sec_code'}, inplace=True)
-    df_ = pd.merge(_df, exchange_sec, on='sec_code', how='left')
+    df_ = pd.merge(_df.astype(str), exchange_sec.astype(str), on='sec_code', how='left')
     no_sec_id_df = df_.loc[df_['sec_id'].isna()]
     if not no_sec_id_df.empty:
         logger.warn(f"{data_source}中本次需注册证券对象有({no_sec_id_df.index.size}只)：\n{no_sec_id_df[['market', 'sec_code', 'sec_name']].reset_index(drop=True)}")

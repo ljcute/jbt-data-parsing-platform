@@ -5,6 +5,7 @@
 # @Site    : 
 # @File    : xd.py
 # @Software: PyCharm
+import datetime
 import pandas as pd
 from data.ms.base_tools import get_df_from_cdata, match_sid_by_code_and_name
 
@@ -15,7 +16,7 @@ def _get_format_df(cdata, biz_type):
     df['sec_code'] = df['secu_code'].apply(lambda x: ('000000'+str(x))[-max(6, len(str(x))):])
     df['sec_name'] = df['secu_name']
     df['sec_name'] = df['sec_name'].str.replace(' ', '')
-    _df = match_sid_by_code_and_name(biz_dt, df, data_source)
+    _df = match_sid_by_code_and_name(datetime.datetime.strptime(biz_dt,'%Y-%m-%d').date(), df, data_source)
     df = df.merge(_df, on=['sec_code', 'sec_name'])
     df['start_dt'] = None
     return biz_dt, df
