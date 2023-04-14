@@ -175,7 +175,7 @@ def get_exchange_discount_limit_rate(biz_dt, df):
     f_rate = get_ex_discount_limit_rate(biz_dt, 'fund', f_df['sec_id'].tolist())
     # 根据返回内容组装结果返回
     sbf_rate = pd.concat([s_rate, b_rate, f_rate])
-    _df = pd.merge(df, sbf_rate, how="left", on="sec_id")
+    _df = pd.merge(df.astype(str), sbf_rate.astype(str), how="left", on="sec_id")
     no_rate_df = _df.loc[_df['rate'].isna()][['sec_type', 'sec_id', 'sec_code', 'sec_name']]
     if not no_rate_df.empty:
         # 监控并Email关键词：如下证券缺少交易所折算率上限
