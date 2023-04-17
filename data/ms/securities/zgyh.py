@@ -24,9 +24,10 @@ def _get_format_df(cdata):
     df.drop_duplicates(subset=["sec_code", "sec_name"], keep='first', inplace=True, ignore_index=False)
     biz_dt = next_trading_day(biz_dt)
     _df = match_sid_by_code_and_name(biz_dt, df, data_source)
-    df = pd.merge(_df, t_df, on=['sec_code', 'sec_name'], how='right')
-    df['start_dt'] = None
-    return biz_dt, df
+    t_df['sec_id'] = t_df['sec_code'].apply(lambda x: (_df[_df['sec_code'] == x])['sec_id'].tolist()[0])
+    t_df['sec_type'] = t_df['sec_code'].apply(lambda x: (_df[_df['sec_code'] == x])['sec_type'].tolist()[0])
+    t_df['start_dt'] = None
+    return biz_dt, t_df
 
 
 def _format_db_rz_rq_bdq(cdata, market):
