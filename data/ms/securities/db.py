@@ -6,7 +6,7 @@
 # @File    : db.py
 # @Software: PyCharm
 import pandas as pd
-from data.ms.base_tools import match_sid_by_code_and_name, get_df_from_cdata
+from data.ms.base_tools import match_sid_by_code_and_name, get_df_from_cdata, next_trading_day
 
 
 def _get_format_df(cdata):
@@ -15,6 +15,7 @@ def _get_format_df(cdata):
     biz_dt = cdata['biz_dt'].values[0]
     df['sec_code'] = df['bm'].apply(lambda x: ('000000'+str(x))[-max(6, len(str(x))):])
     df['sec_name'] = df['name'].str.replace(' ', '')
+    biz_dt = next_trading_day(biz_dt)
     _df = match_sid_by_code_and_name(biz_dt, df, data_source)
     df = df.merge(_df, on=['sec_code', 'sec_name'])
     df['start_dt'] = None

@@ -206,6 +206,20 @@ def char_arr_split(values, split_length=2):
     return values
 
 
+def next_trading_day(date):
+    import datetime
+    """
+    判断日期是否为周末，如果是周末，则将其转为下一个交易日在返回
+    """
+    if isinstance(date, str):
+        date = datetime.datetime.strptime(date, '%Y-%m-%d').date()
+    elif not isinstance(date, datetime.date):
+        raise ValueError('日期格式不正确')
+    if date.weekday() >= 5:
+        date += datetime.timedelta(days=7 - date.weekday())
+    return date
+
+
 def match_sid_by_code_and_name(biz_dt, df, data_source):
     """"
     1、找出df中每个代码，在sid_df中只存在1个代码的代码，认为是相同代码

@@ -7,7 +7,7 @@
 @Software    : PyCharm
 """
 import pandas as pd
-from data.ms.base_tools import get_df_from_cdata, match_sid_by_code_and_name
+from data.ms.base_tools import get_df_from_cdata, match_sid_by_code_and_name, next_trading_day
 
 
 def _get_format_df(cdata):
@@ -22,7 +22,7 @@ def _get_format_df(cdata):
     dep_line = df[df.duplicated(["sec_code", "sec_name"], keep='last')]  # 查看删除重复的行
     dep_list = dep_line.values.tolist()
     df.drop_duplicates(subset=["sec_code", "sec_name"], keep='first', inplace=True, ignore_index=False)
-
+    biz_dt = next_trading_day(biz_dt)
     _df = match_sid_by_code_and_name(biz_dt, df, data_source)
     df = pd.merge(_df, t_df, on=['sec_code', 'sec_name'], how='right')
     df['start_dt'] = None

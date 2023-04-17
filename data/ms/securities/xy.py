@@ -7,7 +7,7 @@
 @Software    : PyCharm
 """
 import pandas as pd
-from data.ms.base_tools import code_ref_id, get_df_from_cdata, match_sid_by_code_and_name
+from data.ms.base_tools import code_ref_id, get_df_from_cdata, match_sid_by_code_and_name, next_trading_day
 
 
 def _get_format_df(cdata, biz_type):
@@ -15,6 +15,7 @@ def _get_format_df(cdata, biz_type):
     biz_dt = cdata['biz_dt'].values[0]
     df['sec_name'] = df['证券简称']
     df['sec_name'] = df['sec_name'].str.replace(' ', '')
+    biz_dt = next_trading_day(biz_dt)
     if biz_type == 'dbq':
         df['sec_code'] = df['证券代码'].apply(lambda x: ('000000'+str(x))[-max(6, len(str(x))):])
         _df = match_sid_by_code_and_name(biz_dt, df, data_source)

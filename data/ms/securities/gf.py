@@ -9,7 +9,7 @@
 import datetime
 
 import pandas as pd
-from data.ms.base_tools import get_df_from_cdata, match_sid_by_code_and_name
+from data.ms.base_tools import get_df_from_cdata, match_sid_by_code_and_name, next_trading_day
 
 
 def _get_format_df(cdata, biz_type):
@@ -18,7 +18,8 @@ def _get_format_df(cdata, biz_type):
     df['sec_code'] = df['0'].apply(lambda x: (str(x))[-6:])
     df['sec_name'] = df['0'].apply(lambda x: (str(x))[:-6])
     df['sec_name'] = df['sec_name'].str.replace(' ', '')
-    _df = match_sid_by_code_and_name(datetime.datetime.strptime(biz_dt,'%Y-%m-%d').date(), df, data_source)
+    biz_dt = next_trading_day(biz_dt)
+    _df = match_sid_by_code_and_name(biz_dt, df, data_source)
     df = df.merge(_df, on=['sec_code', 'sec_name'])
     df['start_dt'] = None
     return biz_dt, df

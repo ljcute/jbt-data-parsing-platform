@@ -7,7 +7,7 @@
 @Software    : PyCharm
 """
 import pandas as pd
-from data.ms.base_tools import code_ref_id, get_df_from_cdata
+from data.ms.base_tools import code_ref_id, get_df_from_cdata, next_trading_day
 
 
 def _get_format_df(cdata):
@@ -22,6 +22,7 @@ def _get_format_df(cdata):
         biz_dt = dt
     else:
         biz_dt = str(dt)[:4] + '-' + str(dt)[4:6] + '-' + str(dt)[-2:]
+    biz_dt = next_trading_day(biz_dt)
     return biz_dt, code_ref_id(biz_dt, df, data_source)
 
 

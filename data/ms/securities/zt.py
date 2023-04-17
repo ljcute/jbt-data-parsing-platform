@@ -8,7 +8,7 @@
 import time
 
 import pandas as pd
-from data.ms.base_tools import get_df_from_cdata, code_ref_id
+from data.ms.base_tools import get_df_from_cdata, code_ref_id, next_trading_day
 from util.logs_utils import logger
 
 
@@ -20,6 +20,7 @@ def _get_format_df(cdata):
     df['sec_name'] = df['STOCK_NAME']
     df['start_dt'] = None
     biz_dt = timeStamp(int(df['CREATE_TIME'].values[0][6:len(df['CREATE_TIME'].values[0]) - 2]))[:10]
+    biz_dt = next_trading_day(biz_dt)
     return biz_dt, code_ref_id(biz_dt, df, data_source)
 
 
