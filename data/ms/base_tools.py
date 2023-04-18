@@ -331,10 +331,11 @@ def get_data_log(dt, df):
     _like_name = pd.DataFrame(columns=df.columns)
     for index, row in dd.iterrows():
         if str(row['sec_name']) in str(row['证券简称']) or str(row['证券简称']) in str(row['sec_name']):
-            s_df = pd.concat([_like_name,row[dd.columns.tolist()].to_frame().T])
-    s_df['sec_code'] = s_df['sec_code'] + '.' + s_df['市场']
-    s_df = s_df[['sec_code', 'sec_name']]
-    return s_df
+            _like_name = pd.concat([_like_name,row[dd.columns.tolist()].to_frame().T])
+    if not _like_name.empty:
+        _like_name['sec_code'] = _like_name['sec_code'] + '.' + _like_name['市场']
+        _like_name = _like_name[['sec_code', 'sec_name']]
+    return _like_name
 
     # if df.empty:
     #     return df
