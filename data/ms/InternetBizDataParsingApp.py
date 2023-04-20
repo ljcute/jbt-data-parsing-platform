@@ -25,6 +25,7 @@ sys.path.append(BASE_DIR)
 from config import Config
 from database import MysqlClient
 from util.logs_utils import logger
+jbt = '金贝塔'
 
 cfg = Config.get_cfg()
 db_biz_pro = MysqlClient(**cfg.get_content(f'pro_db_biz'))
@@ -229,7 +230,13 @@ def handle_range_collected_data(data_source, data_type, start_dt=None, end_dt=No
             dt = _start_dt + timedelta(days=i)
             logger.info(f"开始计算data_source={data_source} data_type={data_type} {dt}")
             # 取biz_dt日，最新数据
-            cdata = get_collect_data(data_source, data_type, dt)
+            if data_source == jbt:
+                cdata = pd.DataFrame()
+                cdata['data_source'] = [jbt]
+                cdata['data_type'] = [2]
+                cdata['biz_dt'] = dt
+            else:
+                cdata = get_collect_data(data_source, data_type, dt)
             # 如果没, 则不解析（continue）
             if cdata.empty:
                 continue

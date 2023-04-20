@@ -165,6 +165,17 @@ def get_exchange_sec_data(biz_dt):
     return sec_db().select(sql)
 
 
+def get_exchange_sec_data_for_jbt(biz_dt):
+    sql = f"""
+    select bo_id, bo_id_type, bo_id_code, bo_name, start_dt, end_dt
+      from t_jbt_exchange_sec_bo 
+      where data_status = 1 
+      and start_dt <= '{biz_dt} 00:00:00'
+      and end_dt > '{biz_dt} 00:00:00'
+    """
+    return sec_db().select(sql)
+
+
 def get_exchange_discount_limit_rate(biz_dt, df):
     if df.empty:
         return
