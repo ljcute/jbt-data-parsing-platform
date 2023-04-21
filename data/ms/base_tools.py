@@ -25,6 +25,8 @@ zw = r'[\u4e00-\u9fa5]+'
 
 _sec_db = MysqlClient(**cfg.get_content('pro_db_sec'))
 
+db_biz_pro = MysqlClient(**cfg.get_content(f'pro_db_biz'))
+
 
 def sec_db():
     global _sec_db
@@ -176,6 +178,15 @@ def get_exchange_sec_data_for_jbt(biz_dt):
     return sec_db().select(sql)
 
 
+def get_special_sec_bo():
+    sql = f"""
+    select bo_id, bo_id_type, bo_id_code, special_sec_code, special_sec_name
+    from t_parsing_special_sec_bo 
+    where bo_status = 1 
+    and data_status = 1
+    """
+    return db_biz_pro.select(sql)
+
 def get_exchange_discount_limit_rate(biz_dt, df):
     if df.empty:
         return
@@ -318,7 +329,20 @@ def match_sid_by_code_and_name(biz_dt, df, data_source):
     data_df = pd.concat([sec_id_df, sec_id_matched, _like_name_df, filtered_df_])
     never_sec_id_df = data_df.loc[data_df['sec_id'].isna()]
     if not never_sec_id_df.empty:
-        logger.warn(f"解析业务日期:{biz_dt},{data_source}证券对象无法识别,或需要注册证券对象有({never_sec_id_df.index.size}只)：\n{never_sec_id_df[['market', 'sec_code', 'sec_name']].reset_index(drop=True)}")
+        special_seb_df = get_special_sec_bo()
+        special_seb_df.rename(columns={'special_sec_name': 'sec_name'}, inplace=True)
+        special_seb_df[['sec_code', 'market']] = special_seb_df['bo_id_code'].str.split('.', n=1, expand=True)
+        special_seb_df['sec_code'] = special_seb_df['sec_code'].apply(lambda x: int(x))
+        spe_bo = pd.merge(never_sec_id_df, special_seb_df, on=['sec_code', 'sec_name'], how='left')
+        spe_bo['sec_id'] = spe_bo['bo_id']
+        spe_bo['sec_type'] = spe_bo['bo_id_type']
+        spe_bo['market_x'] = spe_bo['market_y']
+        spe_bo.rename(columns={'market_x': 'market'}, inplace=True)
+        spe_bo = spe_bo[['sec_code', 'sec_name', 'sec_id', 'sec_type', 'market']]
+        data_df = pd.concat([data_df, spe_bo])
+    last_no_sec_id_df = data_df.loc[data_df['sec_id'].isna()]
+    if not last_no_sec_id_df.empty:
+        logger.warn(f"解析业务日期:{biz_dt},{data_source}证券对象无法识别,或需要注册证券对象有({last_no_sec_id_df.index.size}只)：\n{last_no_sec_id_df[['market', 'sec_code', 'sec_name']].reset_index(drop=True)}")
     return data_df
 
 
