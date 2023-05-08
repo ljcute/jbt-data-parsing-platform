@@ -327,6 +327,8 @@ def match_sid_by_code_and_name(biz_dt, df, data_source):
     _like_name_df = _like_name_df.drop(columns=['end_dt'])
 
     data_df = pd.concat([sec_id_df, sec_id_matched, _like_name_df, filtered_df_])
+    not_six_digits = ~data_df['sec_code'].apply(lambda x: bool(re.match('^\d{6}$', str(x))))
+    data_df.drop(data_df.loc[not_six_digits].index, inplace=True)
     never_sec_id_df = data_df.loc[data_df['sec_id'].isna()]
     if not never_sec_id_df.empty:
         special_seb_df = get_special_sec_bo()
