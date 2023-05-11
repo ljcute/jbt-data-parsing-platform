@@ -26,8 +26,10 @@ def _format_dbq(cdata, market):
     biz_dt, df = _get_format_df(cdata)
     df['rate'] = df['assure_ratio'].apply(lambda x: int(x * 100))
     dbq = df[['sec_type', 'sec_id', 'sec_code', 'rate']].copy()
-    return biz_dt, dbq, pd.DataFrame()
-
+    jzd = df[['sec_type', 'sec_id', 'sec_code', 'stockgroup_name']].copy()
+    jzd.rename(columns={'stockgroup_name': 'rate'}, inplace=True)
+    jzd['rate'] = jzd['rate'].apply(lambda x: 1 if str(x) == 'A' else 2 if str(x) == 'B' else 3 if str(x) == 'C' else 4 if str(x) == 'D' else 5 if str(x) == 'E' else 6 if str(x) == 'F' else str(x))
+    return biz_dt, dbq, jzd
 
 def _format_rz_rq_bdq(cdata, market):
     biz_dt, df = _get_format_df(cdata)

@@ -25,7 +25,11 @@ def _format_dbq(cdata, market):
     biz_dt, df = _get_format_df(cdata)
     df['rate'] = df['折算率'].apply(lambda x: int(str(x).replace('%', '').replace('-', '0')))
     dbq = df[['sec_type', 'sec_id', 'sec_code', 'rate']].copy()
-    return biz_dt, dbq, pd.DataFrame()
+    jzd = df[['sec_type', 'sec_id', 'sec_code', '证券分类']].copy()
+    jzd.rename(columns={'证券分类': 'rate'}, inplace=True)
+    jzd['rate'] = jzd['rate'].apply(lambda x: 1 if str(x) == 'A' else 2 if str(x) == 'B' else 3 if str(x) == 'C' else 4 if str(x) == 'D' else 5 if str(x) == 'E' else 6 if str(x) == 'F' else 8 if str(x) == '北交所' else str(x))
+
+    return biz_dt, dbq, jzd
 
 
 def _format_rz_rq_bdq(cdata, market):
