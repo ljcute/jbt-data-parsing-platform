@@ -12,7 +12,7 @@ from data.ms.base_tools import get_df_from_cdata, code_ref_id, next_trading_day
 
 def _get_format_df(cdata, market):
     data_source, df = get_df_from_cdata(cdata)
-    df['market'] = df['证券市场'].map(lambda x: 'SZ' if str(x) == '深A' else 'SH' if str(x) == '沪A' else 'BJ' if str(x) == '北A' else str(x))
+    df['market'] = df['证券市场'].map(lambda x: 'SZ' if str(x) == '深A' else 'SH' if str(x) == '沪A' else 'BJ' if str(x) == '京A' else str(x))
     df['sec_code'] = df['证券代码'].apply(lambda x: ('000000'+str(x))[-max(6, len(str(x))):])
     df['sec_code'] = df['sec_code'] + '.' + df['market']
     # 代码8、4开头，把市场修复为BJ
