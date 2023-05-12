@@ -7,7 +7,7 @@
 @Software    : PyCharm
 """
 import pandas as pd
-from data.ms.base_tools import code_ref_id, get_df_from_cdata
+from data.ms.base_tools import code_ref_id, get_df_from_cdata, next_trading_day
 
 
 def _get_format_df(cdata):
@@ -20,7 +20,8 @@ def _get_format_df(cdata):
     df.sort_values(by=["sec_code", "sec_name"], ascending=[True, True])
     df.drop_duplicates(subset=["sec_code", "sec_name"], keep='first', inplace=True, ignore_index=False)
     biz_dt = cdata['biz_dt'].values[0]
-    return biz_dt, code_ref_id(df, data_source)
+    biz_dt = next_trading_day(biz_dt)
+    return biz_dt, code_ref_id(biz_dt, df, data_source)
 
 
 def _format_dbq(cdata, market):

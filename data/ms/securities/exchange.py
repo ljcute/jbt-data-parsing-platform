@@ -7,7 +7,7 @@
 @Software    : PyCharm
 """
 import pandas as pd
-from data.ms.base_tools import code_ref_id, get_df_from_cdata, get_exchange_discount_limit_rate
+from data.ms.base_tools import code_ref_id, get_df_from_cdata, get_exchange_discount_limit_rate, next_trading_day
 
 
 def _get_format_df(cdata, market):
@@ -22,7 +22,8 @@ def _get_format_df(cdata, market):
         biz_dt = df['日期'].values[0]
     else:
         biz_dt = cdata['biz_dt'].values[0]
-    return biz_dt, code_ref_id(df, data_source, exchange=True)
+    biz_dt = next_trading_day(biz_dt)
+    return biz_dt, code_ref_id(biz_dt, df, data_source, exchange=True)
 
 
 def _format_dbq(cdata, market):
@@ -30,6 +31,7 @@ def _format_dbq(cdata, market):
     # 从FDB取交易所折算率上限
     df = get_exchange_discount_limit_rate(biz_dt, df)
     dbq = df[['sec_type', 'sec_id', 'sec_code', 'rate']].copy()
+    dbq['rate'] = dbq['rate'].apply(lambda x: float(x))
     return biz_dt, dbq, pd.DataFrame()
 
 
@@ -88,8 +90,13 @@ def _get_jymx_format_df(cdata, market):
     df['market'] = market
     df['sec_code'] = df['sec_code'].apply(lambda x: ('000000'+str(x))[-max(6, len(str(x))):])
     df['sec_code'] = df['sec_code'] + '.' + market
-    biz_dt = df['业务日期']
-    return biz_dt, code_ref_id(df, data_source, exchange=True)
+    biz_dt = df['业务日期'][0]
+    if '-' in str(biz_dt):
+        biz_dt = str(biz_dt)
+    else:
+        biz_dt = str(biz_dt)[:4] + '-' + str(biz_dt)[4:6] + '-' + str(biz_dt)[6:]
+    biz_dt = next_trading_day(biz_dt)
+    return biz_dt, code_ref_id(biz_dt, df, data_source, exchange=True)
 
 
 def _format_jymx(cdata, market):

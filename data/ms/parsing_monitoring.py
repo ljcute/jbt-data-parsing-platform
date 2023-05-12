@@ -22,7 +22,8 @@ sys.path.append(BASE_DIR)
 from config import Config
 from database import MysqlClient
 from util.logs_utils import logger
-from data.ms.base_tools import get_df_from_cdata, match_sid_by_code_and_name, code_ref_id, get_exchange_discount_limit_rate
+from data.ms.base_tools import get_df_from_cdata, match_sid_by_code_and_name, code_ref_id, \
+    get_exchange_discount_limit_rate, next_trading_day
 from data.ms.InternetBizDataParsingApp import get_last_exchange_collect_date, handle_range_collected_data
 
 
@@ -449,10 +450,12 @@ def rq_handle(biz_dt, union):
                 pre = pre[pre['pre_rate'] >= 50]
                 cur = cur[cur['cur_rate'] >= 50]
             elif _data_source in ('东北证券',):
+                pre = pre[:-1]
+                cur = cur[:-1]
                 pre['key'] = pre['bm'].apply(lambda x: ('000000' + str(x))[-max(6, len(str(x))):])
                 cur['key'] = cur['bm'].apply(lambda x: ('000000' + str(x))[-max(6, len(str(x))):])
-                pre['pre_rate'] = pre['rq'].apply(lambda x: int(x))
-                cur['cur_rate'] = cur['rq'].apply(lambda x: int(x))
+                pre['pre_rate'] = pre['rq'].apply(lambda x: int(float(x)))
+                cur['cur_rate'] = cur['rq'].apply(lambda x: int(float(x)))
                 pre = pre[pre['pre_rate'] >= 50]
                 cur = cur[cur['cur_rate'] >= 50]
             elif _data_source in ('长江证券',):
@@ -769,10 +772,12 @@ def rz_handle(biz_dt, union):
                 pre = pre[pre['pre_rate'] >= 100]
                 cur = cur[cur['cur_rate'] >= 100]
             elif _data_source in ('东北证券',):
+                pre = pre[:-1]
+                cur = cur[:-1]
                 pre['key'] = pre['bm'].apply(lambda x: ('000000' + str(x))[-max(6, len(str(x))):])
                 cur['key'] = cur['bm'].apply(lambda x: ('000000' + str(x))[-max(6, len(str(x))):])
-                pre['pre_rate'] = pre['rz'].apply(lambda x: int(x))
-                cur['cur_rate'] = cur['rz'].apply(lambda x: int(x))
+                pre['pre_rate'] = pre['rz'].apply(lambda x: int(float(x)))
+                cur['cur_rate'] = cur['rz'].apply(lambda x: int(float(x)))
                 pre = pre[pre['pre_rate'] >= 100]
                 cur = cur[cur['cur_rate'] >= 100]
             elif _data_source in ('长江证券',):
@@ -870,19 +875,19 @@ def db_handle(biz_dt, union):
                 pre['sec_code'] = pre['证券代码'].apply(lambda x: ('000000'+str(x))[-max(6, len(str(x))):]) + '.' + market
                 pre['sec_name'] = pre['证券简称'].str.replace(' ', '')
                 pre['start_dt'] = None
-                pre = code_ref_id(pre, _data_source, exchange=True)
+                pre = code_ref_id(biz_dt, pre, _data_source, exchange=True)
                 pre = get_exchange_discount_limit_rate(last_work_day(biz_dt), pre)
                 pre = pre[['sec_type', 'sec_id', 'sec_code', 'rate']].copy()
                 pre['key'] = pre['sec_code']
-                pre['pre_rate'] = pre['rate'].apply(lambda x: int(x))
+                pre['pre_rate'] = pre['rate'].apply(lambda x: int(float(x)))
                 cur['sec_code'] = cur['证券代码'].apply(lambda x: ('000000'+str(x))[-max(6, len(str(x))):]) + '.' + market
                 cur['sec_name'] = cur['证券简称'].str.replace(' ', '')
                 cur['start_dt'] = None
-                cur = code_ref_id(cur, _data_source, exchange=True)
+                cur = code_ref_id(biz_dt, cur, _data_source, exchange=True)
                 cur = get_exchange_discount_limit_rate(biz_dt, cur)
                 cur = cur[['sec_type', 'sec_id', 'sec_code', 'rate']].copy()
                 cur['key'] = cur['sec_code']
-                cur['cur_rate'] = cur['rate'].apply(lambda x: int(x))
+                cur['cur_rate'] = cur['rate'].apply(lambda x: int(float(x)))
             elif _data_source in ('华泰证券',):
                 pre = pre.loc[pre['assureStatus'] == 0].copy()
                 cur = cur.loc[cur['assureStatus'] == 0].copy()
@@ -904,12 +909,12 @@ def db_handle(biz_dt, union):
                 pre['sec_code'] = pre['key']
                 pre['sec_name'] = pre['secu_name']
                 pre['market'] = pre['stkex'].map(lambda x: 'SZ' if str(x) == '0' else 'SH' if str(x) == '1' else 'BJ' if str(x) == '2' else str(x))
-                pre = code_ref_id(pre, _data_source, exchange=True)
+                pre = code_ref_id(biz_dt, pre, _data_source, exchange=True)
                 pre['key'] = pre['sec_code']
                 cur['sec_code'] = cur['key']
                 cur['sec_name'] = cur['secu_name']
                 cur['market'] = cur['stkex'].map(lambda x: 'SZ' if str(x) == '0' else 'SH' if str(x) == '1' else 'BJ' if str(x) == '2' else str(x))
-                cur = code_ref_id(cur, _data_source, exchange=True)
+                cur = code_ref_id(biz_dt, cur, _data_source, exchange=True)
                 cur['key'] = cur['sec_code']
             elif _data_source in ('广发证券',):
                 pre['key'] = pre['0'].apply(lambda x: (str(x))[-6:])
@@ -1040,19 +1045,19 @@ def db_handle(biz_dt, union):
             elif _data_source in ('平安证券',):
                 pre['sec_code'] = pre['证券代码'].apply(lambda x: ('000000' + str(x))[-max(6, len(str(x))):])
                 pre['sec_name'] = pre['证券简称'].str.replace(' ', '')
-                _pre = match_sid_by_code_and_name(pre, _data_source)
+                _pre = match_sid_by_code_and_name(next_trading_day(biz_dt), pre, _data_source)
                 pre = pre.merge(_pre, on=['sec_code', 'sec_name'])
                 pre.sort_values(by=["sec_code", "sec_name"], ascending=[True, True])
                 pre.drop_duplicates(subset=["sec_code", "sec_name"], keep='first', inplace=True, ignore_index=False)
-                pre['key'] = pre['scd']
+                pre['key'] = pre['sec_code']
 
                 cur['sec_code'] = cur['证券代码'].apply(lambda x: ('000000' + str(x))[-max(6, len(str(x))):])
                 cur['sec_name'] = cur['证券简称'].str.replace(' ', '')
-                _cur = match_sid_by_code_and_name(cur, _data_source)
+                _cur = match_sid_by_code_and_name(next_trading_day(biz_dt), cur, _data_source)
                 cur = cur.merge(_cur, on=['sec_code', 'sec_name'])
                 cur.sort_values(by=["sec_code", "sec_name"], ascending=[True, True])
                 cur.drop_duplicates(subset=["sec_code", "sec_name"], keep='first', inplace=True, ignore_index=False)
-                cur['key'] = cur['scd']
+                cur['key'] = cur['sec_code']
 
                 pre['pre_rate'] = pre['折算率'].apply(lambda x: int(x * 100))
                 cur['cur_rate'] = cur['折算率'].apply(lambda x: int(x * 100))
@@ -1070,13 +1075,13 @@ def db_handle(biz_dt, union):
             elif _data_source in ('信达证券',):
                 pre['sec_code'] = pre['secu_code'].apply(lambda x: ('000000' + str(x))[-max(6, len(str(x))):])
                 pre['sec_name'] = pre['secu_name'].str.replace(' ', '')
-                _pre = match_sid_by_code_and_name(pre, _data_source)
+                _pre = match_sid_by_code_and_name(next_trading_day(biz_dt), pre, _data_source)
                 pre = pre.merge(_pre, on=['sec_code', 'sec_name'])
                 pre['key'] = pre['scd']
 
                 cur['sec_code'] = cur['secu_code'].apply(lambda x: ('000000' + str(x))[-max(6, len(str(x))):])
                 cur['sec_name'] = cur['secu_name'].str.replace(' ', '')
-                _cur = match_sid_by_code_and_name(cur, _data_source)
+                _cur = match_sid_by_code_and_name(next_trading_day(biz_dt), cur, _data_source)
                 cur = cur.merge(_cur, on=['sec_code', 'sec_name'])
                 cur['key'] = cur['scd']
                 pre['pre_rate'] = pre['dbpzabl'].apply(lambda x: int(str(x).replace('%', '')))
@@ -1124,15 +1129,15 @@ def db_handle(biz_dt, union):
             elif _data_source in ('方正证券',):
                 pre['sec_code'] = pre['stockCode'].apply(lambda x: ('000000' + str(x))[-max(6, len(str(x))):])
                 pre['sec_name'] = pre['stockName'].str.replace(' ', '')
-                _pre = match_sid_by_code_and_name(pre, _data_source)
+                _pre = match_sid_by_code_and_name(next_trading_day(biz_dt), pre, _data_source)
                 pre = pre.merge(_pre, on=['sec_code', 'sec_name'])
-                pre['key'] = pre['scd']
+                pre['key'] = pre['sec_code']
 
                 cur['sec_code'] = cur['stockCode'].apply(lambda x: ('000000' + str(x))[-max(6, len(str(x))):])
                 cur['sec_name'] = cur['stockName'].str.replace(' ', '')
-                _cur = match_sid_by_code_and_name(cur, _data_source)
+                _cur = match_sid_by_code_and_name(next_trading_day(biz_dt), cur, _data_source)
                 cur = cur.merge(_cur, on=['sec_code', 'sec_name'])
-                cur['key'] = cur['scd']
+                cur['key'] = cur['sec_code']
 
                 pre['pre_rate'] = pre['rate'].apply(lambda x: int(x * 100))
                 cur['cur_rate'] = cur['rate'].apply(lambda x: int(x * 100))

@@ -7,7 +7,7 @@
 @Software    : PyCharm
 """
 import pandas as pd
-from data.ms.base_tools import code_ref_id, get_df_from_cdata
+from data.ms.base_tools import code_ref_id, get_df_from_cdata, next_trading_day
 
 
 def _get_format_df(cdata, biz_type):
@@ -21,7 +21,8 @@ def _get_format_df(cdata, biz_type):
     df['sec_name'] = df['stkname']
     df['start_dt'] = None
     biz_dt = cdata['biz_dt'].values[0]
-    return biz_dt, code_ref_id(df, data_source)
+    biz_dt = next_trading_day(biz_dt)
+    return biz_dt, code_ref_id(biz_dt, df, data_source)
 
 
 def _format_dbq(cdata, market):

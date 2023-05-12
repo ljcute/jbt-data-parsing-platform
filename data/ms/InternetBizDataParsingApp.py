@@ -25,6 +25,7 @@ sys.path.append(BASE_DIR)
 from config import Config
 from database import MysqlClient
 from util.logs_utils import logger
+jbt = '金贝塔'
 
 cfg = Config.get_cfg()
 db_biz_pro = MysqlClient(**cfg.get_content(f'pro_db_biz'))
@@ -229,7 +230,15 @@ def handle_range_collected_data(data_source, data_type, start_dt=None, end_dt=No
             dt = _start_dt + timedelta(days=i)
             logger.info(f"开始计算data_source={data_source} data_type={data_type} {dt}")
             # 取biz_dt日，最新数据
-            cdata = get_collect_data(data_source, data_type, dt)
+            if data_source == jbt:
+                if start_dt == end_dt:
+                    dt = datetime.now().date()
+                cdata = pd.DataFrame()
+                cdata['data_source'] = [jbt]
+                cdata['data_type'] = [2]
+                cdata['biz_dt'] = dt
+            else:
+                cdata = get_collect_data(data_source, data_type, dt)
             # 如果没, 则不解析（continue）
             if cdata.empty:
                 continue
@@ -364,9 +373,9 @@ def handle_jymx(_biz_dt, _jymx, market, persist_flag=True):
     if _jymx.empty:
         logger.error(f'交易明细数据为空，解析入库失败！')
 
-    _jymx.drop(['sec360_name', 'exchange_sec_name', 'sec_code', 'sec_name'], axis=1, inplace=True)
+    _jymx.drop(['bo_name', 'sec_code', 'sec_name'], axis=1, inplace=True)
     _jymx['exchange_market'] = 'SZSE' if market == 'SZ' else 'SSE' if market == 'SH' else 'BSE' if market == 'BJ' else market
-    _jymx['biz_dt'] = str(_biz_dt.values.tolist()[0])
+    _jymx['biz_dt'] = _biz_dt
     _jymx['data_status'] = 1
     _jymx['creator_id'] = 414
     _jymx['create_dt'] = str(datetime.now())

@@ -5,20 +5,21 @@
 # @Site    : 
 # @File    : xd.py
 # @Software: PyCharm
+import datetime
 import pandas as pd
-from data.ms.base_tools import get_df_from_cdata, match_sid_by_code_and_name
+from data.ms.base_tools import get_df_from_cdata, match_sid_by_code_and_name, next_trading_day
 
 
 def _get_format_df(cdata, biz_type):
     data_source, df = get_df_from_cdata(cdata)
+    biz_dt = df['creat_date'].values[0]
     df['sec_code'] = df['secu_code'].apply(lambda x: ('000000'+str(x))[-max(6, len(str(x))):])
     df['sec_name'] = df['secu_name']
     df['sec_name'] = df['sec_name'].str.replace(' ', '')
-    _df = match_sid_by_code_and_name(df, data_source)
+    biz_dt = next_trading_day(biz_dt)
+    _df = match_sid_by_code_and_name(biz_dt, df, data_source)
     df = df.merge(_df, on=['sec_code', 'sec_name'])
-    df['sec_code'] = df['scd']
     df['start_dt'] = None
-    biz_dt = df['creat_date'].values[0]
     return biz_dt, df
 
 
