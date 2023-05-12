@@ -9,6 +9,7 @@
 """
 import math
 import os
+import re
 import sys
 from datetime import datetime, timedelta
 
@@ -401,9 +402,12 @@ def rq_handle(biz_dt, union):
                 pre['key'] = pre['证券代码'].apply(lambda x: ('000000' + str(x))[-max(6, len(str(x))):]) + '.' + pre[
                     '证券市场'].map(lambda x: 'SZ' if str(x) == '深A' else 'SH' if str(x) == '沪A' else 'BJ' if str(
                     x) == '北A' else str(x))
+                # 代码8、4开头，把市场修复为BJ
+                pre['key'] = pre['key'].apply(lambda x: str(x)[:6] + '.BJ' if str(x)[:1] in ('8', '4') else x)
                 cur['key'] = cur['证券代码'].apply(lambda x: ('000000' + str(x))[-max(6, len(str(x))):]) + '.' + cur[
                     '证券市场'].map(lambda x: 'SZ' if str(x) == '深A' else 'SH' if str(x) == '沪A' else 'BJ' if str(
                     x) == '北A' else str(x))
+                cur['key'] = cur['key'].apply(lambda x: str(x)[:6] + '.BJ' if str(x)[:1] in ('8', '4') else x)
                 pre['pre_rate'] = 50
                 cur['cur_rate'] = 50
             elif _data_source in ('海通证券',):
@@ -723,9 +727,12 @@ def rz_handle(biz_dt, union):
                 pre['key'] = pre['证券代码'].apply(lambda x: ('000000' + str(x))[-max(6, len(str(x))):]) + '.' + pre[
                     '证券市场'].map(lambda x: 'SZ' if str(x) == '深A' else 'SH' if str(x) == '沪A' else 'BJ' if str(
                     x) == '北A' else str(x))
+                pre['key'] = pre['key'].apply(lambda x: str(x)[:6] + '.BJ' if str(x)[:1] in ('8', '4') else x)
                 cur['key'] = cur['证券代码'].apply(lambda x: ('000000' + str(x))[-max(6, len(str(x))):]) + '.' + cur[
                     '证券市场'].map(lambda x: 'SZ' if str(x) == '深A' else 'SH' if str(x) == '沪A' else 'BJ' if str(
                     x) == '北A' else str(x))
+                # 代码8、4开头，把市场修复为BJ
+                cur['key'] = cur['key'].apply(lambda x: str(x)[:6] + '.BJ' if str(x)[:1] in ('8', '4') else x)
                 pre['pre_rate'] = 100
                 cur['cur_rate'] = 100
             elif _data_source in ('海通证券',):
@@ -1024,9 +1031,12 @@ def db_handle(biz_dt, union):
                 pre['key'] = pre['证券代码'].apply(lambda x: ('000000' + str(x))[-max(6, len(str(x))):]) + '.' + pre[
                     '证券市场'].map(lambda x: 'SZ' if str(x) == '深A' else 'SH' if str(x) == '沪A' else 'BJ' if str(
                     x) == '北A' else str(x))
+                pre['key'] = pre['key'].apply(lambda x: str(x)[:6] + '.BJ' if str(x)[:1] in ('8', '4') else x)
                 cur['key'] = cur['证券代码'].apply(lambda x: ('000000' + str(x))[-max(6, len(str(x))):]) + '.' + cur[
                     '证券市场'].map(lambda x: 'SZ' if str(x) == '深A' else 'SH' if str(x) == '沪A' else 'BJ' if str(
                     x) == '北A' else str(x))
+                # 代码8、4开头，把市场修复为BJ
+                cur['key'] = cur['key'].apply(lambda x: str(x)[:6] + '.BJ' if str(x)[:1] in ('8', '4') else x)
                 pre['pre_rate'] = pre['调整后折算率'].apply(lambda x: int(str(x).replace('%', '')))
                 cur['cur_rate'] = cur['调整后折算率'].apply(lambda x: int(str(x).replace('%', '')))
             elif _data_source in ('海通证券',):
@@ -1091,6 +1101,10 @@ def db_handle(biz_dt, union):
                 cur = cur[:-1]
                 pre['key'] = pre['bm'].apply(lambda x: ('000000' + str(x))[-max(6, len(str(x))):])
                 cur['key'] = cur['bm'].apply(lambda x: ('000000' + str(x))[-max(6, len(str(x))):])
+                not_six_digits = ~pre['bm'].apply(lambda x: bool(re.match('^\d{6}$', str(x))))
+                pre.drop(pre.loc[not_six_digits].index, inplace=True)
+                not_six_digits_ = ~cur['bm'].apply(lambda x: bool(re.match('^\d{6}$', str(x))))
+                cur.drop(cur.loc[not_six_digits_].index, inplace=True)
                 pre['pre_rate'] = pre['zsl'].apply(lambda x: int(x))
                 cur['cur_rate'] = cur['zsl'].apply(lambda x: int(x))
             elif _data_source in ('长江证券',):
