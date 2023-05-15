@@ -1101,10 +1101,10 @@ def db_handle(biz_dt, union):
                 cur = cur[:-1]
                 pre['key'] = pre['bm'].apply(lambda x: ('000000' + str(x))[-max(6, len(str(x))):])
                 cur['key'] = cur['bm'].apply(lambda x: ('000000' + str(x))[-max(6, len(str(x))):])
-                not_six_digits = ~pre['bm'].apply(lambda x: bool(re.match('^\d{6}$', str(x))))
-                pre.drop(pre.loc[not_six_digits].index, inplace=True)
-                not_six_digits_ = ~cur['bm'].apply(lambda x: bool(re.match('^\d{6}$', str(x))))
-                cur.drop(cur.loc[not_six_digits_].index, inplace=True)
+                # not_six_digits = ~pre['bm'].apply(lambda x: bool(re.match('^\d{6}$', str(x))))
+                # pre.drop(pre.loc[not_six_digits].index, inplace=True)
+                # not_six_digits_ = ~cur['bm'].apply(lambda x: bool(re.match('^\d{6}$', str(x))))
+                # cur.drop(cur.loc[not_six_digits_].index, inplace=True)
                 pre['pre_rate'] = pre['zsl'].apply(lambda x: int(x))
                 cur['cur_rate'] = cur['zsl'].apply(lambda x: int(x))
             elif _data_source in ('长江证券',):
