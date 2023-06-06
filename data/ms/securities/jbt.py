@@ -48,7 +48,7 @@ def get_model_jbt_mt_conversion_rate_data(biz_dt):
     select *
       from t_objeva_model_jbt_mt_conversion_rate 
       where status_type = 1
-      and start_dt <= '{biz_dt} 00:00:00'
+      and start_dt <= '{biz_dt} 23:59:59'
       and end_dt > '{biz_dt} 00:00:00' 
     """
     return factor_db().select(sql)
@@ -59,7 +59,7 @@ def get_model_jbt_mt_concentration_group(biz_dt):
     select *
       from t_objeva_model_jbt_mt_concentration_group 
       where status_type = 1
-      and start_dt <= '{biz_dt} 00:00:00'
+      and start_dt <= '{biz_dt} 23:59:59'
       and end_dt > '{biz_dt} 00:00:00' 
     """
     return factor_db().select(sql)
