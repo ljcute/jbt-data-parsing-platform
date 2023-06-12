@@ -296,6 +296,10 @@ def handle_collected_data(cdata, dt, persist_flag=True):
         biz_dt, rq_bdq = format_rq_bdq(broker, cdata, market)
         check_biz_dt(dt, biz_dt)
         handle_rq_bdq(broker_id, biz_dt, rq_bdq, market, persist_flag)
+    elif data_type == 7:
+        biz_dt, dy_dbw = format_dy_dbw(broker, cdata, market)
+        check_biz_dt(dt, biz_dt)
+        handle_dy_dbw(broker_id, biz_dt, dy_dbw, market, persist_flag)
     elif data_type == 99:
         biz_dt, dbq, jzd, rz_bdq, rq_bdq = format_db_rz_rq_bdq(broker, cdata, market)
         check_biz_dt(dt, biz_dt)
@@ -338,6 +342,11 @@ def format_rz_rq_bdq(broker, cdata, market):
 def format_db_rz_rq_bdq(broker, cdata, market):
     exec(f"from data.ms.securities.{broker['broker_code'].values[0].lower()} import _format_db_rz_rq_bdq")
     return eval(f"_format_db_rz_rq_bdq(cdata, market)")
+
+
+def format_dy_dbw(broker, cdata, market):
+    exec(f"from data.ms.securities.{broker['broker_code'].values[0].lower()} import _format_dy_dbw")
+    return eval(f"_format_dy_dbw(cdata, market)")
 
 
 def check_dbq_rate(_dbq):
@@ -489,6 +498,12 @@ def handle_rq_bdq(_broker_id, _biz_dt, _rq_bdq, market, persist_flag=True):
 def handle_dbq_jzd(_broker_id, _biz_dt, _rq_bdq, market, persist_flag=True):
     biz_type = 4
     handle_data(_broker_id, _biz_dt, biz_type, _rq_bdq, market, persist_flag)
+
+
+def handle_dy_dbw(_broker_id, _biz_dt, _rq_bdq, market, persist_flag=True):
+    biz_type = 7
+    handle_data(_broker_id, _biz_dt, biz_type, _rq_bdq, market, persist_flag)
+    logger.info(f"单一股票担保物比例{market}数据保存成功！")
 
 
 def handle_duplicate_data(broker_id, biz_type, data):
@@ -868,7 +883,7 @@ if __name__ == '__main__':
     try:
         __environments = ("loc", "dev", "fat", "uat", "pro")
         biz_type_map = {0: "交易所交易总量", 1: "交易所交易明细", 2: "融资融券可充抵保证金证券", 3: "融资融券标的证券",
-                        4: "融资标的证券", 5: "融券标的证券", 99: "融资融券可充抵保证金证券和融资融券标的证券"}
+                        4: "融资标的证券", 5: "融券标的证券", 6: "单一股票担保物比例信息", 99: "融资融券可充抵保证金证券和融资融券标的证券"}
         cfg = Config.get_cfg()
         if "environment" not in cfg.get_sections() or "env" not in cfg.get_options("environment"):
             raise Exception(f"请设置当前环境environment.env")

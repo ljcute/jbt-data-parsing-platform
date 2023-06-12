@@ -110,3 +110,16 @@ def _format_jymx(cdata, market):
         _market = 'BSE'
 
     return biz_dt, df, market
+
+
+def _format_dy_dbw(cdata, market):
+    biz_dt, df = _get_format_df(cdata, market)
+    if market == 'BJ':
+        rq = df[['sec_type', 'sec_id', 'sec_code', '单一股票担保物比例（%）']].copy()
+        rq.rename(columns={'单一股票担保物比例（%）': 'rate'}, inplace=True)
+    elif market == 'SH':
+        rq = df[['sec_type', 'sec_id', 'sec_code', 'rate']].copy()
+    elif market == 'SZ':
+        rq = df[['sec_type', 'sec_id', 'sec_code', '担保物比例（%）']].copy()
+        rq.rename(columns={'担保物比例（%）': 'rate'}, inplace=True)
+    return biz_dt, rq
