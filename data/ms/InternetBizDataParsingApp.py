@@ -883,7 +883,7 @@ if __name__ == '__main__':
     try:
         __environments = ("loc", "dev", "fat", "uat", "pro")
         biz_type_map = {0: "交易所交易总量", 1: "交易所交易明细", 2: "融资融券可充抵保证金证券", 3: "融资融券标的证券",
-                        4: "融资标的证券", 5: "融券标的证券", 6: "单一股票担保物比例信息", 99: "融资融券可充抵保证金证券和融资融券标的证券"}
+                        4: "融资标的证券", 5: "融券标的证券", 7: "单一股票担保物比例信息", 99: "融资融券可充抵保证金证券和融资融券标的证券"}
         cfg = Config.get_cfg()
         if "environment" not in cfg.get_sections() or "env" not in cfg.get_options("environment"):
             raise Exception(f"请设置当前环境environment.env")
