@@ -231,7 +231,7 @@ def handle_range_collected_data(data_source, data_type, start_dt=None, end_dt=No
             logger.info(f"开始计算data_source={data_source} data_type={data_type} {dt}")
             # 取biz_dt日，最新数据
             if data_source == jbt:
-                if start_dt == end_dt:
+                if start_dt == end_dt is None:
                     dt = datetime.now().date()
                 cdata = pd.DataFrame()
                 cdata['data_source'] = [jbt]
